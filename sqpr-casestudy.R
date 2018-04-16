@@ -1,8 +1,9 @@
 library("lavaan")
 library("tidyverse")
 library("essurvey")
-library("sqpr")
 
+# devtools::install_github("recsm-asqme/sqpr")
+library("sqpr")
 
 ### Set your credentials here
 # Provide your registere ess email, your SQP email and your password
