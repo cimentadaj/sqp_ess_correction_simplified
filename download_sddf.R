@@ -1,11 +1,78 @@
 library(essurvey)
 library(xml2)
+library(httr)
+library(haven)
 library(tidyverse)
 
-rounds <- 6
-country <- "Israel"
-
+#### Only change these parameters!
+rounds <- 6 # don't change this one yet!!
+country <- "Sweden"
+email <- ""
 ####
+
+
+#### Functions
+
+# Safe getter
+safe_GET <- function(url, config = list(), ...) {
+  httr::stop_for_status(httr::GET(url = url, config = config, ...))
+}
+
+# Some countries don't have sddf files and below I grab
+# the sddf file by subsetting a slot in a list that contains
+# the url (after scraping). Some countries dont contain this
+# slot, so an error is raised because the slot of the url is
+# not available. With this function I capture that error and
+# replace it with an empty string so the 'url-grabbing' con
+# continue without crashing.
+subscript_error_handler <- function(expr, fill_with, ...) {
+  res <- tryCatch(expr = expr,
+                  error = function(e) return(fill_with),
+                  ...)
+  res
+}
+
+# This function returns the stata or spss link of a given sddf
+# file.
+grab_link <- function(link, ess_website, format = "stata") {
+  download_page <- safe_GET(paste0(ess_website, link))
+  html_ess <- xml2::read_html(download_page)
+  z <- xml2::xml_text(xml2::xml_find_all(html_ess, "//a/@href"))
+  z[grep(format, z)]
+}
+
+# This function authenticates in the ess website to be able
+# to download all other functions.
+authenticate_ess <- function (ess_email, ess_website, path_login) {
+  if (missing(ess_email)) {
+    stop("`ess_email` parameter must be specified. Create an account at https://www.europeansocialsurvey.org/user/new")
+  }
+  values <- list(u = ess_email)
+  url_login <- paste0(ess_website, path_login)
+  authen <- httr::POST(url_login, body = values)
+  check_authen <- safe_GET(url_login, query = values)
+  authen_xml <- xml2::read_html(check_authen)
+  error_node <- xml2::xml_find_all(authen_xml, "//p [@class=\"error\"]")
+  if (length(error_node) != 0) {
+    stop(xml2::xml_text(error_node), " Create an account at https://www.europeansocialsurvey.org/user/new")
+  }
+}
+
+# This function takes a dir and reads all files in the argument
+# format and then deletes the files.
+read_format_data <- function (urls, format, rounds) {
+  format_read <- switch(format, spss = haven::read_spss, stata = haven::read_dta)
+  format_ext <- c(".dta", ".sav")
+  format_dirs <- list.files(urls, pattern = paste0(format_ext, 
+                                                   "$", collapse = "|"), full.names = TRUE)
+  dataset <- lapply(format_dirs, format_read)
+  unlink(format_dirs, recursive = TRUE, force = TRUE)
+  if (length(rounds) == 1) 
+    dataset <- dataset[[1]]
+  dataset
+}
+
+#### Checking all main arguments are valid
 if (!rounds %in% show_rounds()) {
   stop(rounds, " is not a valid round.")
 }
@@ -14,50 +81,83 @@ if (!country %in% show_countries()) {
   stop(country, " is not a available in ESS round ", rounds)
 }
 
+## Define all important links
 ess_website <- "http://www.europeansocialsurvey.org"
 ess_url <- paste0(ess_website, "/data/download.html?r=")
+path_login <- "/user/login"
 final_url <- paste0(ess_url, rounds)
+##
 
+## Authenticate in ESS website
+authenticate_ess(email, ess_website, path_login)
+###
+
+# Grab all country names
 cnts <-
   final_url %>% 
   read_html() %>% 
   xml_find_all(xpath = "//h4") %>% 
   xml_text()
 
+# Grab all urls that have an sddf file
 web_try <-
   final_url %>%
   read_html() %>% 
   xml_find_all(xpath = "//div[@class='round_files']//ul") %>% 
   as_list()
 
-subscript_handler <- function(expr, fill_with, ...) {
-  res <- tryCatch(expr = expr,
-           error = function(e) return(fill_with),
-           ...)
-  res
-}
-
+# Because some countries don't have an sddf urls, they're missing
+# a slot in the list that returns all the country details.
+# Below I loop over the index of each country-info and grab
+# the sddf url to donwload. Countries that don't have an sddf slot
+# are replaced with an empty string '' and an empty attribute href.
+# This is done so that the loop continues and doesn't crash.
+# Later I remove the countries that don't have a sddf url.
 all_sddf <-
   map_chr(seq_along(web_try), ~ {
-    grab_list_link <- subscript_handler(transpose(web_try[[.x]])[[1]][[5]],
-                                        structure(list(""), href = ""))
+    grab_list_link <-
+      subscript_error_handler(
+        transpose(web_try[[.x]])[[1]][[5]],
+        structure(list(""), href = "")
+      )
+    
     grab_actual_link <- attr(grab_list_link, "href")
     grab_actual_link
 })
 
-country_available <- country %in% cnts
-available_link <- web_try[country == cnts]
+# This returns all sddf urls
+all_sddf
 
-if (country_available && all_sddf[country == cnts] == "") {
+# Which countries are available in the sddf website?
+country_available <- country %in% cnts
+
+# GRab the index of the countries that are available
+index_country <- country == cnts
+
+# Grab the sddf link of the chosen country
+available_link <- web_try[index_country]
+country_link <- all_sddf[index_country]
+
+# Raise an error if chose country doesn't have an sddf url
+if (country_available &&  country_link == "") {
   stop(country, " doesn't have weight data for round ", rounds)
 }
 
+# Grab the specific 'stata' (or 'spss') zip url from 
+# each country link and construct the full download path
+format_urls <-
+  map_chr(country_link, grab_link, ess_website = ess_website) %>% 
+  paste0(ess_website, .)
 
-# complete_df <-
-#   all_sddf %>% 
-#   set_names(cnts) %>% 
-#   enframe() %>% 
-#   filter(value != "") %>% 
-#   mutate(value = paste0(ess_website, value))
+# Download the data and read it in stata format
+sddf_data <-
+  essurvey:::round_downloader(
+    format_urls,
+    country,
+    tempdir()
+  ) %>% 
+  dirname() %>% 
+  read_format_data(format = 'stata', rounds = rounds)
 
-
+# all ready
+sddf_data
