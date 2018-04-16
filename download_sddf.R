@@ -1,0 +1,63 @@
+library(essurvey)
+library(xml2)
+library(tidyverse)
+
+rounds <- 6
+country <- "Israel"
+
+####
+if (!rounds %in% show_rounds()) {
+  stop(rounds, " is not a valid round.")
+}
+
+if (!country %in% show_countries()) {
+  stop(country, " is not a available in ESS round ", rounds)
+}
+
+ess_website <- "http://www.europeansocialsurvey.org"
+ess_url <- paste0(ess_website, "/data/download.html?r=")
+final_url <- paste0(ess_url, rounds)
+
+cnts <-
+  final_url %>% 
+  read_html() %>% 
+  xml_find_all(xpath = "//h4") %>% 
+  xml_text()
+
+web_try <-
+  final_url %>%
+  read_html() %>% 
+  xml_find_all(xpath = "//div[@class='round_files']//ul") %>% 
+  as_list()
+
+subscript_handler <- function(expr, fill_with, ...) {
+  res <- tryCatch(expr = expr,
+           error = function(e) return(fill_with),
+           ...)
+  res
+}
+
+all_sddf <-
+  map_chr(seq_along(web_try), ~ {
+    grab_list_link <- subscript_handler(transpose(web_try[[.x]])[[1]][[5]],
+                                        structure(list(""), href = ""))
+    grab_actual_link <- attr(grab_list_link, "href")
+    grab_actual_link
+})
+
+country_available <- country %in% cnts
+available_link <- web_try[country == cnts]
+
+if (country_available && all_sddf[country == cnts] == "") {
+  stop(country, " doesn't have weight data for round ", rounds)
+}
+
+
+# complete_df <-
+#   all_sddf %>% 
+#   set_names(cnts) %>% 
+#   enframe() %>% 
+#   filter(value != "") %>% 
+#   mutate(value = paste0(ess_website, value))
+
+

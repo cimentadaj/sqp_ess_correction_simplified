@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1523887368105.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4060687171",
+    "id" : "726B0B0C",
+    "lastKnownWriteTime" : 1523893440,
+    "last_content_update" : 1523893440665,
+    "path" : "~/all_repos/sqp_ess_correction/download_sddf.R",
+    "project_path" : "download_sddf.R",
+    "properties" : {
+        "cursorPosition" : "55,0",
+        "scrollLine" : "10",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
