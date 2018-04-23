@@ -1,0 +1,291 @@
+---
+title: "Case-study: Correcting for measurement error in the European Social Survey"
+author: "Jorge Cimentada and Wiebke Weber"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+In this case study we will go through an applied example of the capabilities of the `sqpr` package. For a detailed example on accessing the SQP API, check out the 'Accessing the SQP API' vignette from the `sqpr` package.
+
+We'll begin by loading the packages we'll use and the `sqpr` package.
+
+```{r}
+library(lavaan)
+library(tidyverse)
+library(essurvey)
+library(sqpr)
+```
+
+## Read the data
+
+```{r, echo = FALSE}
+ess_email <- Sys.getenv("ess_email")
+```
+
+Let's read in the data from the European Social Survey using the `ess` package and create a sum score of a number of variables. A sum score is literally the `sum` of a number of variables to create a composite score. Remember to replace your email as a character string instead of the argument `your_email`.
+
+```{r, results = 'hide'}
+ess7es <-
+  import_country("Spain", 7, ess_email) %>%
+  recode_missings() 
+
+# Create composite scores
+ess7es <-
+  ess7es %>%
+  mutate(poltrst = trstprl + trstplt + trstprt,
+         serv = stfedu + stfhlth,
+         systmrsp = psppsgv + psppipl + ptcpplt)
+
+selected_vars <- c("trstprl", "trstplt", "trstprt",
+                   "stfedu", "stfhlth", "psppsgv",
+                   "psppipl", "ptcpplt", "ppltrst",
+                   "polintr", "stflife", "stfeco",
+                   "agea","eisced")
+
+composite_scores <- c("poltrst", "serv", "systmrsp")
+
+all_vars <- c(composite_scores, selected_vars) # for using later
+```
+
+So far we the original `tibble` with a few extra columns containing the composite sum scores:
+
+```{r}
+ess7es
+```
+
+Let's read in the SQP data. First we login with `sqp_login()` and for that to work we need to execute these two lines with our valid SQP credentials:
+
+```{r, eval = FALSE}
+Sys.setenv(SQP_USER = 'your_username or your_email')
+Sys.setenv(SQP_PW = 'your_pw')
+```
+
+Once that's done, we can run `sqp_login()` and continue with accessing the data.
+
+```{r}
+sqp_login()
+study_id <- find_studies("ESS Round 7")$id
+
+questions <-
+  study_id %>%
+  find_questions(selected_vars[1:12]) %>%
+  filter(country_iso == "ES", language_iso == "spa")
+```
+
+Let's confirm all of our questions were extracted.
+
+```{r}
+all(tolower(questions$short_name) %in% selected_vars[1:12])
+```
+Why are we only selecting 12 variables? You'll see later on. We will add the predicted estimates of the last two manually because they're not in the SQP data base.
+
+To wrap the SQP API related business, let's grab the predicted estimates with `get_estimates`.
+
+```{r}
+sqp_data <-
+  get_estimates(questions$id) %>%
+  arrange(question)
+```
+
+Alright, now we have a nicely formatted `tibble` from the SQP database in R.
+
+```{r}
+sqp_data
+```
+
+## Analysis
+
+With the function `sqpr_sscore` we can calculate the quality of a sum score. Remember those sum scores we calculated at the beginning? We can calculate the quality of the sum score by specifying the data from the SQP API, the data from the European Social Survey and provide `sqp_sscore` with the variables that contribute to the sum score.
+
+For example, this code..
+
+```{r}
+sqp_sscore(sqp_data = sqp_data,
+           df = ess7es,
+           new_name = poltrst,
+           trstprl, trstplt, trstprt)
+```
+
+creates a new variable called `poltrst` which will have the quality of the sum score of `trstprl`, `trstplt`, `trstprt`. Note that these three variables are **not** present anymore, but only `poltrst`, the summary of the three. For our analysis we want to repeat that for the three sum scores from the beginning. Let's extend it:
+
+```{r}
+Quality <-
+  sqp_data %>%
+  sqp_sscore(df = ess7es, new_name = poltrst, trstprl, trstplt, trstprt) %>%
+  sqp_sscore(df = ess7es, new_name = serv, stfedu, stfhlth) %>%
+  sqp_sscore(df = ess7es, new_name = systmrsp, psppsgv, psppipl, ptcpplt) 
+```
+
+Let's see how it looks like.
+
+```{r}
+Quality
+```
+
+Great! We have our summarized `tibble`. Sometimes you'll want to manually append predictions such as quality estimates not available in the SQP API. For our case, we want to add the `quality` estimates of the variables `agea` and `eised` (remember those two we were excluding from before? we were excluding them because they're not available in the SQP data base). For that we can use `sqp_bind_metrics`.
+
+```{r}
+Quality <- 
+  Quality %>%
+  sqp_bind_metrics(agea, list(quality = 1)) %>%
+  sqp_bind_metrics(eisced, list(quality = 0.93))
+
+Quality
+```
+
+Note that `sqp_bind_metrics` is very strict, it accepts an `sqp` data frame (given by `get_estimates`) and it will match that the names of your estimates (`quality` here) matches exactly the same names in the SQP API. You can read more about it in `?sqp_bind_metrics`. Finally, let's order our results.
+
+```{r}
+variables_order <- c("poltrst",
+                     "serv",
+                     "systmrsp",
+                     "ppltrst",
+                     "polintr",
+                     "stflife",
+                     "stfeco",
+                     "agea",
+                     "eisced")
+
+Quality <- Quality[match(variables_order, Quality$question), ]
+```
+
+
+Briefly, let's also select these variables for ESS data.
+
+```{r}
+ess7escorr <- ess7es %>% select(variables_order)
+```
+
+## Correlations and correcting for measurement error
+
+Let's get the correlation of all the variables in the ESS data.
+```{r}
+# Exploratory correlation matrix (in order of the columns in data frame):
+original_corr_2 <- cor(ess7escorr, use = "complete.obs", method = "pearson")
+
+original_corr_2
+```
+
+`sqpr` has a very similar function to `cor` but allows to replace the diagonal. In our analysis we can use it to replace the diagonal with the quality estimates of all the variables.
+
+```{r}
+corr_q2 <-
+  sqp_correlate(x = ess7escorr,
+                diag_adj = Quality$quality,
+                use = "complete.obs",
+                method = "pearson")
+
+corr_q2
+```
+
+It's the same correlation coefficients but with the diagonal set to the quality of the estimates. But **note** that both the order of the variables `Quality` and the order of the variables in `ess7corr` should be the same! Otherwise we might confuse quality coefficients between variables.
+
+We often want to calculate the Common Method Variance (CMV) of some of these observed variables because they share common methods such as likert scales, etc. The `sqpr` package makes this very easy using the `sqpr_cmv` function. Supply the same `sqp_data`, the `Quality` dataset and `sqp_cmv` estimates the CMV between the variables specified (here only two)
+
+```{r}
+#subtract the cmv from the observed correlation
+corr_q2_cmv <-
+  sqp_cmv(x = corr_q2,
+          sqp_data = Quality,
+          stfeco, stflife)
+
+corr_q2_cmv
+```
+Perhaps you can't see it but the coefficient of the `stfeco` and `stflife` combination has gone down from `0.27` to `0.20`. More concretely, `sqp_cmv` calculates the CMV and subtracts it from the correlation coefficient. A more directly example is:
+
+```{r}
+cmv <-
+  Quality %>%
+  filter(question %in% c("stflife", "stfeco")) %>%
+  sqpr:::estimate_cmv()
+
+0.27 - cmv
+```
+However, I don't advise any user to use `sqpr:::estimate_cmv` because it has not been developed for public use. The ready-for use version is `sqp_cmv`.
+
+
+To finish off correcting for the measurement error, we need to turn that correlation matrix into a covariance matrix.
+
+```{r}
+corrected_corr <- corr_q2_cmv %>% select(-rowname) %>% as.matrix() %>% cov2cor()
+
+corrected_corr
+```
+
+Here we have a corrected matrix for both measurement error and for the common method variance of some variables. We can dump this into our `sem` models and get much better estimates.
+
+## Regression model
+
+Let's run two regression models taken from Weber & Werner (2018) and see how the results differ.
+
+```{r}
+model<- "poltrst ~ ppltrst + stflife + polintr + stfeco + serv + systmrsp + agea + eisced"
+
+# Model based on original correlation matrix
+fit <-
+  sem(model,
+      sample.cov=original_corr_2,
+      sample.nobs= 1624) 
+
+# Model based on corrected correlation matrix 
+fit.corrected <-
+  sem(model,
+      sample.cov=corrected_corr,
+      sample.nobs= 1624) 
+```
+
+Let's look at how much the coefficients differ
+
+```{r, fig.width = 7, fig.with = 9}
+coef_table <-
+  list(fit, fit.corrected) %>%
+  map(parameterestimates) %>%
+  map(~ filter(.x, lhs == "poltrst")) %>%
+  map(~ select(.x, rhs, est, ci.lower, ci.upper)) %>%
+  bind_rows() %>%
+  mutate(model = rep(c("original", "corrected"), each = 9))
+
+coef_table %>%
+  ggplot(aes(rhs, est, colour = model)) +
+  geom_linerange(aes(ymin = ci.lower, ymax = ci.upper), position = position_dodge(width = 0.5)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  labs(x = "Predictors", y = "Estimated coefficients") +
+  theme_bw()
+```
+
+It differs slightly between models (although strongly for the dependent variable). Another approach is getting the ratio between the corrected over the original model.
+
+```{r}
+# Relative increase (they don't only go up!):
+coef(fit.corrected) / coef(fit)
+```
+
+It looks like the results do differ substantially! Otherwise everything would be at `1`.
+
+Moreover, the R-squares of the models differ quite substantially.
+
+```{r}
+R2_uncorr <- inspect(fit, 'r2')
+R2 <- inspect(fit.corrected, 'r2')
+
+# Change of R2:
+R2 - R2_uncorr
+```
+
+This case-study shows how adjusting for measurement error and Common Method Variance (CMV) can improve your estimates. We hope that you find the `sqpr` package useful for your estimations.
+
+* Wiebke Weber and Hannah Werner (under review). "The correct(ed) political trust. A step-by-step explanation to correct for measurement error in the study of trust in political institutions.", Social Indicators Research.
+
