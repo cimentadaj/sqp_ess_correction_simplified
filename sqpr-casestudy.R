@@ -2,7 +2,7 @@ library("lavaan")
 library("tidyverse")
 library("essurvey")
 
-# devtools::install_github("recsm-asqme/sqpr")
+devtools::install_github("asqm/sqpr")
 library("sqpr")
 
 ### Set your credentials here
