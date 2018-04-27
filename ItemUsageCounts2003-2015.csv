@@ -1,0 +1,761 @@
+Section ID;SECTION NAME;LABEL 1;LABEL 2;ITEM TEXT;NO.OF.USES;NOTES;CURRENT CORE;ALL REPEATS;REL.REPEATS
+1;A core;TvTot;A1 (R1);On an average weekday, how much time, in total, do you spend watching television?;81;Asked in rounds 1-7;;7;6
+1;A core;TvPol;A2 (R1);On an average weekday, how much of your time watching television is spent watching news or programmes about politics and current affairs?;68;Asked in rounds 1-7;;7;6
+1;A core;RdTot;A3 (R1);On an average weekday, how much time, in total, do you spend listening to the radio?;33;Asked in rounds 1-7;;7;6
+1;A core;RdPol;A4 (R1);On an average weekday, how much of your time listening to the radio is spent listening to news or programmes about politics and current affairs;43;Asked in rounds 1-7;;7;6
+1;A core;NwspTot;A5 (R1);On an average weekday, how much time, in total, do you spend reading the newspapers?;55;Asked in rounds 1-7;;7;6
+1;A core;NwspPol;A6 (R1);And how much of this time is spent reading about politics and current affairs?;48;Asked in rounds 1-7;;7;6
+1;A core;NetUse;A7 (R1);How often do you use the internet, the World Wide Web or e-mail ? whether at home or at work ? for your personal use?;75;Asked in rounds 1-7;;7;6
+1;A core;;A1 (R8);On a typical week day, about how much time do you spend watching, reading or listening to news about politics and current affairs ?  ;0;Asked from Round 8 on;Yes;1;0
+1;A core;;A2 (R8);People can use the internet on different devices such as computers, tablets and smartphones. How often do you use the internet on these or any other devices? ;0;Asked from Round 8 on;Yes;1;0
+1;A core;;A3 (R8);Thinking about a typical weekday, approximately how many hours do you spend actively using the internet on a computer, tablet, smartphone or other device?;0;Asked from Round 8 on;Yes;1;0
+1;A core;PplTrst;A8 (R1);Would you say that most people can be trusted, or that you can?t be too careful in dealing with people?;388;All rounds;Yes;8;6
+1;A core;PplFair;A9 (R1);Do you think that most people would try to take advantage of you if they got the chance, or would they try to be fair?;193;All rounds;Yes;8;6
+1;A core;PplHlp;A10 (R1);Would you say that most of the time people try to be helpful or that they are mostly looking out for themselves? ;173;All rounds;Yes;8;6
+2;B core;PolIntr;B1 (R1);How interested would you say you are in politics?;176;All rounds;Yes;8;6
+2;B core;psppsgv;B1a (R7);How much would you say the political system in [country] allows people like you to have a say in what the government does?;0;Asked from Round 7 on;Yes;2;0
+2;B core;actrolg;B1b (R7);How able do you think you are to take an active role in a group involved with political issues?;0;Asked from Round 7 on;Yes;2;0
+2;B core;psppipl;B1c (R7);And how much would you say that the political system in [country] allows people like you to have an influence on politics?;0;Asked from Round 7 on;Yes;2;0
+2;B core;cptppol;B1d (R7);How confident are you in your own ability to participate in politics?;0;Asked from Round 7 on;Yes;2;0
+2;B core;ptcpplt;B1e (R7);How much would you say that politicians care what people like you think?;0;Asked in Round 7;;1;0
+2;B core;etapapl;B1f (R7);How easy do you personally find it to take part in politics;0;Asked in Round 7;;1;0
+2;B core;PolCmpl;B2 (R1);How often does politics seem so complicated that you can?t really understand what is going on?;59;Asked in Rounds 1-4;;4;4
+2;B core;PolActiv;B3 (R1);Do you think that you could take an active role in a group involved with political issues?;25;All rounds;Yes;8;6
+2;B core;PolDcs;B4 (R1);How difficult or easy do you find it to make your mind up about political issues?;46;Asked in Rounds 1-4;;4;4
+2;B core;PltCare;B5 (R1);Do you think that politicians in general care what people like you think?;29;All rounds;Yes;8;6
+2;B core;PltInVt;B6 (R1);Would you say that politicians are just interested in getting people?s votes rather than in people?s opinions?;24;All rounds;Yes;8;6
+2;B core;TrstPrl;B7 (R1);Trust in [country]?s parliament;259;All rounds;Yes;8;6
+2;B core;TrstLgl;B8 (R1);Trust in the legal system;209;All rounds;Yes;8;6
+2;B core;TrstPlc;B9 (R1);Trust in the police;180;All rounds;Yes;8;6
+2;B core;TrstPlt;B10 (R1);Trust in politicians?;219;All rounds;Yes;8;6
+2;B core;TrstPrt;B8 (R2);Trust in political parties;129;Asked from Round 2 on;Yes;7;5
+2;B core;TrstEP;B11 (R1);Trust in the European Parliament?;85;All rounds;Yes;8;6
+2;B core;TrstUN;B12 (R1);Trust in the United Nations?;61;All rounds;Yes;8;6
+2;B core;Vote;B13 (R1);Some people don?t vote nowadays for one reason or another. Did you vote in the last [country] national election in [month/year]?;187;All rounds;Yes;8;6
+2;B core;PrtVtxx;B14 (R1);Which party did you vote for in that election?;76;All rounds;Yes;8;6
+2;B core;ContPlt;B15 (R1);Contacted a politician, government or local government official;112;All rounds;Yes;8;6
+2;B core;WrkPrty;B16 (R1);Worked in a political party or action group;99;All rounds;Yes;8;6
+2;B core;WrkOrg;B17 (R1);Worked in another organisation or association;88;All rounds;Yes;8;6
+2;B core;Badge;B18 (R1);Worn or displayed a campaign badge/sticker;82;All rounds;Yes;8;6
+2;B core;SgnPtit;B19 (R1);Signed a petition;132;All rounds;Yes;8;6
+2;B core;PblDmn;B20 (R1);Taken part in a lawful public demonstration;141;All rounds;Yes;8;6
+2;B core;BctPrd;B21 (R1);Boycotted certain products;126;All rounds;Yes;8;6
+2;B core;BghtPrd;B22 (R1);Deliberately bought certain products for political, ethical or environmental reasons;51;Asked in Round 1;;1;1
+2;B core;DntMny;B23 (R1);Donated money to a political organisation or group;34;All rounds;Yes;8;6
+2;B core;IlglPst;B24 (R1);Participated in illegal protest activities;32;All rounds;Yes;8;6
+2;B core;;B22 (R8);Posted or shared anything about politics online, for example on Facebook, Twitter, blogs or via email?;0;Asked from Round 8 on;Yes;1;0
+2;B core;ClsPrty;B25a (R1);Is there a particular political party you feel closer to than all the other parties?;64;All rounds;Yes;8;6
+2;B core;PrtClsxx;B25b (R1);Which one?;12;All rounds;Yes;8;6
+2;B core;PrtDgCl;B25c (R1);How close do you feel to this party?;10;All rounds;Yes;8;6
+2;B core;MmbPrty;B26 (R1);Are you a member of any political party?;58;All rounds;Yes;8;6
+2;B core;PrtMbxx;B27 (R1);Which one?;1;All rounds;Yes;8;6
+2;B core;implvdm;B18d (R6);How important is it for you to live in a country that is governed democratically?;2;Asked in Round 6 (part of Democracy module);;1;1
+2;B core;dmcntov;B18e (R6);How democratic do you think [country] is overall? ;0;Asked in Round 6 (part of Democracy module);;1;1
+2;B core;LRScale;B28 (R1);In politics people sometimes talk of ?left? and ?right?. Where would you place yourself on this scale?;257;All rounds;Yes;8;6
+2;B core;StfLife;B29 (R1);All things considered, how satisfied are you with your life as a whole nowadays?;245;All rounds;Yes;8;6
+2;B core;StfEco;B30 (R1);On the whole how satisfied are you with the present state of the economy in [country]?;129;All rounds;Yes;8;6
+2;B core;StfGov;B31 (R1);Now thinking about the [country] government, how satisfied are you with the way it is doing its job?;95;All rounds;Yes;8;6
+2;B core;StfDem;B32 (R1);And on the whole, how satisfied are you with the way democracy works in [country]?;141;All rounds;Yes;8;6
+2;B core;StfEdu;B33 (R1);Now, using this card, please say what you think overall about the state of education in [country] nowadays?;57;All rounds;Yes;8;6
+2;B core;StfHlth;B34 (R1);Still using this card, please say what you think overall about the state of health services in [country] nowadays?;77;All rounds;Yes;8;6
+2;B core;EUFtF;B34 (R2);Now thinking about the European Union, some say European unification should go further. Others say it has already gone too far?;23;NOT asked in Rounds 1, 4, 5;Yes;5;3
+2;B core;ImSmEtn;B35 (R2);To what extent do you think [country] should allow people of the same race or ethnic group as most [country?s] people to come and live here?;78;All rounds (part of Immigration module in Rounds 1 and 7);Yes;8;6
+2;B core;ImDfEtn;B36 (R2);How about people of a different race or ethnic group from most [country] people?;99;All rounds (part of Immigration module in Rounds 1 and 7);Yes;8;6
+2;B core;ImPcntr;B37 (R2);How about people from the poorer countries outside Europe?;82;All rounds (part of Immigration module in Rounds 1 and 7);Yes;8;6
+2;B core;ImBGEco;B38 (R2);Would you say it is generally bad or good for [country]?s economy that people come to live here from other countries?;164;All rounds (part of Immigration module in Rounds 1 and 7);Yes;8;6
+2;B core;ImUEClt;B39 (R2);Would you say that [country]?s cultural life is generally undermined or enriched by people coming to live here from other countries?;188;All rounds (part of Immigration module in Rounds 1 and 7);Yes;8;6
+2;B core;ImWBCnt;B40 (R2);Is [country] made a worse or a better place to live by people coming to live here from other countries?;158;All rounds (part of Immigration module in Rounds 1 and 7);Yes;8;6
+2;B core;DcLEnv;B35 (R1);Protecting the environment - at which level the policies should mainly be decided?;7;Asked in Round 1 (part of the Citizenship module);;1;1
+2;B core;DcLCrm;B36 (R1);Fighting against organised crime - at which level the policies should mainly be decided?;7;Asked in Round 1 (part of the Citizenship module);;1;1
+2;B core;DcLAgr;B37 (R1);Agriculture - at which level the policies should mainly be decided?;7;Asked in Round 1 (part of the Citizenship module);;1;1
+2;B core;DcLDef;B38 (R1);Defence - at which level the policies should mainly be decided?;6;Asked in Round 1 (part of the Citizenship module);;1;1
+2;B core;DcLWlfr;B39 (R1);Social welfare - at which level the policies should mainly be decided?;7;Asked in Round 1 (part of the Citizenship module);;1;1
+2;B core;DcLAid;B40 (R1);Aid to developing countries - at which level the policies should mainly be decided?;7;Asked in Round 1 (part of the Citizenship module);;1;1
+2;B core;DcLMig;B41 (R1);Immigration and refugees - at which level the policies should mainly be decided?;9;Asked in Round 1 (part of the Citizenship module);;1;1
+2;B core;DcLIntr;B42 (R1);Interest rates - at which level the policies should mainly be decided?;7;Asked in Round 1 (part of the Citizenship module);;1;1
+2;B core;GinvEco;B43 (R1);The less that government intervenes in the economy, the better it is for [country];18;All rounds;Yes;8;6
+2;B core;GincDif;B44 (R1);The government should take measures to reduce differences in income levels;148;"All rounds; a similar item in R6 Democracy (E29)";Yes;8;6
+2;B core;NeedTrU;B45 (R1);Employees need strong trade unions to protect their working conditions and wages;25;All rounds;Yes;8;6
+2;B core;FreeHms;B46 (R1);Gay men and lesbians should be free to live their own life as they wish;72;All rounds;Yes;8;6
+2;B core;;B35 (R8);If a close family member was a gay man or a lesbian, I would feel ashamed.;0;Asked from Round 8 on;Yes;1;0
+2;B core;;B36 (R8);Gay male and lesbian couples should have the same rights to adopt children as straight couples;0;Asked from Round 8 on;Yes;1;0
+2;B core;LawObey;B47 (R1);Whatever the circumstances, the law should always be obeyed;4;Asked in Round 1 (part of the Citizenship module);;1;1
+2;B core;PrtyBan;B48 (R1);Political parties that wish to overthrow democracy should be banned;10;Asked in Rounds 1-5;;5;5
+2;B core;EcoHEnv;B49 (R1);Economic growth always ends up harming the environment;0;Asked in Round 1;;1;1
+2;B core;SciSEnv;B50 (R1);Modern science can be relied on to solve our environmental problems;3;Asked in Rounds 1-5;;5;5
+3;C core;Happy;C1 (R1);Taking all things together, how happy would you say you are?;172;All rounds;Yes;8;6
+3;C core;SclMeet;C2 (R1);How often do you meet socially with friends, relatives or work colleagues?;179;All rounds;Yes;8;6
+3;C core;InmDisc;C3 (R1);Do you have anyone with whom you can discuss intimate and personal matters?;66;All rounds;Yes;8;6
+3;C core;SclAct ;C4 (R1);Compared to other people of your age, how often would you say you take part in social activities?;55;All rounds;Yes;8;6
+3;C core;CrmVct ;C5 (R1);Have you or a member of your household been the victim of a burglary or assault in the last 5 years?;41;All rounds;Yes;8;6
+3;C core;AeSfDrk;C6 (R1);How safe do you ? or would you - feel walking alone in this area after dark?;73;All rounds;Yes;8;6
+3;C core;Brghmwr;C7 (R3);How often, if at all, do you worry about your home being burgled?;23;Asked in Rounds 3, 4 and 5;;3;3
+3;C core;Brghmef;C8 (R3);Does this worry about your home being burgled have a?serious effect on the quality of your life?;8;Asked in Rounds 3, 4 and 5;;3;3
+3;C core;Crvctwr;C9 (R3);How often, if at all, do you worry about becoming a victim of violent crime?;25;Asked in Rounds 3, 4 and 5;;3;3
+3;C core;crvctef;C10 (R3);Does this worry about becoming a victim of violent crime have a?serious effect on the quality of your life?;6;Asked in Rounds 3, 4 and 5;;3;3
+3;C core;trrenyr;C11 (R3);(how likely) Do you think a terrorist attack somewhere in Europe during the next twelve months is?;4;Asked in Rounds 3 and 4;;2;2
+3;C core;trrcnyr;C12 (R3);(how likely) Do you think a terrorist attack somewhere somewhere in [COUNTRY] during the next twelve months is?;10;Asked in Rounds 3 and 4;;2;2
+3;C core;trrprsn;C13 (R3);If a man is suspected of planning a terrorist attack in [COUNTRY], the police should have the power to keep him in prison until they are satisfied he was not involved.;6;Asked in Rounds 3 and 4;;2;2
+3;C core;trrtort;C14 (R3);Torturing a prisoner in a [COUNTRY?s] prison is never justified, even if it might provide information that could prevent a terrorist attack.;3;Asked in Rounds 3 and 4;;2;2
+3;C core;Health;C7 (R1);How is your health in general?;238;All rounds;Yes;8;6
+3;C core;HlthHmp;C8 (R1);Are you hampered in your daily activities in any way by any longstanding illness, or disability, infirmity or mental health problem?;48;All rounds;Yes;8;6
+3;C core;;C9 (R8);People might feel different levels of attachment to the country where they live and to Europe. How attached do you feel to [country]?                                                      ;0;Asked from Round 8 on;Yes;1;0
+3;C core;;C10 (R8);And how attached do you feel to Europe?;0;Asked from Round 8 on;Yes;1;0
+3;C core;RlgBlg ;C9 (R1);Do you consider yourself as belonging to any particular religion or denomination?;75;All rounds;Yes;8;6
+3;C core;RlgDnm;C10 (R1);Which one? (Denomination);144;All rounds;Yes;8;6
+3;C core;RlgBlgE;C11 (R1);Have you ever considered yourself as belonging to any particular religion or denomination?;4;All rounds;Yes;8;6
+3;C core;RlgDnmE;C12 (R1);Which one? (Denomination);1;All rounds;Yes;8;6
+3;C core;RlgDgr;C13 (R1);Regardless of whether you belong to a particular religion, how religious would you say you are?;221;All rounds;Yes;8;6
+3;C core;RlgAtnd;C14 (R1);Apart from special occasions such as weddings and funerals, about how often do you attend religious services nowadays?;208;All rounds;Yes;8;6
+3;C core;Pray;C15 (R1);Apart from when you are at religious services, how often, if at all, do you pray?;61;All rounds;Yes;8;6
+3;C core;DscGrp;C16 (R1);Would you describe yourself as being a member of a group that is discriminated against in this country?;82;All rounds;Yes;8;6
+3;C core;DscrRce...;C17 (R1);On what grounds is your group discriminated against?;22;All rounds;Yes;8;6
+3;C core;CtzCntr;C18 (R1);Are you a citizen of [country]?;81;All rounds;Yes;8;6
+3;C core;Ctzship;C19 (R1);What citizenship do you hold?;17;All rounds;Yes;8;6
+3;C core;BrnCntr;C20 (R1);Were you born in [country]? ;215;All rounds ;Yes;8;6
+3;C core;CntBrth ;C21 (R1);In which country were you born?;73;All rounds;Yes;8;6
+3;C core;LiveCntr;C22 (R1);How long ago did you first come to live in [country]?;48;All rounds;Yes;8;6
+3;C core;LngHom ;C23 (R1);What language or languages do you speak most often at home?;39;All rounds;Yes;8;6
+3;C core;BlgEtMG;C24 (R1);Do you belong to a minority ethnic group in [country]?;99;All rounds;Yes;8;6
+3;C core;FaCntr;C25 (R1);Was your father born in [country]?;123;All rounds;Yes;8;6
+3;C core;FaCntn ;C26 (R1);In which country was your father born?;50;Asked from Round 2 on (Continent level in Round 1);Yes;7;5
+3;C core;MoCntr;C27 (R1);Was your mother born in [country]?;123;All rounds;Yes;8;6
+3;C core;MoCntn;C28 (R1);In which country was your mother born?;49;Asked from Round 2 on (Continent level in Round 1);Yes;7;5
+4;F core;WrkCtr;F14 (R1);Do/did you have a work contract of limited 7 unlimited duration;76;All rounds;Yes;8;6
+4;F core;WkDcOrg;F18 (R2);How much the management at your work  allows/allowed you to decide how your own daily work is organised?;71;All rounds (part of the Citizenship module in Round 1);Yes;8;6
+4;F core;Iorgact;F19 (R2);How much the management at your work  allows/allowed you to influence policy decisions about activities of the organisation? ;36;Asked from Round 2 on;Yes;7;5
+4;F core;wkdcpce;F19a (R1);How much the management at your work  allows/allowed you to choose or change your pace of work? ;35;All rounds;Yes;8;6
+4;F core;Uemp3M;F25 (R1);Have you ever been unemployed and seeking work for a period of more than three months?;47;All rounds;Yes;8;6
+4;F core;Uempl12M;F26 (R1);Has any of these periods lasted for 12 months or more?;26;All rounds;Yes;8;6
+4;F core;Uemp5Yr;F27 (R1);Have any of these periods been within the past 5 years?;26;All rounds;Yes;8;6
+4;F core;Wrkac6m;F26 (R2);In the last 1No years have you done any paid work in another country for a period of 6 months or more?;20;All rounds;Yes;8;6
+4;F core;MbTrU;F28 (R1);Are you or have you ever been a member of a trade union or similar organisation?;124;All rounds;Yes;8;6
+4;F core;HincSrc;F29 (R1);What is the main source of income in your household?;28;All rounds;Yes;8;6
+4;F core;HincFel;F31 (R1);Which of the descriptions on this card comes closest to how you feel about your household?s income nowadays?;254;All rounds;Yes;8;6
+4;F core;BrwMny;F32 (R1);If for some reason you were in serious financial difficulties and had to borrow money to make ends meet, how difficult or easy would that be?;20;Asked in Rounds 1-5;;5;5
+4;F core;AtnCrse;F57 (R1);During the last twelve months, have you taken any course or attended any lecture or conference to improve your knowledge or skills for work?;16;All rounds;Yes;8;6
+4;F core;anctry1;F61 (R7);How would you describe your ancestry?;;Asked from Round 7 on (immigration background, 3rd and further generation); ;2;0
+5;Section H - PVQ;PVQ;H;Human values scale - Portrait Values Questionnaire (any item) ;262;All rounds;Yes;8;6
+6;R1 Immigration;ImgEtn;D1;Thinking of people coming to live in [country] nowadays from other countries, would you say that?most are of the same race or ethnic group as the majority?...;1;;;1;1
+6;R1 Immigration;EImGrpC;D2;Would you say that?most come from the richer countries of Europe?;2;;;1;1
+6;R1 Immigration;mgRpc;D3;Would you say that?most come from the richer countries outside Europe?...;2;;;1;1
+6;R1 Immigration;ImSmEtn;D4;To what extent do you think [country] should allow people of the same race or ethnic group as most [country?s] people to come and live here?;-78;made into a core item;;-8;-6
+6;R1 Immigration;ImDfEtn;D5;How about people of a different race or ethnic group from most [country] people?;-99;made into a core item;;-8;-6
+6;R1 Immigration;EImRcnt;D6;To what extent do you think [country] should allow people from the richer countries in Europe to come and live here?;26;;;1;1
+6;R1_R8 Immigration;EImPcnt;D7;And how about people from the poorer countries in Europe?;34;B30a in R8 Immigration;;2;1
+6;R1 Immigration;ImRcntr;D8;To what extent do you think [country] should allow people from the richer countries outside Europe to come and live here?;31;;;1;1
+6;R1 Immigration;mPcntr;D9;How about people from the poorer countries outside Europe?;-82;made into a core item;;-8;-6
+6;R1_R8 Immigration;QfImEdu;D10;Have good educational qualifications (how important to allow immigration);11;D1 in R8 Immigration;;2;1
+6;R1 Immigration;QfImFml;D11;Have close family living here? (how important to allow immigration);4;;;1;1
+6;R1_R8 Immigration;QfImLng;D12;Be able to speak [country]?s official language(s) (how important to allow immigration);12;D2 in R8 Immigration;;2;1
+6;R1_R8 Immigration;QfImChr;D13;Come from a Christian background? (how important to allow immigration);13;D3 in R8 Immigration;;2;1
+6;R1_R8 Immigration;QfImWht;D14;Be white? (how important to allow immigration);12;D4 in R8 Immigration;;2;1
+6;R1 Immigration;QfImWlt;D15;Be wealthy? (how important to allow immigration);2;;;1;1
+6;R1_R8 Immigration;QfImWSk;D16;Have work skills that [country] needs? (how important to allow immigration);11;D5 in R8 Immigration;;2;1
+6;R1_R8 Immigration;QfImCmt;D17;Be committed  to the way of life in [country]? (how important to allow immigration);14;D6 in R8 Immigration;;2;1
+6;R1 Immigration;ImWgDwn;D18;Average wages and salaries are generally brought down by people coming to live and work here;31;;;1;1
+6;R1 Immigration;ImHEcoP;D19;People who come to live and work here generally harm the economic prospects of the poor more than the rich ;23;;;1;1
+6;R1 Immigration;ImFlJob;D20;People who come to live and work here help to fill jobs where  there are shortages of workers ;15;;;1;1
+6;R1 Immigration;ImUnpLv;D21;If people who have come to live and work here are unemployed for a long period, they should be made to leave ;23;;;1;1
+6;R1 Immigration;ImSmRgt;D22;People who have come to live here should be given the same rights as everyone else ;20;;;1;1
+6;R1 Immigration;ImSCrLv;D23;If people who have come to live here commit a serious crime, they should41 be made to leave ;14;;;1;1
+6;R1 Immigration;ImACrLv;D24;If people who have come to live here commit any crime, they should be made to leave;18;;;1;1
+6;R1_R8 Immigration;ImTCJob;D25;Would you say that people who come to live here generally take jobs away from workers in [country], or generally help to create new jobs? ;69;D7 in R8 Immigration;;2;1
+6;R1_R8 Immigration;ImBleCo;D26;On balance, do you think people who come here take out more than they put in or put in more than they take out?;69;D8 in R8 Immigration;;2;1
+6;R1 Immigration;ImBGEco;D27;Would you say it is generally bad or good for [country]?s economy that people come to live here from other countries?;-164;made into a core item;;-8;-6
+6;R1 Immigration;ImUEClt;D28;Would you say that [country]?s cultural life is generally undermined or enriched by people coming to live here from other countries?;-188;made into a core item;;-8;-6
+6;R1 Immigration;ImWBCnt;D29;Is [country] made a worse or a better place to live by people coming to live here from other countries?;-158;made into a core item;;-8;-6
+6;R1_R8 Immigration;ImWBCrm;D30;Are [country]?s crime problems made worse or better by people coming to live here from other countries?;51;D9 in R8 Immigration;;2;1
+6;R1 Immigration;ImBGHCt;D31;When people leave their countries to come to live in [country], do you think it has a bad or good effect on those countries in the long run?;1;;;1;1
+6;R1 Immigration;CtBfSMv;D32;All countries benefit if people can move to countries where their skills are most needed;4;;;1;1
+6;R1 Immigration;ImRspRc;D33;Richer countries have a responsibility to accept people from poorer countries;3;;;1;1
+6;R1 Immigration;ImSEtBs;D34;Now thinking again of people who have come to live in [country] from another country who are of the same race or ethnic group as most [country] people, how much would you mind or not mind if someone like this was appointed as your boss?;7;;;1;1
+6;R1 Immigration;ImSEtMr;D35;Married a close relative of yours?;8;;;1;1
+6;R1_R8 Immigration;ImDEtBs;D36;And now thinking of people who have come to live in [country] from another country who are of a different race or ethnic group from most [country] people, how much would you mind or not mind if someone like this was appointed as your boss?;15;D11 in R8 Immigration;;2;1
+6;R1_R8 Immigration;ImDetMr;D37;Married a close relative of yours?;17;D12 in R8 Immigration;;2;1
+6;R1 Immigration;IdEtALv;D38;Suppose you were choosing where to live. Which of the three types of area on this card would you ideally wish to live in?;5;;;1;1
+6;R1_R8 Immigration;AcEtALv;D39;And now using this card, how would you describe the area where you currently live?;25;D12 in R8 Immigration;;2;1
+6;R1_R8 Immigration;PplSTrd;D40;It is better for a country if almost everyone shares the same customs and traditions ;42;D13 in R8 Immigration;;2;1
+6;R1 Immigration;VrtRlg;D41;It is better for a country if there are a variety of different religions;19;;;1;1
+6;R1 Immigration;ComnLng;D42;It is better for a country if almost everyone is able to speak at least one common language ;9;;;1;1
+6;R1 Immigration;AlwSpSc;D43;Communities of people who have come to live here should be allowed to educate their children in their own separate schools if they wish ;4;;;1;1
+6;R1 Immigration;StImRdT;D44;If a country wants to reduce tensions it should stop immigration;10;;;1;1
+6;R1_R8 Immigration;LwDscWp;D45;A law against racial or ethnic discrimination in the workplace. (how good or bad);6;D14 in R8 Immigration;;2;1
+6;R1 Immigration;LwPEth;D46;A law against promoting racial or ethnic hatred (how good or bad);4;;;1;1
+6;R1 Immigration;ImgFrnd;D47;Do you have any friends who have come to live in [country] from another country?;46;;;1;1
+6;R1 Immigration;ImgClg;D48;Do you have any colleagues at work who have come to live in [country] from another country?;19;;;1;1
+6;R1 Immigration;ShrRfg;D49;[country] has more than its fair share of people applying for refugee status ;8;;;1;1
+6;R1 Immigration;RfgAWrk;D50;While their applications for refugee status are being considered, people should be allowed to work in [country] ;6;;;1;1
+6;R1_R8 Immigration;GvRfgAp;D51;The government should be generous in judging people?s applications for refugee status ;8;D15 in R8 Immigration;;2;1
+6;R1 Immigration;RfgFrPc;D52;Most applicants for refugee status aren?t in real fear of persecution in their own countries ;5;;;1;1
+6;R1 Immigration;RfgDtCn;D53;While their cases are being considered, applicants should be kept in detention centres ;5;;;1;1
+6;R1 Immigration;RfgGvFn;D54;Refugees whose applications While their cases are being considered, the country] government should give ;6;;;1;1
+6;R1 Immigration;RfgBFml;D55;financial support to applicants are granted should be entitled to bring in their close family members;8;;;1;1
+6;R1_R8 Immigration;NoImBro;D56;Out of every 100 people living in [country], how many do you think were born outside [country]?;18;D16 in R8 Immigration;;2;1
+6;R1 Immigration;CpImPop;D57;Compared to other European countries of about the same size as [country], do you think that more or fewer people to come and live here from other countries?;5;;;1;1
+6;R1 Immigration;BLnCmIg;D58;How do you think the number of people leaving [country] nowadays compares to the number coming to live in [country]?;0;;;1;1
+7;R1 Citizenship;Sptc;E1;A sports club or club for out-door activities? (member, participant, donated money, voluntary work, friends);113;;;1;1
+7;R1 Citizenship;CltO;E2;An organization for cultural or hobby activities?;111;;;1;1
+7;R1 Citizenship;TrU;E3;A trade union? ;113;;;1;1
+7;R1 Citizenship;PrFO;E4;A business, professional, or farmers? organisation?;112;;;1;1
+7;R1 Citizenship;CnsO;E5;A consumer or automobile organisation?;106;;;1;1
+7;R1 Citizenship;HmnO;E6;An organisation for humanitarian aid, human rights, minorities, or immigrants?;111;;;1;1
+7;R1 Citizenship;EPAO;E7;Organisation for environmental protection, peace or animal rights ;109;;;1;1
+7;R1 Citizenship;RlgO;E8;A religious or church organisation?;108;;;1;1
+7;R1 Citizenship;Prty;E9;A political party? ;100;;;1;1
+7;R1 Citizenship;SETO;E10;An organisation for science, education, or teachers and parents?;107;;;1;1
+7;R1 Citizenship;SclC;E11;A social club, club for the young, the retired/elderly, women, or friendly societies?;105;;;1;1
+7;R1 Citizenship;OthV;E12;Any other voluntary organization such as the ones I?ve just mentioned?;93;;;1;1
+7;R1 Citizenship;ImpFml;E13;Family - how important in your life?;8;;;1;1
+7;R1 Citizenship;ImpFrds;E14;Friends - how important in your life?;13;;;1;1
+7;R1 Citizenship;ImpLsrT;E15;Leisure time - how important in your life?;6;;;1;1
+7;R1 Citizenship;ImpPol;E16;Politics - how important in your life?;11;;;1;1
+7;R1 Citizenship;ImpWrk;E17;Work - how important in your life?;13;;;1;1
+7;R1 Citizenship;ImpRlg;E18;Religion - how important in your life?;20;;;1;1
+7;R1 Citizenship;ImpVo;E19;Voluntary organizations - how important in your life?;9;;;1;1
+7;R1 Citizenship;HlpPpl;E20;Not counting anything you do for your family, in your work, or within voluntary organisations, how often, if at all, do you actively provide help for other people?;20;also in R3 Well-being (E2);;2;2
+7;R1 Citizenship;DiscPol;E21;Still using this card, how often would you say you discuss politics and current affairs?;18;;;1;1
+7;R1 Citizenship;ImpSPpl;E22;To be a good citizen, how important would you say it is for a person to?support people who are worse off than themselves?;23;;;1;1
+7;R1 Citizenship;ImpVote;E23;Vote in elections?;20;;;1;1
+7;R1 Citizenship;ImpObLw;E24;Always obey laws and regulations?;15;;;1;1
+7;R1 Citizenship;ImpOpin;E25;Form their own opinion, independently of others?;13;;;1;1
+7;R1 Citizenship;ImpAvo;E26;Be active in voluntary organisations?;18;;;1;1
+7;R1 Citizenship;ImpAPol;E27;Be active in politics?;14;;;1;1
+7;R1 Citizenship;YrLvdAe;E28;How long have you lived in this area?;16;;;1;1
+7;R1 Citizenship;WrkFlex;E30;How much the management at your work allows you? to be flexible in your working hours?;12;;;1;1
+7;R1 Citizenship;WkDcOrg;E31;To decide how your own daily work is organised?;-71;made into a core item;;-8;-6
+7;R1 Citizenship;WkEnvin;E32;To influence your environment?;7;;;1;1
+7;R1 Citizenship;WkDcsin;E33;To influence decisions about the general direction of your work?;9;;;1;1
+7;R1 Citizenship;WkChTsk;E34;To change your work tasks if you wish to?;10;;;1;1
+7;R1 Citizenship;SmBtJob;E35;How difficult or easy would it be for you ? to get a similar or better job with another employer if you wanted to??.;23;also in R2 Family (G79);;2;2
+7;R1 Citizenship;STrtBsn;E36;To start your own business if you wanted to?;3;;;1;1
+7;R1 Citizenship;TruWrkp;E37;Can I just check, is there a trade union or similar organisation at your work place?;7;;;1;1
+7;R1 Citizenship;TruSay;E38;How difficult or easy is it ?to have a say in the actions taken by the trade union?;1;;;1;1
+7;R1 Citizenship;TruIWkp;E39;For the trade union to influence conditions at your place of work?;2;;;1;1
+7;R1 Citizenship;StfHWkp;E40;During the last 12 months, how satisfied or dissatisfied have you generally been with the way  hings have been handled in your work or workplace?;3;;;1;1
+7;R1 Citizenship;ImprWkc;E41;During the last 12 months, have you made any attempt to improve conditions at work, or to prevent them from getting worse?;1;;;1;1
+7;R1 Citizenship;ImprWCR;E42;Did any improvements result?;1;;;1;1
+7;R1 Citizenship;ImprWCT;E43;Regardless of the outcome, how fairly or unfairly were you treated in your attempt to improve things at work? ;3;;;1;1
+8;R2 Health;mdlswgt;D1;How much do you approve or disapprove if otherwise healthy people use medicines to? lose weight? ;1;;;1;1
+8;R2 Health;mdhair;D2;...reduce hair loss? ;1;;;1;1
+8;R2 Health;mdmemo;D3;...improve their memory?;1;;;1;1
+8;R2 Health;mdhappy;D4;...feel happier;1;;;1;1
+8;R2 Health;mdsexlf;D5;...improve their sex life?;1;;;1;1
+8;R2 Health;hltherb;D6;When you have a health problem, how often do you use herbal remedies?;0;;;1;1
+8;R2 Health;mdsdeff;D7;When you are prescribed a medicine, how often do you worry about side effects?;2;;;1;1
+8;R2 Health;prfmddc;D8;When you have a health problem, how often do you prefer a medicine prescribed by a medical doctor as opposed to one that you can just buy or one that is recommended by some other practitioner?;0;;;1;1
+8;R2 Health;ddprsmd;D9;Please think back to the last time a doctor prescribed you a medicine you had not had before. Which statement on the card  comes closest to what you did with this prescription?;6;;;1;1
+8;R2 Health;usmdprs;D10;Are you regularly taking any pills or using any medication prescribed for you?;2;;;1;1
+8;R2 Health;usmprse;D11;Many people occasionally use medicine prescribed for somebody else. In the last 5 years, how often have you taken or used a prescribed medicine that was prescribed for someone else?;2;;;1;1
+8;R2 Health;advsthr;D12;Suppose you had a very sore throat. Who, if anyone, would you go to first for advice or treatment? ;1;;;1;1
+8;R2 Health;prcsthr;D12a;Which if any of these types of practitioner do you think you would go to first for advice or treatment? ;0;;;1;1
+8;R2 Health;advhach;D13;Suppose now that you had a serious headache. Who, if anyone, would you go to first for advice or treatment? ;1;;;1;1
+8;R2 Health;prchach;D13a;Which if any of these types of practitioner do you think you would go to first for advice or treatment? ;0;;;1;1
+8;R2 Health;advslep;D14;Suppose now that you had serious sleeping problems. Who, if anyone, would you go to first for advice or treatment?;1;;;1;1
+8;R2 Health;prcslep;D14a;Which if any of these types of practitioner do you think you would go to first for advice or treatment? ;0;;;1;1
+8;R2 Health;advbach;D15;Suppose now that you had serious backache. Who, if anyone, would you go to first for advice or treatment? ;1;;;1;1
+8;R2 Health;prcbach;D15a;Which if any of these types of practitioner do you think you would go to first for advice or treatment? ;0;;;1;1
+8;R2 Health;chsrgp;D16;In choosing your regular GP, do you feel that you have... ... enough choice, or not enough choice?;4;;;1;1
+8;R2 Health;prfsmdc;D17;Some people prefer to see the same doctor for all their everyday health problems. Others prefer to see different doctors for different everyday health problems. How about you?;3;;;1;1
+8;R2 Health;tmcnsdc;D18;How many times in the past twelve months have you consulted a doctor for yourself? ;5;;;1;1
+8;R2 Health;illcure;D19;How much you agree or disagree with each of these statements:? Most illnesses cure themselves without having to go to a doctor.;0;;;1;1
+8;R2 Health;pplcure;D20;When suffering from illnesses like the common cold, people can cure themselves.;2;;;1;1
+8;R2 Health;pprlydc;D21;People rely too much on their doctors rather than themselves to keep healthy.;2;;;1;1
+8;R2 Health;psmdcpr;D22;When people are sure about what medicine they need, their doctor should just prescribe it for them.;2;;;1;1
+8;R2 Health;follwdc;D23;It is best to follow doctors? orders. ;1;;;1;1
+8;R2 Health;dsplvpr;D24;I generally feel a bit disappointed when I leave a doctor?s surgery without a prescription.;3;;;1;1
+8;R2 Health;dckptrt;D25;How often you think the following applies to doctors in general: Doctors keep the whole truth from their patients. ;2;;;1;1
+8;R2 Health;dctreql;D26;GPs treat their patients as their equals. ;3;;;1;1
+8;R2 Health;dcdisc;D27;Before doctors decide on a treatment, they discuss it with their patient.;3;;;1;1
+8;R2 Health;ptnrlcq;D28;Patients are reluctant to ask their doctor all the questions they?d like to ask.;2;;;1;1
+8;R2 Health;dcadmms;D29;Doctors are willing to admit their mistakes to their patients.;2;;;1;1
+8;R2 Health;dcdfcwr;D30;Doctors use words or phrases that their patients find difficult to understand;2;;;1;1
+9;R2 Econ morality;ctzhlpo;E1;Citizens should spend at least some of their free time helping others ;7;;;1;1
+9;R2 Econ morality;scbevts;E2;Society would be better off if everyone just looked after themselves;3;;;1;1
+9;R2 Econ morality;ctzchtx;E3;Citizens should not cheat on their taxes;16;;;1;1
+9;R2 Econ morality;tstrprh;E4;How much would you trust ?. Plumbers, builders, car mechanics and other repair people;4;;;1;1
+9;R2 Econ morality;tstfnch;E5;Financial companies such as banks or insurers;6;;;1;1
+9;R2 Econ morality;tstpboh;E6;Public officials;7;;;1;1
+9;R2 Econ morality;rprochg;E7;How often things happened to you in the last five years... A plumber, builder, car mechanic or other repair person overcharged you or did unnecessary work;3;;;1;1
+9;R2 Econ morality;fodcncl;E8;You were sold food that was packed to conceal the worse bits;3;;;1;1
+9;R2 Econ morality;bnkfldl;E9;A bank or insurance company failed to offer you the best deal you were entitled to;4;;;1;1
+9;R2 Econ morality;scndhfl;E10;You were sold something second-hand that quickly proved to be faulty;3;;;1;1
+9;R2 Econ morality;pboafvr;E11;A public official asked you for a favour or a bribe in return for a service;6;;;1;1
+9;R2 Econ morality;wrytrdh;E12;Experiences of being treated dishonestly over the past five years?. How worried are you that things like this will happen to you?;3;;;1;1
+9;R2 Econ morality;pyavtxw;E13;...Someone paying cash with no receipt so as to avoid paying VAT or other taxes? (how wrong);6;;;1;1
+9;R2 Econ morality;slcnflw;E14;...Someone selling something second-hand and concealing some or all of its faults?;4;;;1;1
+9;R2 Econ morality;flinsrw;E15;...Someone making an exaggerated or false insurance claim?;6;also in R5 Criminal Justice (D1);;2;2
+9;R2 Econ morality;pbofvrw;E16;...A public official asking someone for a favour or bribe in return for their services?;9;;;1;1
+9;R2 Econ morality;mnyacth;E17;If you want to make money, you can?t always act honestly;4;;;1;1
+9;R2 Econ morality;olwmsop;E18;You should always strictly obey the law even if it means missing good opportunities;7;;;1;1
+9;R2 Econ morality;ignrlaw;E19;Occasionally, it is alright to ignore the law and do what you want to;2;;;1;1
+9;R2 Econ morality;bsnprft;E20;Nowadays businesses are only interested in making profits and not in improving service or quality for customers;3;;;1;1
+9;R2 Econ morality;frmwktg;E21;Nowadays large firms work together in order to keep their prices unnecessarily high;1;;;1;1
+9;R2 Econ morality;cmprcti;E22;Nowadays customers and consumers are in a better position to protect their interests;1;;;1;1
+9;R2 Econ morality;frdbnft;E23;Suppose you planned to get benefits or services you were not entitled to. How many of your friends or relatives do you think you could ask for support?;4;;;1;1
+9;R2 Econ morality;kptchng;E24;... Kept the change from a shop assistant or waiter knowing they had given you too much? (how often in 5 years);6;;;1;1
+9;R2 Econ morality;payavtx;E25;...Paid cash with no receipt so as to avoid paying VAT or other taxes?;10;;;1;1
+9;R2 Econ morality;slcnsfl;E26;...Sold something second-hand and concealed some or all of its faults?;5;;;1;1
+9;R2 Econ morality;musdocm;E27;...Misused or altered a card or document to pretend you were eligible for something you were not?;5;;;1;1
+9;R2 Econ morality;flinsr;E28;...Made an exaggerated or false insurance claim?;10;also in R5 Criminal Justice (D43);;2;2
+9;R2 Econ morality;pbofvr;E29;...Offered a favour or bribe to a public official in return for their services?;10;;;1;1
+9;R2 Econ morality;flgvbnf;E30;...Over-claimed or falsely claimed government benefits such as social security or other benefits?;6;;;1;1
+10;R2_R5 Family;gdsprt;G1;I have felt cheerful and in good spirits (over the last two weeks);26;"G1-G5: WHO-Five Well-being index; G1 in R5 Family";;2;2
+10;R2_R5 Family;clmrlx;G2;I have felt calm and relaxed;24; G2 in R5 Family;;2;2
+10;R2_R5 Family;actvgrs;G3;I have felt active and vigorous;23; G3 in R5 Family;;2;2
+10;R2 Family;frshrst;G4;I have woken up feeling fresh and rested;17;;;1;1
+10;R2 Family;lfintr;G5;My daily life has been filled with things that interest me;17;;;1;1
+10;R2_R5 Family;wmcpwrk;G6;A woman should be prepared to cut down on her paid work for the sake of her family ;65;"also in R4 Welfare (D3); G4 in R5 Family";;3;3
+10;R2 Family;mnrsphm;G7;Men should take as much responsibility as women for the home and children;35;;;1;1
+10;R2_R5 Family;mnrgtjb;G8;When jobs are scarce, men should have more right to a job than women;67;"also in R4 Welfare (D6) and R8 Welfare (B33a); G5 in R5 Family";;4;3
+10;R2 Family;prntghr;G9;When there are children in the home, parents should stay together even if they don?t get along;12;;;1;1
+10;R2 Family;prrfmly;G10;A person?s family ought to be his or her main priority in life;20;;;1;1
+10;R2 Family;yrlvptn;G12;In which year did you first start living in the same household as your husband/wife/partner?;0;;;1;1
+10;R2 Family;dsgrhwk;G13;How often do you and your husband/wife/partner disagree about ? How to divide house-work?;10;;;1;1
+10;R2_R5 Family;dsgrmny;G14;?Money?;3;G78 in R5 Family ;;2;2
+10;R2 Family;dsgrpwk;G15;?The amount of time spent on paid work?;5;;;1;1
+10;R2 Family;gwhhprc;G16;When you and your husband/wife/partner make decisions, who generally gets their way on... occasional more expensive purchases for the household?;0;;;1;1
+10;R2 Family;gwdvhwk;G17;? How to divide housework?;1;;;1;1
+10;R2_R5 Family;wkengtp;G19;How often partner?s work involves? Working evenings or nights?;5;G80 in R5 Family ;;2;2
+10;R2_R5 Family;wkovtmp;G20;...Having to work overtime at short notice?;5;G81 in R5 Family ;;2;2
+10;R2_R5 Family;ptnwkwe;G21;?Working at weekends?;6;G82 in R5 Family ;;2;2
+10;R2 Family;hwktwd1;G22;On a typical weekday about how many hours, in total, do people in your household spend on housework for your home? (respondents living with a partner);32;;;1;1
+10;R2_R5 Family;hwkpwd1;G23;And about how much of this time do you spend yourself? ;37;G76 in R5 Family (modified version);;2;2
+10;R2_R5 Family;hwkpwdp;G24;And about how much of this time does your husband/wife/partner spend on housework?;31;G77 in R5 Family (modified version);;2;2
+10;R2 Family;hwktwe1;G25;About how many hours are spent doing housework during a typical weekend?;26;;;1;1
+10;R2_R5 Family;hwkpwe1;G26;And about how much of this time do you spend yourself?;31;G76 in R5 Family (modified version);;2;2
+10;R2_R5 Family;hwkpwep;G27;And about how much of this time does your husband/wife/partner spend on housework?;17;G77 in R5 Family (modified version);;2;2
+10;R2 Family;hwktwd2;G29;On a typical weekday about how many hours, in total, do people in your household spend on housework for your home? (respondents not living with a partner);14;;;1;1
+10;R2 Family;hwkpwd2;G30;And about how much of this time do you spend yourself?;15;;;1;1
+10;R2 Family;hwktwe2;G31;About how many hours are spent doing housework during a typical weekend?;12;;;1;1
+10;R2 Family;hwkpwe2;G32;And about how much of this time do you spend yourself?;12;;;1;1
+10;R2 Family;tngdohm;G34;There are so many things to do at home, I often run out of time before I get them all done ;5;;;1;1
+10;R2 Family;hwkmono;G35;I find my housework monotonous;4;;;1;1
+10;R2 Family;chdohwk;G36;I can choose myself when and how to do housework;0;;;1;1
+10;R2 Family;hwkstrs;G37;I find my housework stressful;9;;;1;1
+10;R2 Family;hmeqphw;G38;How well equipped is your home for housework? ;0;;;1;1
+10;R2 Family;lkafohh;G39;And apart from housework, do you look after others in your household, such as small children or someone ill, disabled or elderly?;3;;;1;1
+10;R2 Family;updhlrl;G40;Apart from your own children, how often, if at all, do you give unpaid help to a family member or relative outside your household with childcare, other care, housework or home maintenance?;2;;;1;1
+10;R2 Family;updhlrp;G41;And if you needed help, is there anyone outside your household you can count on to give you unpaid help with childcare, other care, housework or home maintenance?;5;;;1;1
+10;R2 Family;cldcrot;G43;What is the main type of childcare that the youngest child receives? ;2;;;1;1
+10;R2 Family;cldcrmr;G44;In your present situation, would you ideally like much more childcare, slightly more childcare, or is the amount you have about right?;1;;;1;1
+10;R2 Family;cldnhh;G45;Do you have any children, of any age, who do not currently live in your household? ;0;;;1;1
+10;R2 Family;cldnhhn;G46;How many children is that?;0;;;1;1
+10;R2 Family;cldnhhg;G48;Is this a son or a daughter?; ;hidden usage;;1;1
+10;R2 Family;clnhhyb;G49;In which year was he/she born?; ;hidden usage;;1;1
+10;R2 Family;clnhhbo;G50;Thinking about your oldest child who does not currently live in your household, in which year was he/she born?; ;hidden usage;;1;1
+10;R2 Family;clnhhby;G51;And in which year was your youngest child who does not currently live in your household born?; ;hidden usage;;1;1
+10;R2 Family;cldnhhd;G52;How many of the children who do not currently live in your household are daughters?; ;hidden usage;;1;1
+10;R2 Family;clfncsp;G53;Please tell me how much financial support you currently provide to your child(ren) or grandchildren who live apart from you? ;1;;;1;1
+10;R2 Family;clhwksp;G54;How much support in everyday housework or care do you provide for your grown up children or grandchildren who live apart from you?;2;;;1;1
+10;R2 Family;clfncrc;G55;And how much financial support do you currently receive from your grown up children or grandchildren who live apart from you? ;1;;;1;1
+10;R2 Family;clhwkrc;G56;How much support with your everyday housework or care do you currently receive from your grown up children or grandchildren who live apart from you? ;2;;;1;1
+10;R2_R5 Family;plnchld;G58;Do you plan to have a child within the next three years? ;15;G88 in R5 Family;;2;2
+10;R2_R5 Family;jbcoedu;G61;If someone was applying nowadays for the job you do now, would they need any education or vocational schooling beyond compulsory education?;5;G23 in R5 Family;;2;2
+10;R2_R5 Family;jbedyrs;G62;About how many years of education or vocational schooling beyond compulsory education would they need?;6;G24 in R5 Family;;2;2
+10;R2_R5 Family;jblrn;G63;If somebody with the right education and qualifications replaced you in your job, how long would it take for them to learn to do the job reasonably well?;16;G25 in R5 Family;;2;2
+10;R2_R5 Family;vrtywrk;G64;There is a lot of variety in my work. ;12;G26 in R5 Family;;2;2
+10;R2_R5 Family;jbrqlrn;G65;My job requires that I keep learning new things.;19;G27 in R5 Family;;2;2
+10;R2_R5 Family;jbscr;G66;My job is secure.;39;G32 in R5 Family;;2;2
+10;R2_R5 Family;wgdpeft;G67;My wage or salary depends on the amount of effort I put into my work.;10;G28 in R5 Family;;2;2
+10;R2_R5 Family;hlpcowk;G68;I can get support and help from my co-workers when needed.;14;G29 in R5 Family;;2;2
+10;R2_R5 Family;dcsfwrk;G69;I can decide the time I start and finish work.;17;G31 in R5 Family;;2;2
+10;R2_R5 Family;hlthrwk;G70;My health or safety is at risk because of my work.;11;G30 in R5 Family;;2;2
+10;R2_R5 Family;wrkhrd;G71;My job requires that I work very hard.;21;G34 in R5 Family;;2;2
+10;R2_R5 Family;nevdnjb;G72;I never seem to have enough time to get everything done in my job.;25;G35 in R5 Family;;2;2
+10;R2_R5 Family;oprtad;G73;My opportunities for advancement are good.;18;G36 in R5 Family;;2;2
+10;R2 Family;nbsrsp;G74;How many people is your immediate supervisor or boss responsible for?;0;;;1;1
+10;R2_R5 Family;bsmw;G75;Is your immediate supervisor/boss a man or a woman?;3;G37 in R5 Family;;2;2
+10;R2_R5 Family;ppwwkp;G75a;What is the proportion of women at your workplace?;3;G38 in R5 Family;;2;2
+10;R2 Family;yrcremp;G76;In what year did you (first) start working for your current employer?;7;;;1;1
+10;R2 Family;trndnjb;G77;I would turn down another job with higher pay in order to stay with this organisation.;6;;;1;1
+10;R2 Family;wrkspv;G78;My work is closely supervised.;6;;;1;1
+10;R2_R5 Family;smbtjoba;G79;How difficult or easy would it be for you to get a similar or better job with another employer if you wanted to?;-23;first asked in R1 Citizenship (E35), G40 in R5 Family (modified);;-3;-3
+10;R2_R5 Family;rpljbde;G80;In your opinion, how difficult or easy would it be for your employer to replace you if you left? ;2;G41 in R5 Family;;2;2
+10;R2 Family;tmtowrk;G81;How long does it usually take you to get to work on a normal workday? ;1;;;1;1
+10;R2_R5 Family;wrkengt;G82;How often respondent?s work involves ? Working evenings or nights?;19;G15 in R5 Family;;2;2
+10;R2_R5 Family;wkovrtm;G83;?Having to work overtime at short notice?;19;G16 in R5 Family;;2;2
+10;R2_R5 Family;wrkwe;G84;How often does your work involve working at weekends?;19;G17 in R5 Family;;2;2
+10;R2_R5 Family;wrywprb;G85;How often do you...keep worrying about work problems when you are not working?;21;G46 in R5 Family;;2;2
+10;R2_R5 Family;trdawrk;G86;...feel too tired after work to enjoy the things you would like to do at home?;26;G47 in R5 Family;;2;2
+10;R2_R5 Family;jbprtfp;G87;...find that your job prevents you from giving the time you want to your partner or family?;24;G48 in R5 Family;;2;2
+10;R2_R5 Family;pfmfdjb;G89;How often do you...find that your partner or family gets fed up with the pressure of your job?;15;G50 in R5 Family;;2;2
+10;R2_R5 Family;dfcnswk;G90;...find it difficult to concentrate on work because of your family responsibilities?;2;G52 in R5 Family;;2;2
+10;R2_R5 Family;grspay;G91;What is your usual gross pay before deductions for tax and insurance?;0;G56 in R5 Family;;2;2
+10;R2 Family;netpay;G92;And what is your usual net pay (after deductions for tax and insurance)?;0;G57 in R5 Family;;1;1
+10;R2_R5 Family;payprd;G93;How long a period does that pay cover?;0;;;2;2
+10;R2 Family;stdlvl;G94;At what level are you studying? ;0;;;1;1
+10;R2 Family;prmpls;G95;Thinking about the place where you study? The premises are pleasant.;0;;;1;1
+10;R2 Family;quclss;G96;There is usually peace and quiet during classes/lectures.;0;;;1;1
+10;R2 Family;tchtruf;G97;There are teachers who treat me badly or unfairly.;0;;;1;1
+10;R2 Family;stdtruf;G98;There are students who treat me badly or unfairly.;0;;;1;1
+10;R2 Family;tchints;G99;Teachers are interested in the students.;0;;;1;1
+10;R2 Family;tchlcrt;G100;When I criticise something, my teachers listen to what I have to say.;0;;;1;1
+10;R2 Family;stdask;G101;There are students in my classes/course(s) who I can ask for help and discuss problems with.;0;;;1;1
+10;R2 Family;stpvtfm;G102;My studies prevent me from spending as much time with my family as I would like to.;0;;;1;1
+10;R2 Family;fmpvtst;G103;Family responsibilities prevent me from spending as much time on my studies as I would like to.;0;;;1;1
+10;R2 Family;tchlp;G104;Do you feel you get the help you need from the teachers about your course(s)?;0;;;1;1
+10;R2 Family;stdhrsw;G105;How many hours do you spend studying during an average term-time week? ;1;;;1;1
+10;R2 Family;stdmcdo;G106;And thinking about your studies, do you usually feel you have...(far too much / little to do);0;;;1;1
+10;R2 Family;crspce;G107;Do you find the pace of your course(s) too slow, about right, or too fast?;0;;;1;1
+10;R2_R5 Family;rtryr;G108;In what year did you retire?;4;G84 in R5 Family;;2;2
+10;R2_R5 Family;wntrtr;G109;Did you want to retire then or would you have preferred to continue in paid work?;3;G85 in R5 Family;;2;2
+10;R2_R5 Family;ipjbscr;G111;A secure job (how important when choosing a job);13;G66 in R5 Family;;2;2
+10;R2_R5 Family;ipjbhin;G112;A high income;7;G67 in R5 Family;;2;2
+10;R2 Family;ipjbprm;G113;A job with good promotion opportunities;6;;;1;1
+10;R2_R5 Family;ipjbini;G114;A job that enabled you to use your own initiative;7;G65 in R5 Family;;2;2
+10;R2_R5 Family;ipjbwfm;G115;A job which allowed you to combine work and family responsibilities;13;G68 in R5 Family;;2;2
+10;R2_R5 Family;wkhsch;G116;How many hours a week, if any, would you choose to work, bearing in mind that your earnings would go up or down according to how many hours you work?;12;G72 in R5 Family;;2;2
+10;R2 Family;fstjbyr;G117;Thinking back, in what year did you start working in your first job? ;5;;;1;1
+10;R2 Family;yrspdwk;G118;In total, how many years have you been in paid work?;1;;;1;1
+10;R2 Family;flthmcc;G121;Including any time spent on maternity or parental leave, around how long in total have you spent full-time at home because you were caring for your child(ren)? ;8;;;1;1
+10;R2 Family;fthcncr;G122;Do you think that this has had negative consequences for your occupational career?;5;;;1;1
+10;R2 Family;ptmhmcc;G123;And around how long in total, have you spent in part-time work rather than full-time work because you were caring for your child(ren)? ;4;;;1;1
+10;R2 Family;pthcncr;G124;Do you think that this has had negative consequences for your occupational career?;0;;;1;1
+10. Jan;R5 Family 2;gvprppv;G6;The government should do much more to prevent people falling into poverty.;1;;;1;1
+10. Jan;R5 Family 2;fltlnla;G7;Please tell me how much of the time during the past week you felt lonely?;-43;first asked in R3 Well-being (E12);;-2;-2
+10. Jan;R5 Family 2;mlohinc;G8;(In the last three years) I have had to manage on a lower household income. ;10;;;1;1
+10. Jan;R5 Family 2;dsdclve;G9;I have had to draw on my savings or get into debt to cover ordinary living expenses.;9;;;1;1
+10. Jan;R5 Family 2;cuthheq;G10;I have had to cut back on holidays or new household equipment.;7;;;1;1
+10. Jan;R5 Family 2;jbtsktm;G13;In your main job, which one of the following tasks do you generally spend most time on?;0;;;1;1
+10. Jan;R5 Family 2;yrskdwk;G14;Including all the jobs you have ever had, how many years in total have you been doing the kind of work you currently do?;0;;;1;1
+10. Jan;R5 Family 2;emplrjb;G20;Do you know of any other employers who would have good use for what you have learnt in your present job? ;1;;;1;1
+10. Jan;R5 Family 2;mnrsefw;G21;People put effort into their work for many different reasons. Which of the reasons shown on this card is the main reason why you put effort into your work?;0;;;1;1
+10. Jan;R5 Family 2;scrsefw;G22;And what is the second most important reason? ;0;;;1;1
+10. Jan;R5 Family 2;lsintjb;G33; I may have to move to a less interesting job in my organisation in the next 12 months.;0;;;1;1
+10. Jan;R5 Family 2;bseftwk;G39;How difficult or easy do you think it is for your immediate boss to know how much effort you put into your work?;1;;;1;1
+10. Jan;R5 Family 2;wpmwkcp;G42;At your workplace are there regular meetings between representatives of the employer and employees, in which working conditions and practices can be discussed?;2;;;1;1
+10. Jan;R5 Family 2;indisdc;G43;How much influence would you say these discussions generally have on decisions that affect your working conditions and practices? ;1;;;1;1
+10. Jan;R5 Family 2;truinwk;G44;How much influence would you say that trade unions at your workplace generally have over decisions that affect your working conditions and practices? ;1;;;1;1
+10. Jan;R5 Family 2;pdaprpa;G45;Considering all my efforts and achievements in my job, I feel I get paid appropriately? ;-11;first asked in R3 Well-being (E53);;-2;-2
+10. Jan;R5 Family 2;dfcnswka;G52;Finds it difficult to concentrate on work because of your family responsibilities (how often);0;;;1;1
+10. Jan;R5 Family 2;stfmjob;G53;All things considered, how satisfied are you in your main job?;-26;first asked in R3 Well-being (E48), modified version;;-2;-2
+10. Jan;R5 Family 2;stfjbot;G54;And how satisfied are you with the balance between the time you spend on your paid work and the time you spend on other aspects of your life?;-18;first asked in R3 Well-being (E49);;-2;-2
+10. Jan;R5 Family 2;wkjbndm;G55;I would enjoy working in my current job even if I did not need the money.;1;;;1;1
+10. Jan;R5 Family 2;linwk3y;G58;?had to do less interesting work? (happened to you in the last three years);4;;;1;1
+10. Jan;R5 Family 2;rdpay3y;G59;?had to take a reduction in pay? ;6;;;1;1
+10. Jan;R5 Family 2;wkshr3y;G60;?had to work shorter hours? ;7;;;1;1
+10. Jan;R5 Family 2;lscjb3y;G61;?had less security in your job? ;4;;;1;1
+10. Jan;R5 Family 2;orgfd3y;G62;Financial difficulty in the organisation for which you work, last 3 years;2;;;1;1
+10. Jan;R5 Family 2;npemp3y;G63;And during the last three years, would you say that the number of people employed at the organisation for which you work has? (decreased / increased) ;1;;;1;1
+10. Jan;R5 Family 2;ipjbtro;G69;A job that offered good training opportunities (important when choosing a job);1;;;1;1
+10. Jan;R5 Family 2;pdjbndm;G70;I would enjoy having a paid job even if I did not need the money?;1;;;1;1
+10. Jan;R5 Family 2;uemp3y;G71;Thinking just of the last 3 years, what was the longest period in months, if any, that you were continuously unemployed and seeking work?;1;;;1;1
+10. Jan;R5 Family 2;pwkhsch;G74;If you could choose, how many hours a week, if any, would you like your partner to work bearing in mind that your partner?s earnings would go up or down according to how many hours s/he works?;2;;;1;1
+10. Jan;R5 Family 2;puemp3y;G75;Thinking just of the last 3 years, what was the longest period in months, if any, that your partner was continuously unemployed and seeking work?;0;;;1;1
+10. Jan;R5 Family 2;agertr;G87;At what age would you like to /would you have liked to retire?;1;;;1;1
+11;R3 Timing of Life;evpdemp;D1;Have you ever been in paid employment or a paid apprenticeship of  20 hours or more per week for at least 3 months?;0;;;1;1
+11;R3 Timing of Life;pdempyr;D2;In what year did you first start working in a job like this?;4;;;1;1
+11;R3 Timing of Life;lvpntyr;D3;In what year, if ever, did you first leave your parent(s) for 2 months or more to start living separately from them?;8;;;1;1
+11;R3 Timing of Life;evlvptn;D4;Have you ever lived with a spouse or partner for three months or more?;4;;;1;1
+11;R3 Timing of Life;lvptnyr;D5;In what year did you first live with a spouse or partner for three months or more?;8;;;1;1
+11;R3 Timing of Life;evmar;D6;Are you or have you ever been married?;3;;;1;1
+11;R3 Timing of Life;maryr;D7;In what year did you first marry;6;;;1;1
+11;R3 Timing of Life;bthcld;D8;Have you ever given birth to/fathered a child?;8;;;1;1
+11;R3 Timing of Life;nbthcld;D9;How many children have you ever given birth to/fathered?;0;;;1;1
+11;R3 Timing of Life;fcldbrn;D10;In what year was your (first) child born?;10;;;1;1
+11;R3 Timing of Life;ycldbyr;D11;In what year was your youngest child born?;0;;;1;1
+11;R3 Timing of Life;ngchld;D12;How many grandchildren do you have, if any?;0;;;1;1
+11;R3 Timing of Life;ygcdbyr;D13;In what year was your first grandchild born?;0;;;1;1
+11;R3 Timing of Life;ggchld;D14;Do you have any great grandchildren?;0;;;1;1
+11;R3 Timing of Life;brnmm;D15;In what month were you born?;0;;;1;1
+11;R3 Timing of Life;ageadlt;D17;At what age, approximately, would you say girls/boys or women/men become adults?;4;;;1;1
+11;R3 Timing of Life;agemage;D18;And at what age, approximately, would you say women/men reach middle age?;1;;;1;1
+11;R3 Timing of Life;ageoage;D19;And at what age, approximately, would you say women/men reach old age?;1;;;1;1
+11;R3 Timing of Life;adllvhm;D20;To be considered an adult how important is it for a woman/man to have left the parental home? ;4;;;1;1
+11;R3 Timing of Life;adftjob;D21;To be considered an adult how important is it for a woman/man to have a full-time job? ;4;;;1;1
+11;R3 Timing of Life;adlvptn;D22;To be considered an adult how important is it for a woman/man to have lived with a spouse or partner?;4;;;1;1
+11;R3 Timing of Life;adpnt;D23;And to be considered an adult how important is it for a woman/man to have become a mother? ;4;;;1;1
+11;R3 Timing of Life;oldfrl;D24;To be considered old how important is it for a woman/man to be physically frail? ;0;;;1;1
+11;R3 Timing of Life;oldgpnt;D25;To be considered old how important is it for a woman/man to be a grandmother/grandfather? ;0;;;1;1
+11;R3 Timing of Life;oldhlpo;D26;And to be considered old, how important is it for a woman/man to need the help of others to look after her?;0;;;1;1
+11;R3 Timing of Life;iaglptn;D27;In your opinion, what is the ideal age for a girl/boy or woman/man to start living with a partner she/he is not married to?;1;;;1;1
+11;R3 Timing of Life;iaglvmr;D28;In your opinion, what is the ideal age for a girl/boy or woman/man to get married and live with her husband/ his wife?;2;;;1;1
+11;R3 Timing of Life;iagpnt;D29;In your opinion, what is the ideal age for a girl/boy or woman/man to become a mother/father?;4;;;1;1
+11;R3 Timing of Life;iagrtr;D30;In your opinion, what is the ideal age for a woman/man to retire permanently?;1;;;1;1
+11;R3 Timing of Life;tygledu;D31;Before what age would you say a girl/boy or woman/man is generally too young to leave full-time education?;1;;;1;1
+11;R3 Timing of Life;tygsexi;D32;Before what age would you say a woman/man is generally too young to have sexual intercourse?;5;;;1;1
+11;R3 Timing of Life;tyglvp;D33;Before what age would you say a woman/man  is generally too young to start living with a partner she/he is not married to?;1;;;1;1
+11;R3 Timing of Life;tyglvmr;D34;Before what age would you say a woman/man is generally too young to get married and live with her husband/ his wife?;1;;;1;1
+11;R3 Timing of Life;tygpnt;D35;Before what age would you say a woman/man is generally too young to become a mother/ father?;3;;;1;1
+11;R3 Timing of Life;tygrtr;D36;And before what age would you say a woman/man is generally too young to retire permanently?;3;;;1;1
+11;R3 Timing of Life;tolvpnt;D37;After what age would you say a woman/man is generally too old to still be living with her parents?;2;;;1;1
+11;R3 Timing of Life;tochld;D38;After what age would you say a woman/man is generally too old to consider having any more children?;6;;;1;1
+11;R3 Timing of Life;towkht;D39;After what age would you say a woman/man is generally too old to be working 20 hours or more per week?;3;;;1;1
+11;R3 Timing of Life;anvcld;D40;Do you approve or disapprove if a woman/man ?chooses never to have children? ;9;;;1;1
+11;R3 Timing of Life;alvgptn;D41;?lives with a partner without being married to him/her?;7;;;1;1
+11;R3 Timing of Life;acldnmr;D42;?has a child with a partner she/he lives with but is not married to?;8;;;1;1
+11;R3 Timing of Life;aftjbyc;D43;?has a full-time job while she/he has children aged under 3?;9;;;1;1
+11;R3 Timing of Life;advcyc;D44;?gets divorced while she/he has children aged under 12?;4;;;1;1
+11;R3 Timing of Life;rpntyng;D45;How do you think most people would react if a woman/man they knew well ?became a mother/ father before the age of 18?;0;;;1;1
+11;R3 Timing of Life;rwkold;D46;?carried on working after the age of 70?;0;;;1;1
+11;R3 Timing of Life;rnvcld;D47;?chose never to have children? ;1;;;1;1
+11;R3 Timing of Life;rlvgptn;D48;?lived with a partner without being married to him/her?;1;;;1;1
+11;R3 Timing of Life;rcldnmr;D49;?had a child with a partner she/he lived with but was not married to?;1;;;1;1
+11;R3 Timing of Life;rftjbyc;D50;?had a full-time job while she/he had children aged under 3?;2;;;1;1
+11;R3 Timing of Life;rdvcyc;D51;?got divorced while she/ he had children under 12?;1;;;1;1
+11;R3 Timing of Life;plnftr;D52;Do you generally plan for your future or do you just take each day as it comes? ;3;;;1;1
+11;R3 Timing of Life;wrinco;D53;How worried are you, if at all, that your income in old age will not be adequate enough to cover your later years. ;3;;;1;1
+11;R3 Timing of Life;rspslvo;D54;Please tell me who you think should be mainly responsible for providing people with an adequate standard of living in their old age? ;0;;;1;1
+11;R3 Timing of Life;svclvo;D55;Are you currently saving or have you saved in the past specifically in order to live comfortably in your old age?;3;;;1;1
+12;R3_R6 Well-being;wkvlorg;E1;In the past 12 months, how often did you get involved in work for voluntary or charitable organisations? ;27;D1 in R6 Well-being;;2;2
+12;R3 Well-being;hlpoth;E2;Not counting anything you do for your family, in your work, or within voluntary organisations, how often, in the past 12 months, did you actively provide help for other people? ;-20;first asked in R1 Citizenship (E20);;-2;-2
+12;R3 Well-being;atnoact;E3;And in the past 12 months, how often did you help with or attend activities organised in your local area?;14;;;1;1
+12;R3_R6 Well-being;optftr;E4;I?m always optimistic about my future ;19;D2 in R6 Well-being;;2;2
+12;R3_R6 Well-being;pstvms;E5;In general I feel very positive about myself. ;14;D3 in R6 Well-being;;2;2
+12;R3_R6 Well-being;flrms;E6;At times I feel as if I am a failure ;12;D4 in R6 Well-being;;2;2
+12;R3 Well-being;lfcllk;E7;On the whole my life is close to how I would like it to be;5;;;1;1
+12;R3_R6 Well-being;fltdpr;E8;? you felt depressed? (during the past week);43;"CES-D Depression scale (E8-E15); D5-D12 in R6 Well-being; Also in R7 Health Ineq (E20-E27)";;3;2
+12;R3_R6 Well-being;flteeff;E9;? you felt that everything you did was an effort? ;31;;;3;2
+12;R3_R6 Well-being;slprl;E10;? your sleep was restless?;32;;;3;2
+12;R3_R6 Well-being;wrhpp;E11;? you were happy?;32;;;3;2
+12;R3_R6 Well-being;fltlnl;E12;? you felt lonely?;43;also in R5 Family (G7);;4;3
+12;R3_R6 Well-being;enjlf;E13;? you enjoyed life?;30;;;3;2
+12;R3_R6 Well-being;fltsd;E14;? you felt sad?;36;;;3;2
+12;R3_R6 Well-being;cldgng;E15;? you could not get going?;29;;;3;2
+12;R3_R6 Well-being;enrglot;E16;? you had a lot of energy?;11;D13 in R6 Well-being;;2;2
+12;R3_R6 Well-being;fltanx;E17;? you felt anxious?;12;D14 in R6 Well-being;;2;2
+12;R3 Well-being;flttrd;E18;? you felt tired?;9;;;1;1
+12;R3_R6 Well-being;absddng;E19;? you were absorbed in what you were doing? ;7;D32 in R6 Well-being (modified);;2;2
+12;R3_R6 Well-being;fltpcfl;E20;? you felt calm and peaceful?;7;D15 in R6 Well-being;;2;2
+12;R3 Well-being;fltbrd;E21;? you felt bored?;7;;;1;1
+12;R3 Well-being;fltrstm;E22;? you felt really rested when you woke up in the morning? ;7;;;1;1
+12;R3_R6 Well-being;dclvlf;E23;I feel I am free to decide for myself how to live my life.;14;D16 in R6 Well-being;;2;2
+12;R3 Well-being;enjstm;E24;In my daily life, I seldom have time to do the things I really enjoy.;5;;;1;1
+12;R3_R6 Well-being;lchshcp;E25;In my daily life I get very little chance to show how capable I am.;9;D17 in R6 Well-being;;2;2
+12;R3 Well-being;lrnnew;E26;I love learning new things. ;3;;;1;1
+12;R3_R6 Well-being;accdng;E27;Most days I feel a sense of accomplishment from what I do.;13;D18 in R6 Well-being;;2;2
+12;R3 Well-being;plprftr;E28;I like planning and preparing for the future.;2;;;1;1
+12;R3_R6 Well-being;wrbknrm;E29;When things go wrong in my life, it generally takes me a long time to get back to normal.;9;D19 in R6 Well-being;;2;2
+12;R3 Well-being;pactlot;E30;My life involves a lot of physical activity.;1;;;1;1
+12;R3 Well-being;stflfsf;E31;How satisfied are you with how your life has turned out so far? ;11;;;1;1
+12;R3 Well-being;stfsdlv;E32;And how satisfied are you with your present standard of living?;8;;;1;1
+12;R3 Well-being;fmlenj;E33;How much of the time spent with your immediate family is? enjoyable? ;6;;;1;1
+12;R3 Well-being;fmlstrs;E34;?stressful? ;3;;;1;1
+12;R3_R6 Well-being;chlrnnw;E35;Please tell me to what extent? you get a chance to learn new things? ;4;D20 in R6 Well-being;;2;2
+12;R3_R6 Well-being;pplahlp;E36;?you feel that people in your local area help one another? ;8;D21 in R6 Well-being;;2;2
+12;R3_R6 Well-being;trtrsp;E37;? you feel that people treat you with respect?;10;D22 in R6 Well-being;;2;2
+12;R3 Well-being;trtunf;E38;? you feel that people treat you unfairly? ;7;;;1;1
+12;R3 Well-being;rcndsrv;E39;? you feel that you get the recognition you deserve for what you do?;5;;;1;1
+12;R3_R6 Well-being;dngval;E40;I generally feel that what I do in my life is valuable and worthwhile;9;D23 in R6 Well-being;;2;2
+12;R3 Well-being;hlprtrn;E41;If I help someone I expect some help in return ;2;;;1;1
+12;R3_R6 Well-being;nhpftr;E42;The way things are now, I find it hard to be hopeful about the future of the world ;3;D24 in R6 Well-being;;2;2
+12;R3 Well-being;ppllfcr;E43;There are people in my life who really care about me ;10;;;1;1
+12;R3_R6 Well-being;lfwrs;E44;For most people in [COUNTRY] life is getting worse rather than better;4;D26 in R6 Well-being;;2;2
+12;R3_R6 Well-being;flclpla;E45;I feel close to the people in my local area ;11;D27 in R6 Well-being;;2;2
+12;R3 Well-being;fstwttv;E46;Do you ever feel frustrated by having watched too much television?;0;;;1;1
+12;R3 Well-being;stfjb;E48;All things considered, how satisfied are you with your present job?;26;also in R5 Family (G53);;2;2
+12;R3 Well-being;stfjbot;E49;How satisfied are you with the balance between the time you spend on your paid work and the time you spend on other aspects of your life?;18;also in R5 Family (G54);;2;2
+12;R3 Well-being;jbintr;E50;How much of the time do you find your job? interesting?;5;;;1;1
+12;R3 Well-being;jbstrs;E51;? stressful?;6;;;1;1
+12;R3 Well-being;uempnyr;E52;How likely would you say it is that you will become unemployed in the next 12 months?;20;;;1;1
+12;R3 Well-being;pdaprp;E53;Considering all my efforts and achievements in my job, I feel I get paid appropriately;11;also in R5 Family (G45);;2;2
+12;R3 Well-being;inccmp;E54;How important is it for you to compare your income with other people?s incomes? ;7;;;1;1
+12;R3 Well-being;inccmpw;E55;Whose income would you be most likely to compare your own with?;6;;;1;1
+12. Jan;R6 Well-being 2;lotsgot;D25;There are lots of things I feel I am good at;2;;;1;1
+12. Jan;R6 Well-being 2;tmdotwa;D28;To what extent do you make time  to do the things you really want to do? ;2;;;1;1
+12. Jan;R6 Well-being 2;flapppl;D29;To what extent do you feel appreciated  by the people you are close to? ;2;;;1;1
+12. Jan;R6 Well-being 2;deaimpp;D30;How difficult or easy do you find it to deal with  important  problems that come up in your life? ;4;;;1;1
+12. Jan;R6 Well-being 2;tmimdng;D31;How much of the time would you generally say you are...interested in what you are doing?;2;;;1;1
+12. Jan;R6 Well-being 2;tmendng;D33;... enthusiastic about what you are doing?;2;;;1;1
+12. Jan;R6 Well-being 2;tnapsur;D34;On a typical day, how often do you take notice of  and appreciate  your surroundings ?;0;;;1;1
+12. Jan;R6 Well-being 2;sedirlf;D35;To what extent do you feel that you have a sense of direction in your life;3;;;1;1
+12. Jan;R6 Well-being 2;rehlppl;D36;To what extent do you receive help and support  from people  you are close to  when you need it? ;4;;;1;1
+12. Jan;R6 Well-being 2;prhlppl;D37;And to what extent do you provide help and support  to people you are close to  when they need it? ;4;;;1;1
+12. Jan;R6 Well-being 2;plinsoc;D38;There are people who tend to be  towards the top of our society and people who tend to be towards the bottom. Where would you place yourself on this scale nowadays? ;1;;;1;1
+12. Jan;R6 Well-being 2;physact;D39;Please tell me on how many of the last 7 days you were physically active continuously for 20 minutes or longer? ;2;;;1;1
+13;R4_R8 Welfare;dfincac;D1;Large differences in people?s incomes are acceptable to properly reward differences in talents and efforts.;13;E1 in R8 Welfare;;2;1
+13;R4 Welfare;schtaut;D2;Schools must teach children to obey authority.;5;;;1;1
+13;R4 Welfare;wmcpwrk;D3;A woman should be prepared to cut down on her paid work for the sake of her family.;-65;first asked in R2 Family (G6);;-3;-3
+13;R4_R8 Welfare;smdfslv;D4;For a society to be fair, differences in people?s standard of living should be small.;17;E2 in R8 Welfare;;2;1
+13;R4 Welfare;hrshsnt;D5;People who break the law should be given much harsher sentences than they are these days.;9;also in R5 Criminal justice (D33);;2;2
+13;R4_R8 Welfare;mnrgtjb;D6;When jobs are scarce, men should have more right to a job than women.;-67;"first asked in R2 Family (G8); B33a in R8 Welfare";;-4;-3
+13;R4_R8 Welfare;uemplwk;D7;Of every 100 people of working age in [country] how many would you say are unemployed and looking for work?;5;E3 in R8 Welfare;;2;1
+13;R4 Welfare;sickdsb;D8;And of every 100 people of working age in [country] how many would you say are long-term sick or disabled?;2;;;1;1
+13;R4 Welfare;nmnybsc;D9;And of every 100 people of working age in [country] how many would you say do not have enough money for basic necessities?;3;;;1;1
+13;R4 Welfare;brnocnt;D10;And of every 100 people of working age in [country] about how many would you say were born outside [country]?;3;;;1;1
+13;R4_R8 Welfare;slvpens;D11;Using this card, what do you think overall about the standard of living of pensioners? ;9;E4 in R8 Welfare;;2;1
+13;R4_R8 Welfare;slvuemp;D12;What do you think overall about the standard of living of people who are unemployed? ;12;E5 in R8 Welfare;;2;1
+13;R4 Welfare;cldcrsv;D13;And what do you think overall about the provision of affordable child care services for working parents? ;9;;;1;1
+13;R4 Welfare;yngfnjb;D14;And what do you think overall about the opportunities for young people to find their first full-time job in [country]? ;7;;;1;1
+13;R4 Welfare;gvjbevn;D15;?ensure a job for everyone who wants one? (should it be governments? responsibility);28;;;1;1
+13;R4 Welfare;gvhlthc;D16;?ensure adequate health care for the sick?;28;;;1;1
+13;R4_R8 Welfare;gvslvol;D17;?ensure a reasonable standard of living for the old?;25;E6 in R8 Welfare;;2;1
+13;R4_R8 Welfare;gvslvue;D18;?ensure a reasonable standard of living for the unemployed;27;E7 in R8 Welfare;;2;1
+13;R4_R8 Welfare;gvcldcr;D19;?ensure sufficient child care services for working parents?;21;E8 in R8 Welfare;;2;1
+13;R4 Welfare;gvpdlwk;D20;?provide paid leave from work for people who temporarily have to care for sick family members?;18;;;1;1
+13;R4_R8 Welfare;sbstrec;D21;Social benefits and services in [country] ?place too great a strain on the economy;15;E9 in R8 Welfare;;2;1
+13;R4_R8 Welfare;sbprvpv;D22;?prevent widespread poverty?;15;E10 in R8 Welfare;;2;1
+13;R4_R8 Welfare;sbeqsoc;D23;?lead to a more equal society;14;E11 in R8 Welfare;;2;1
+13;R4 Welfare;sbenccm;D24;?encourage people from other countries to come and live here?;2;;;1;1
+13;R4_R8 Welfare;sbbsntx;D25;?cost businesses too much in taxes and charges?;8;E12 in R8 Welfare;;2;1
+13;R4 Welfare;sbcwkfm;D26;?make it easier for people to combine work and family life?;11;;;1;1
+13;R4_R8 Welfare;sblazy;D27;?make people lazy?;13;E13 in R8 Welfare;;2;1
+13;R4_R8 Welfare;sblwcoa;D28;?make people less willing to care for one another?;10;E14 in R8 Welfare;;2;1
+13;R4 Welfare;sblwlka;D29;?make people less willing to look after themselves and their family?;10;;;1;1
+13;R4 Welfare;hlthcef;D30;Please tell me how efficient you think the provision of health care in [country] is. ;8;;;1;1
+13;R4 Welfare;txautef;D31;And how efficient do you think the tax authorities are at things like handling queries on time, avoiding mistakes and preventing fraud? ;6;;;1;1
+13;R4 Welfare;dcndleq;D32;Please tell me whether you think doctors and nurses in [country] give special advantages to certain people or deal with everyone equally?;4;;;1;1
+13;R4 Welfare;txadleq;D33;Please tell me whether you think the tax authorities in [country] give special advantages to certain people or deal with everyone equally?;8;;;1;1
+13;R4 Welfare;ditxssp;D34;If the government had to choose between increasing taxes and spending more on social benefits and services, or decreasing taxes and spending less on social benefits and services, which should they do? ;20;;;1;1
+13;R4 Welfare;txearn;D35;Think of two people, one earning twice as much as the other. Which of the three statements on this card comes closest to how you think they should be taxed?;4;;;1;1
+13;R4 Welfare;earnpen;D36;Some people say that higher earners should get larger old age pensions because they have paid in more. Others say that lower earners should get larger old age pensions because their needs are greater. ;6;;;1;1
+13;R4 Welfare;earnueb;D37;Some people say that higher earners should get more benefit when they are temporarily unemployed because they paid more in tax, whilst others think that lower earners should get more because they are in greater need?;6;;;1;1
+13;R4_R8 Welfare;imsclbn;D38;Thinking of people coming to live in [country] from other countries, when do you think they should obtain the same rights to social benefits and services as citizens already living here? ;7;E15 in R8 Welfare;;2;1
+13;R4 Welfare;imrccon;D39;On balance, do you think people who come to live in [country] receive more than they contribute or contribute more than they receive? ;4;;;1;1
+13;R4_R8 Welfare;uentrjb;D40;Most unemployed people do not really try to find a job.;12;E16 in R8 Welfare;;2;1
+13;R4_R8 Welfare;lbenent;D41;Many people with very low incomes get less benefit than they are legally entitled to.;6;E17 in R8 Welfare;;2;1
+13;R4_R8 Welfare;bennent;D42;Many people manage to obtain benefits and services to which they are not entitled.;12;E18 in R8 Welfare;;2;1
+13;R4 Welfare;insfben;D43;There are insufficient benefits in [country] to help the people who are in real need.;7;;;1;1
+13;R4 Welfare;prtsick;D44;Employees often pretend they are sick in order to stay at home.;9;;;1;1
+13;R4 Welfare;lvpbhlt;D45;There is some debate nowadays about the cost of providing public health care in [country]. Thinking about 10 years from now, which of the statements on this card comes closest to your own opinion?;3;;;1;1
+13;R4 Welfare;lvoapen;D46;There is also some debate nowadays about the cost of pensions in [country]. Thinking of ten years from now, which of the statements on this card comes closest to your own opinion?;2;;;1;1
+13;R4_R8 Welfare;lkuemp;D47;Using this card, please tell me how likely it is that during the next 12 months you will be unemployed and looking for work for at least four consecutive weeks?;5;E38 in R8 Welfare;;2;1
+13;R4 Welfare;lklpwcf;D48;How likely is it that during the next 12 months you will have to spend less time in paid work than you would like, because you have to take care of family members or relatives? ;5;;;1;1
+13;R4_R8 Welfare;lknemny;D49;And during the next 12 months how likely is it that there will be some periods when you don?t have enough money to cover your household necessities? ;21;E39 in R8 Welfare;;2;1
+13;R4 Welfare;lknhlcn;D50;And during the next 12 months how likely is it that you will not receive the health care you really need if you become ill? ;12;;;1;1
+14;R4 Ageism;agdcyng;E1;At what age do you think people generally stop being described as young?;3;;;1;1
+14;R4 Ageism;agdcold;E2;At what age do you think people generally start being described as old?;5;;;1;1
+14;R4 Ageism;agegrbl;E3;Please tell me which box best describes the age group you see yourself as belonging to. ;3;;;1;1
+14;R4 Ageism;agrpblg;E4;Using this card, please tell me if you have a strong or weak sense of belonging to this age group. ;1;;;1;1
+14;R4 Ageism;stsp20;E5;Where most people would place the status of ?people in their 20s?;1;;;1;1
+14;R4 Ageism;stsp40;E6;?people in their 40s?;1;;;1;1
+14;R4 Ageism;stsp70;E7;?people over 70?;2;;;1;1
+14;R4 Ageism;wr20crm;E8;How worried are you?by the level of crime committed by people in their 20s these days?;0;;;1;1
+14;R4 Ageism;wr20emp;E9;?that employers might prefer to give jobs to people in their 20s rather than to people in their 40s or older?;0;;;1;1
+14;R4 Ageism;p20cust;E10;Please tell me whether you think most people in their 20s have a good or bad effect on [country]?s customs and way of life? ;0;;;1;1
+14;R4 Ageism;p20cnec;E11;All things considered, do you think people in their 20s contribute very little or a great deal economically to [country] these days? ;0;;;1;1
+14;R4 Ageism;p70hltb;E12;Using this card, please tell me whether or not you think people over 70 are a burden on [country]?s health service these days? ;0;;;1;1
+14;R4 Ageism;p70cust;E13;Please tell me whether you think most people over 70 have a good or bad effect on [country]?s customs and way of life? ;0;;;1;1
+14;R4 Ageism;p70cnec;E14;All things considered, do you think people over 70 contribute very little or a great deal economically to [country] these days? ;3;;;1;1
+14;R4 Ageism;v20frnd;E15;Please tell me how likely it is that most people in [country] view those in their 20s...as friendly?;1;;;1;1
+14;R4 Ageism;v20comp;E16; ?as competent?;2;;;1;1
+14;R4 Ageism;v20mrst;E17;?as having high moral standards?;1;;;1;1
+14;R4 Ageism;v20resp;E18;?with respect?;1;;;1;1
+14;R4 Ageism;v70frnd;E19;Please tell me how likely it is that most people in [country] view those over 70... as friendly?;3;;;1;1
+14;R4 Ageism;v70comp;E20;?as competent?;3;;;1;1
+14;R4 Ageism;v70mrst;E21;?as having high moral standards?;2;;;1;1
+14;R4 Ageism;v70resp;E22;?with respect?;0;;;1;1
+14;R4 Ageism;acq30bs;E23;Please tell me how acceptable or unacceptable you think most people in [country] would find it if a suitably qualified 30 year old was appointed as their boss?;0;;;1;1
+14;R4 Ageism;acq70bs;E24;And please tell me how acceptable or unacceptable you think most people in [country] would find it if a suitably qualified 70 year old was appointed as their boss?;0;;;1;1
+14;R4 Ageism;v20envy;E25;Please tell me how likely it is that most people in [country] view those in their 20s... with envy?;0;;;1;1
+14;R4 Ageism;v20pity;E26;?with pity?;0;;;1;1
+14;R4 Ageism;v20adm;E27;?with admiration?;0;;;1;1
+14;R4 Ageism;v20cntm;E28;?with contempt?;0;;;1;1
+14;R4 Ageism;v70envy;E29;And now please tell me how likely it is that most people in [country] view those over 70... with envy?;2;;;1;1
+14;R4 Ageism;v70pity;E30;?with pity?;1;;;1;1
+14;R4 Ageism;v70adm;E31;?with admiration?;2;;;1;1
+14;R4 Ageism;v70cntm;E32;?with contempt?;1;;;1;1
+14;R4 Ageism;oafl20;E33;Tell me overall how negative or positive you feel towards people in their 20s? ;1;;;1;1
+14;R4 Ageism;oafl70;E34;And overall, how negative or positive do you feel towards people over 70? ;3;;;1;1
+14;R4 Ageism;predage;E35;Please tell me how often, in the past year, anyone has shown prejudice against you or treated you unfairly because of? your age? ;4;;;1;1
+14;R4 Ageism;predsex;E36;?your sex? ;1;;;1;1
+14;R4 Ageism;predetn;E37;?your race or ethnic background?;1;;;1;1
+14;R4 Ageism;lkrspag;E38;And how often, if at all, in the past year have you felt that someone showed you a lack of respect because of your age, for instance by ignoring or patronising you? ;4;;;1;1
+14;R4 Ageism;trtbdag;E39;In particular, how often in the past year has someone treated you badly because of your age, for example by insulting you, abusing you or refusing you services? ;5;;;1;1
+14;R4 Ageism;frndy30;E40;About how many friends, other than members of your family, do you have who are younger than 30? ;2;;;1;1
+14;R4 Ageism;dprsy30;E41;Which option on this card best describes whether or not you can discuss personal issues such as feelings, beliefs or experiences with any of these friends?;0;;;1;1
+14;R4 Ageism;frndo70;E42;About how many friends, other than members of your family, do you have who are aged over 70? ;2;;;1;1
+14;R4 Ageism;dprso70;E43;Which option on this card best describes whether or not you can discuss personal issues such as feelings, beliefs or experiences with any of these friends?;0;;;1;1
+14;R4 Ageism;ageyo30;E44;Please tell me how old you are? ;0;;;1;1
+14;R4 Ageism;chg1530;E45;Do you have any children or grandchildren who are between the ages of 15 and 30?;0;;;1;1
+14;R4 Ageism;dprschg;E46;Which option on this card best describes whether or not you can discuss personal issues such as feelings, beliefs or experiences with any of these children or grandchildren;0;;;1;1
+14;R4 Ageism;mbfmo70;E47;Are any members of your family aged over 70? ;1;;;1;1
+14;R4 Ageism;dprsf70;E48;Which option on this card best describes whether or not you can discuss personal issues such as feelings, beliefs or experiences with any of these members of your family?;0;;;1;1
+14;R4 Ageism;pvolwrk;E49;In the last month have you done any paid or voluntary work?;5;;;1;1
+14;R4 Ageism;twcol20;E50;How much of this time was spent working with colleagues or volunteers in their 20s? ;0;;;1;1
+14;R4 Ageism;twcol70;E51;And how much of this time was spent working with colleagues or volunteers aged over 70? ;1;;;1;1
+14;R4 Ageism;sgr2070;E52;Taking all things into account, please say how you see people in their 20s and people over 70 in [country] today?;1;;;1;1
+14;R4 Ageism;buproag;E53;Please tell me how important it is for you to be unprejudiced against people of other age groups. ;1;;;1;1
+14;R4 Ageism;suproag;E54;And now please tell me how important it is for you to be seen as being unprejudiced against people of other age groups.;1;;;1;1
+14;R4 Ageism;srdscag;E55;How serious, if at all, would you say discrimination is in [country] against people because of their age ? whether they are old or young;3;;;1;1
+15;R5 Criminal justice;insclwr;D1;Please tell me how wrong it is to?make an exaggerated or false insurance claim?;-6;first asked in R2 Economic morality (E15);;-2;-2
+15;R5 Criminal justice;bystlwr;D2;...buy something you thought might be stolen? ;1;;;1;1
+15;R5 Criminal justice;trfowr;D3;...commit a traffic offence like speeding or crossing a red light? ;1;;;1;1
+15;R5 Criminal justice;insclct;D4;Please tell me how likely it is that you would be caught and punished if you? made an exaggerated or false insurance claim? ;3;;;1;1
+15;R5 Criminal justice;bystlct;D5;...bought something you thought might be stolen? ;2;;;1;1
+15;R5 Criminal justice;trfoct;D6;...committed a traffic offence like speeding or crossing a red light? ;2;;;1;1
+15;R5 Criminal justice;plcjbcn;D7;Taking into account all the things the police are expected to do, would you say they are doing a good job or a bad job? ;1;;;1;1
+15;R5 Criminal justice;plccont;D8;In the past 2 years, did the police in [country] approach you, stop you or make contact with you for any reason?;1;;;1;1
+15;R5 Criminal justice;plcstf;D9;How dissatisfied or satisfied were you with the way the police treated you the last time this happened? ;0;;;1;1
+15;R5 Criminal justice;plcvcrp;D10;When victims report crimes, do you think the police treat rich people worse, poor people worse, or are rich and poor treated equally? ;8;;;1;1
+15;R5 Criminal justice;plcvcrc;D11;And when victims report crimes, do you think the police treat some people worse because of their race or ethnic group or is everyone treated equally? ;1;;;1;1
+15;R5 Criminal justice;plcpvcr;D12;Based on what you have heard or your own experience how successful do you think the police are at preventing crimes in [country] where violence is used or threatened? ;6;;;1;1
+15;R5 Criminal justice;plccbrg;D13;And how successful do you think the police are at catching people who commit house burglaries in [country]? ;7;;;1;1
+15;R5 Criminal justice;plcarcr;D14;If a violent crime were to occur near to where you live and the police were called, how slowly or quickly do you think they would arrive at the scene? ;10;;;1;1
+15;R5 Criminal justice;plcrspc;D15;Based on what you have heard or your own experience how often would you say the police generally treat people in [country] with respect? ;12;;;1;1
+15;R5 Criminal justice;plcfrdc;D16;About often would you say that the police make fair, impartial decisions in the cases they deal with? ;9;;;1;1
+15;R5 Criminal justice;plcexdc;D17;And when dealing with people in [country], how often would you say the police generally explain their decisions and actions when asked to do so?;8;;;1;1
+15;R5 Criminal justice;bplcdc;D18;(Is it a duty to) ?back the decisions made by the police even when you disagree with them?;6;;;1;1
+15;R5 Criminal justice;doplcsy;D19;? do what the police tell you even if you don?t understand or agree with the reasons?;8;;;1;1
+15;R5 Criminal justice;dpcstrb;D20;? do what the police tell you to do, even if you don?t like how they treat you?;9;;;1;1
+15;R5 Criminal justice;plcrgwr;D21;The police generally have the same sense of right and wrong as I do.;10;;;1;1
+15;R5 Criminal justice;plcipvl;D22;The police stand up for values that are important to people like me.;6;;;1;1
+15;R5 Criminal justice;gsupplc;D23;I generally support how the police usually act. ;4;;;1;1
+15;R5 Criminal justice;plciplt;D24;The decisions and actions of the police are unduly influenced by pressure from political parties and politicians.;1;;;1;1
+15;R5 Criminal justice;plccbrb;D25;How often would you say that the police in [country] take bribes? ;6;;;1;1
+15;R5 Criminal justice;ctjbcnt;D26;Taking into account all the things the courts are expected to do, would you say they are doing a good job or a bad job? ;1;;;1;1
+15;R5 Criminal justice;ctmtgfr;D27;Please tell me how often you think the courts make mistakes that let guilty people go free? ;3;;;1;1
+15;R5 Criminal justice;ctfrdc;D28;How often do you think the courts make fair, impartial decisions based on the evidence made available to them? ;3;;;1;1
+15;R5 Criminal justice;wraccrp;D29;Suppose two people - one rich, one poor - each appear in court, charged with an identical crime they did not commit. (who is more likely to be found guilty) ;1;;;1;1
+15;R5 Criminal justice;wraccrc;D30;Now suppose two people from different race or ethnic groups each appear in court, charged with an identical crime they did not commit. ;3;;;1;1
+15;R5 Criminal justice;jdgcbrb;D31;Tell me how often you would say that judges in [country] take bribes?;4;;;1;1
+15;R5 Criminal justice;ctprpwr;D32;Courts generally protect the interests of the rich and powerful above those of ordinary people.;4;;;1;1
+15;R5 Criminal justice;hrshsnta;D33;People who break the law should be given much harsher sentences than they are these days.;-9;first asked in R4 Welfare (D5);;-2;-2
+15;R5 Criminal justice;dbctvrd;D34;Everyone has a duty to back the final verdict of the courts.;0;;;1;1
+15;R5 Criminal justice;lwstrob;D35;All laws should be strictly obeyed. ;5;;;1;1
+15;R5 Criminal justice;rgbrklw;D36;Doing the right thing sometimes means breaking the law.;1;;;1;1
+15;R5 Criminal justice;ctinplt;D37;The decisions and actions of the courts are unduly influenced by pressure from political parties and politicians.;2;;;1;1
+15;R5 Criminal justice;stcbg2t;D38;People have different ideas about the sentences which should be given to offenders. Take for instance the case of a 25 year old man who is found guilty of house burglary for the second time?;0;;;1;1
+15;R5 Criminal justice;tmprs;D39;And which of the answers on this card comes closest to the length of time you think he should spend in prison? ;0;;;1;1
+15;R5 Criminal justice;caplcst;D40;Imagine that you were out and saw someone push a man to the ground and steal his wallet. How likely would you be to call the police? ;4;;;1;1
+15;R5 Criminal justice;widprsn;D41;How willing would you be to identify the person who had done it? ;4;;;1;1
+15;R5 Criminal justice;wevdct;D42;And how willing would you be to give evidence in court against the accused?;4;;;1;1
+15;R5 Criminal justice;flsin5y;D43;Please tell me how often you have ...made an exaggerated or false insurance claim? ;-10;first asked in R2 Economic morality (E28);;-2;-2
+15;R5 Criminal justice;bstln5y;D44;...bought something you thought might be stolen? ;1;;;1;1
+15;R5 Criminal justice;troff5y;D45;...committed a traffic offence like speeding or crossing a red light?;0;;;1;1
+16;R6 Democracy;fairelc;E1;Please tell me how important you think it is for democracy in general... that national elections are free and fair?;7;;;1;1
+16;R6 Democracy;dspplvt;E2;...that voters discuss politics with people they know before deciding how to vote?;8;;;1;1
+16;R6 Democracy;dfprtal;E3;...that different political parties offer clear alternatives to one another?;7;;;1;1
+16;R6 Democracy;oppcrgv;E4;...that opposition parties are free to criticise the government?;6;;;1;1
+16;R6 Democracy;medcrgv;E5;?that the media are free to criticise the government?;7;;;1;1
+16;R6 Democracy;meprinf;E6;...that the media provide citizens with reliable information to judge the government?;8;;;1;1
+16;R6 Democracy;rghmgpr;E7;...that the rights of minority groups are protected?;9;;;1;1
+16;R6 Democracy;votedir;E8;...that citizens have the final say on the most important political issues by voting on them directly in referendums?;8;;;1;1
+16;R6 Democracy;imvtctz;E9;....that immigrants only get the right to vote in national elections once they become citizens?;4;;;1;1
+16;R6 Democracy;cttresa;E10;...that the courts treat everyone the same?;8;;;1;1
+16;R6 Democracy;ctstogv;E11;...that the courts are able to stop the government acting beyond its authority?;5;;;1;1
+16;R6 Democracy;gptpelc;E12;...that governing parties are punished in elections when they have done a bad job?;7;;;1;1
+16;R6 Democracy;gvctzpv;E13;...that the government protects all citizens against poverty?;7;;;1;1
+16;R6 Democracy;gvexpdc;E14;...that the government explains its decisions to voters?;5;;;1;1
+16;R6 Democracy;grdfinc;E15;...that the government takes measures to reduce differences in income levels?;6;;;1;1
+16;R6 Democracy;pltavie;E16;...that politicians take into account the views of other European governments before making decisions?;2;;;1;1
+16;R6 Democracy;fairelcc;E17;Please tell me to what extent you think each of the following statements applies in [country]? National elections in [country] are free and fair.;3;;;1;1
+16;R6 Democracy;dspplvtc;E18;Voters in [country] discuss politics with people they know before deciding how to vote.;3;;;1;1
+16;R6 Democracy;dfprtalc;E19;Different political parties in [country] offer clear alternatives to one another.;2;;;1;1
+16;R6 Democracy;oppcrgvc;E20;Opposition parties in [country] are free to criticise the government.;4;;;1;1
+16;R6 Democracy;medcrgvc;E21;The media in [country] are free to criticise the government.;4;;;1;1
+16;R6 Democracy;meprinfc;E22;The media in [country] provide citizens with reliable information to judge the government.;4;;;1;1
+16;R6 Democracy;rghmgprc;E23;The rights of minority groups in [country] are protected.;3;;;1;1
+16;R6 Democracy;votedirc;E24;Citizens in [country] have the final say on the most important political issues by voting on them directly in referendums. ;4;;;1;1
+16;R6 Democracy;cttresac;E25;The courts in [country] treat everyone the same?;3;;;1;1
+16;R6 Democracy;gptpelcc;E26;Governing parties in [country] are punished in elections when they have done a bad job.;4;;;1;1
+16;R6 Democracy;gvctzpvc;E27;The government in [country] protects all citizens against poverty.;4;;;1;1
+16;R6 Democracy;gvexpdcc;E28;The government in [country] explains its decisions to voters.;6;;;1;1
+16;R6 Democracy;grdfincc;E29;The government in [country] takes measures to reduce differences in income levels. ;5;Similar to core item B44 (R1);;1;1
+16;R6 Democracy;pltaviec;E30;Politicians in [country] take into account the views of other European governments before making decisions. ;2;;;1;1
+16;R6 Democracy;fplvdm;E31;Which one of the statements describes what you think is best for democracy in general? ? Everyone should be free to express their political views openly, even if they are extreme?;0;;;1;1
+16;R6 Democracy;fplvdmi;E32;How important do you think it is for democracy in general that everyone is free to express their political views openly, even if they are extreme? ;0;;;1;1
+16;R6 Democracy;fplvdmc;E33;To what extent do you think everyone in [country] today is free to express their political views openly, even if they are extreme?;0;;;1;1
+16;R6 Democracy;pplvdmi;E34;How important do you think it is for democracy in general that those who hold extreme political views are prevented from expressing them openly? ;0;;;1;1
+16;R6 Democracy;pplvdmc;E35;Using this card, to what extent do you think those who hold extreme political views in [country] today are prevented from  expressing them openly?;0;;;1;1
+16;R6 Democracy;chpldm;E36;Which one of the statements describes what you think is best for democracy in general?... The government should change its planned policies in response to what most people think?;1;;;1;1
+16;R6 Democracy;chpldmi;E37;How important do you think it is for democracy in general that the government changes its planned policies in response to what most people think? ;1;;;1;1
+16;R6 Democracy;chpldmc;E38;Please tell me how often you think the government in [country] today changes its planned policies in response to what most people think?;4;;;1;1
+16;R6 Democracy;stpldmi;E39;How important do you think it is for democracy in general that the government sticks to its planned policies regardless of what most people think? ;1;;;1;1
+16;R6 Democracy;stpldmc;E40;Please tell me how often you think the government in [country] today sticks to its planned policies regardless of what most people think?;1;;;1;1
+16;R6 Democracy;gvspcdm;E41;"The government in some countries is formed by  a single party; in other countries by two or more parties in coalition. Which option on this card describes what you think is best for democracy in general? ";0;;;1;1
+16;R6 Democracy;gvspdmi;E42;How important do you think it is for democracy in general that the government is formed by a single party? ;0;;;1;1
+16;R6 Democracy;gvspdmc;E43;Please tell me how often you think the government in [country] is formed by a single party?;0;;;1;1
+16;R6 Democracy;gvcodmi;E44;How important do you think it is for democracy in general that  the government is formed by two or more parties in coalition? ;0;;;1;1
+16;R6 Democracy;gvcodmc;E45;Please tell me how often you think the government in [country] is formed by two or more parties in coalition?;0;;;1;1
