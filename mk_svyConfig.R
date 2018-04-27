@@ -13,7 +13,6 @@ read.csv2("svydesign_info_ESS6.csv") %>%
 
 
 mk_ess_svy  <- function(svyinfo,
-                        rounds = 6,
                         email = "stefan.zins@gesis.org") {
   country <- as.character(svyinfo$country)
   #skip Austria
@@ -24,9 +23,8 @@ mk_ess_svy  <- function(svyinfo,
   } else {
     print(country)
     sddf_data <-
-      get_sddf(rounds = rounds,
-               country = country,
-               email = email)
+      grab_sddf(country = country,
+                email = email)
     
     if (country == "Denmark") {
       sddf_data %<>%
