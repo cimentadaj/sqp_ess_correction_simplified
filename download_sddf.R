@@ -4,13 +4,6 @@ library(httr)
 library(haven)
 library(tidyverse)
 
-#### Only change these parameters!
-rounds <- 6 # don't change this one yet!!
-country <- "Sweden"
-email <- ""
-####
-
-
 #### Functions
 
 # Safe getter
@@ -72,92 +65,97 @@ read_format_data <- function (urls, format, rounds) {
   dataset
 }
 
-#### Checking all main arguments are valid
-if (!rounds %in% show_rounds()) {
-  stop(rounds, " is not a valid round.")
+grab_sddf <- function(country, email) {
+  rounds <- 6 # don't change this one yet!!
+  #### Checking all main arguments are valid
+  if (!rounds %in% show_rounds()) {
+    stop(rounds, " is not a valid round.")
+  }
+  
+  if (!country %in% show_countries()) {
+    stop(country, " is not a available in ESS round ", rounds)
+  }
+  
+  ## Define all important links
+  ess_website <- "http://www.europeansocialsurvey.org"
+  ess_url <- paste0(ess_website, "/data/download.html?r=")
+  path_login <- "/user/login"
+  final_url <- paste0(ess_url, rounds)
+  ##
+  
+  ## Authenticate in ESS website
+  authenticate_ess(email, ess_website, path_login)
+  ###
+  
+  # Grab all country names
+  cnts <-
+    final_url %>% 
+    read_html() %>% 
+    xml_find_all(xpath = "//h4") %>% 
+    xml_text()
+  
+  # Grab all urls that have an sddf file
+  web_try <-
+    final_url %>%
+    read_html() %>% 
+    xml_find_all(xpath = "//div[@class='round_files']//ul") %>% 
+    as_list()
+  
+  # Because some countries don't have an sddf urls, they're missing
+  # a slot in the list that returns all the country details.
+  # Below I loop over the index of each country-info and grab
+  # the sddf url to donwload. Countries that don't have an sddf slot
+  # are replaced with an empty string '' and an empty attribute href.
+  # This is done so that the loop continues and doesn't crash.
+  # Later I remove the countries that don't have a sddf url.
+  all_sddf <-
+    map_chr(seq_along(web_try), ~ {
+      grab_list_link <-
+        subscript_error_handler(
+          transpose(web_try[[.x]])[[1]][[5]],
+          structure(list(""), href = "")
+        )
+      
+      grab_actual_link <- attr(grab_list_link, "href")
+      grab_actual_link
+    })
+  
+  # This returns all sddf urls
+  all_sddf
+  
+  # Which countries are available in the sddf website?
+  country_available <- country %in% cnts
+  
+  # GRab the index of the countries that are available
+  index_country <- country == cnts
+  
+  # Grab the sddf link of the chosen country
+  available_link <- web_try[index_country]
+  country_link <- all_sddf[index_country]
+  
+  # Raise an error if chose country doesn't have an sddf url
+  if (country_available &&  country_link == "") {
+    stop(country, " doesn't have weight data for round ", rounds)
+  }
+  
+  # Grab the specific 'stata' (or 'spss') zip url from 
+  # each country link and construct the full download path
+  format_urls <-
+    map_chr(country_link, grab_link, ess_website = ess_website) %>% 
+    paste0(ess_website, .)
+  
+  # Download the data and read it in stata format
+  sddf_data <-
+    essurvey:::round_downloader(
+      format_urls,
+      country,
+      tempdir()
+    ) %>% 
+    dirname() %>% 
+    read_format_data(format = 'stata', rounds = rounds)
+  
+  # all ready
+  sddf_data
 }
 
-if (!country %in% show_countries()) {
-  stop(country, " is not a available in ESS round ", rounds)
-}
-
-## Define all important links
-ess_website <- "http://www.europeansocialsurvey.org"
-ess_url <- paste0(ess_website, "/data/download.html?r=")
-path_login <- "/user/login"
-final_url <- paste0(ess_url, rounds)
-##
-
-## Authenticate in ESS website
-authenticate_ess(email, ess_website, path_login)
-###
-
-# Grab all country names
-cnts <-
-  final_url %>% 
-  read_html() %>% 
-  xml_find_all(xpath = "//h4") %>% 
-  xml_text()
-
-# Grab all urls that have an sddf file
-web_try <-
-  final_url %>%
-  read_html() %>% 
-  xml_find_all(xpath = "//div[@class='round_files']//ul") %>% 
-  as_list()
-
-# Because some countries don't have an sddf urls, they're missing
-# a slot in the list that returns all the country details.
-# Below I loop over the index of each country-info and grab
-# the sddf url to donwload. Countries that don't have an sddf slot
-# are replaced with an empty string '' and an empty attribute href.
-# This is done so that the loop continues and doesn't crash.
-# Later I remove the countries that don't have a sddf url.
-all_sddf <-
-  map_chr(seq_along(web_try), ~ {
-    grab_list_link <-
-      subscript_error_handler(
-        transpose(web_try[[.x]])[[1]][[5]],
-        structure(list(""), href = "")
-      )
-    
-    grab_actual_link <- attr(grab_list_link, "href")
-    grab_actual_link
-})
-
-# This returns all sddf urls
-all_sddf
-
-# Which countries are available in the sddf website?
-country_available <- country %in% cnts
-
-# GRab the index of the countries that are available
-index_country <- country == cnts
-
-# Grab the sddf link of the chosen country
-available_link <- web_try[index_country]
-country_link <- all_sddf[index_country]
-
-# Raise an error if chose country doesn't have an sddf url
-if (country_available &&  country_link == "") {
-  stop(country, " doesn't have weight data for round ", rounds)
-}
-
-# Grab the specific 'stata' (or 'spss') zip url from 
-# each country link and construct the full download path
-format_urls <-
-  map_chr(country_link, grab_link, ess_website = ess_website) %>% 
-  paste0(ess_website, .)
-
-# Download the data and read it in stata format
-sddf_data <-
-  essurvey:::round_downloader(
-    format_urls,
-    country,
-    tempdir()
-  ) %>% 
-  dirname() %>% 
-  read_format_data(format = 'stata', rounds = rounds)
-
-# all ready
-sddf_data
+# grab_sddf(country, email)
