@@ -6,7 +6,7 @@ source("download_sddf.R")
 
 mk_ess_svy  <- function(svyinfo,
                         ess_data,
-                        email = "stefan.zins@gesis.org") {
+                        email                                                            ) {
   country <- as.character(svyinfo$country)
   #skip Austria
   if (country %in% c("Austria", "Israel")) {
@@ -18,13 +18,12 @@ mk_ess_svy  <- function(svyinfo,
     sddf_data <-
       grab_sddf(country = country,
                 email = email)
-    
     if (country == "Denmark") {
       sddf_data %<>%
         filter(!is.na(idno))
     }
     if (country == "Iceland") {
-      #no stratification information in sddf
+      # now stratification information in sddf
       svyinfo$stratex1 <- "no"
     }
     
@@ -44,8 +43,11 @@ mk_ess_svy  <- function(svyinfo,
     svydesign(
       id = sta,
       strata = str,
-      weights = sddf_data$prob,
-      data = full_join(ess_data, sddf_data, by = c("cntry", "idno"))
+      weights = 1/sddf_data$prob,
+      data = suppressWarnings(
+        full_join(ess_data, sddf_data, by = c("cntry", "idno"))
+        )
+      # suppress 'has different attributes' warning of 'full_join'
     ) # merge ess data with sddf data so that all variables are
     # together
   }

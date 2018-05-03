@@ -13,9 +13,9 @@ library(sqpr)
 # Register for SQP here: http://sqp.upf.edu/accounts/login/?next=/loadui/
 # Once you run the three lines below you can erase your credentials to 
 # how it was before and during this session you will be logged in.
-Sys.setenv(ess_email = '')
-Sys.setenv(SQP_USER = '')
-Sys.setenv(SQP_PW = '')
+Sys.setenv(ess_email = 'stefan.zins@gesis.org')
+Sys.setenv(SQP_USER = 'BernStZi')
+Sys.setenv(SQP_PW = 'ConstructionOfStrata')
 
 country <- "Spain"
 # don't change this just yet. If you do, remember to change
@@ -95,7 +95,9 @@ read.csv2("svydesign_info_ESS6.csv") %>%
   svyinfo
 
 # Only grab svyinfo for selected country and create svy object
-ess_svy <- mk_ess_svy(svyinfo[[country]], ess6escorr, Sys.getenv("ess_email"))
+ess_svy <- mk_ess_svy(svyinfo[[country]], 
+                      ess6es,#ess6escorr, 
+                      Sys.getenv("ess_email"))
 
 ## ------------------------------------------------------------------------
 # Correlation matrix without weights:
@@ -106,10 +108,20 @@ original_corr_2
 ## ------------------------------------------------------------------------
 # Weighted correlation matrix and replacing the diagonal 
 # with the quality estimate of each variable
-corr_q2 <- 
-  svycor(~ stfdem + imbgeco + imueclt, design = ess_svy)$cors %>% 
-  `diag<-`(Quality$quality)
 
+#option to deal with lonegly PSUs
+options(survey.lonely.psu="adjust")
+
+
+corr_q2 <- 
+  svyvar(~ stfdem + imbgeco + imueclt, design = ess_svy, na.rm=TRUE) %>%
+  as.matrix %>%
+  cov2cor
+  #`diag<-`(Quality$quality) 
+
+attr(corr_q2,"statistic") <- "covariance"
+  
+  
 # `svycor` does not belong to the `survey package` but to the `jtools` package.
 # See https://cran.r-project.org/web/packages/jtools/vignettes/svycor.html
 # for a description of the function. It is actually implemented by Thomas
