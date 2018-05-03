@@ -28,15 +28,6 @@ ess6es <-
   import_country(country, 6) %>%
   recode_missings() 
 
-### Download SDDF data ess
-# We shouldn't use the file download_sddf directly but only
-# to extract the function grab_sddf
-source("./download_sddf.R")
-
-ess6sddf <- grab_sddf(country, Sys.getenv("ess_email"))
-
-ess6es <- full_join(ess6es, ess6sddf, by = c("cntry", "idno"))
-
 # Select all variables of the analysis available in the dataset
 # Place the dependent variable as the first and all remaining independent
 # variables in whatever order
@@ -87,36 +78,28 @@ Quality
 Quality <- Quality[match(selected_vars, Quality$question), ]
 
 ## ------------------------------------------------------------------------
-# Define variables for weighting from sddf
-svy_vars <- list(
-  ids = ~psu,
-  strata = ~stratify,
-  probs = ~prob
-)
-
-# weight variables as strings for subsetting as columns
-wgt_vars <- map_chr(svy_vars, ~ as.character(.x)[-1])
-
-# Select the variables of interesting the svydesign variables
-# (already merged previously from the sddf)
+# Select the variables
 ess6escorr <- 
   ess6es %>%
-  select(c(selected_vars, wgt_vars)) %>% 
+  select(c("cntry", "idno", selected_vars)) %>% 
   filter(complete.cases(.))
 
-# Define survey design
-ess_svy <-
-  svydesign(
-  ids = svy_vars[["ids"]],
-  strata = svy_vars[["stratify"]],
-  probs = svy_vars[["probs"]],
-  data = ess6escorr
-)
+# Download SDDF data and create svydesign object
+# using `mk_ess_svy`
+source("./mk_svyConfig.R")
+
+#load sampling design information
+read.csv2("svydesign_info_ESS6.csv") %>%
+  filter(domains %% 1 == 0) %>%
+  split(.,.$country) ->
+  svyinfo
+
+# Only grab svyinfo for selected country and create svy object
+ess_svy <- mk_ess_svy(svyinfo[[country]], ess6escorr, Sys.getenv("ess_email"))
 
 ## ------------------------------------------------------------------------
-# Correlation matrix:
-# Excluding weight vars
-original_corr_2 <- cor(ess6escorr[which(!names(ess6escorr) %in% wgt_vars)],
+# Correlation matrix without weights:
+original_corr_2 <- cor(ess6escorr[selected_vars],
                        use = "complete.obs", method = "pearson")
 
 original_corr_2

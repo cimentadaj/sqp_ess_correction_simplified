@@ -1,18 +1,11 @@
-library(magrittr)
-
 # email   <- "stefan.zins@gesis.org" 
 # rounds  <- 6 # don't change this one yet!!
 # country <- "Albania"
 source("download_sddf.R")
 
-#load sampling design information
-read.csv2("svydesign_info_ESS6.csv") %>%
-  filter(domains %% 1 == 0) %>%
-  split(.,.$country) ->
-  svyinfo
-
 
 mk_ess_svy  <- function(svyinfo,
+                        ess_data,
                         email = "stefan.zins@gesis.org") {
   country <- as.character(svyinfo$country)
   #skip Austria
@@ -51,13 +44,14 @@ mk_ess_svy  <- function(svyinfo,
     svydesign(
       id = sta,
       strata = str,
-      weights = 1 / sddf_data$prob,
-      data = sddf_data
-    )
+      weights = sddf_data$prob,
+      data = full_join(ess_data, sddf_data, by = c("cntry", "idno"))
+    ) # merge ess data with sddf data so that all variables are
+    # together
   }
   
 }
 
 # Test for all ess countries
-ess6_svydesign <- sapply(svyinfo, mk_ess_svy)
+# ess6_svydesign <- sapply(svyinfo, mk_ess_svy)
 
