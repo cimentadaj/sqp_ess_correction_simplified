@@ -4,7 +4,7 @@ library(jtools)
 library(tidyverse)
 library(essurvey)
 
-devtools::install_github("asqm/sqpr")
+#devtools::install_github("asqm/sqpr")
 library(sqpr)
 
 ### Set your credentials here
@@ -13,9 +13,9 @@ library(sqpr)
 # Register for SQP here: http://sqp.upf.edu/accounts/login/?next=/loadui/
 # Once you run the three lines below you can erase your credentials to 
 # how it was before and during this session you will be logged in.
-Sys.setenv(ess_email = 'stefan.zins@gesis.org')
-Sys.setenv(SQP_USER = 'BernStZi')
-Sys.setenv(SQP_PW = 'ConstructionOfStrata')
+Sys.setenv(ess_email = '')
+Sys.setenv(SQP_USER = '')
+Sys.setenv(SQP_PW = '')
 
 country <- "Spain"
 # don't change this just yet. If you do, remember to change
@@ -112,23 +112,15 @@ original_corr_2
 #option to deal with lonegly PSUs
 options(survey.lonely.psu="adjust")
 
-
 corr_q2 <- 
   svyvar(~ stfdem + imbgeco + imueclt, design = ess_svy, na.rm=TRUE) %>%
   as.matrix %>%
   cov2cor
-  #`diag<-`(Quality$quality) 
 
 attr(corr_q2,"statistic") <- "covariance"
-  
-  
-# `svycor` does not belong to the `survey package` but to the `jtools` package.
-# See https://cran.r-project.org/web/packages/jtools/vignettes/svycor.html
-# for a description of the function. It is actually implemented by Thomas
-# Lumley (survey author) in a random forum post:
-# https://stackoverflow.com/questions/34418822/pearson-correlation-coefficient-in-rs-survey-package#41031088
-# and someone just took the code and put it in their package so we have
-# full confidence it has the same quality as the `survey` code.
+# Replace diagonal
+diag(corr_q2) <- Quality$quality
+
 corr_q2
 
 ## ------------------------------------------------------------------------
@@ -147,8 +139,10 @@ corr_q2_cmv
 # Turn into a covariance matrix
 corrected_corr <- corr_q2_cmv %>% select(-rowname) %>% as.matrix() %>% cov2cor()
 
+# diag(corrected_corr) <- Quality$quality
 corrected_corr
 ## ------------------------------------------------------------------------
+# Create model formula
 model<- paste0(selected_vars[1], " ~ ", paste0(selected_vars[-1], collapse = " + "))
 sample_size <- nrow(ess6escorr)
 
@@ -162,7 +156,7 @@ fit <-
 fit.corrected <-
   sem(model,
       sample.cov=corrected_corr,
-      sample.nobs= sample_size) 
+      sample.nobs= sample_size)
 
 ## ---- fig.width = 7, fig.with = 9----------------------------------------
 # Difference in coefficients between models
