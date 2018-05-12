@@ -11,20 +11,6 @@ safe_GET <- function(url, config = list(), ...) {
   httr::stop_for_status(httr::GET(url = url, config = config, ...))
 }
 
-# Some countries don't have sddf files and below I grab
-# the sddf file by subsetting a slot in a list that contains
-# the url (after scraping). Some countries dont contain this
-# slot, so an error is raised because the slot of the url is
-# not available. With this function I capture that error and
-# replace it with an empty string so the 'url-grabbing' con
-# continue without crashing.
-subscript_error_handler <- function(expr, fill_with, ...) {
-  res <- tryCatch(expr = expr,
-                  error = function(e) return(fill_with),
-                  ...)
-  res
-}
-
 # This function returns the stata or spss link of a given sddf
 # file.
 grab_link <- function(link, ess_website, format = "stata") {
@@ -54,19 +40,28 @@ authenticate_ess <- function (ess_email, ess_website, path_login) {
 # This function takes a dir and reads all files in the argument
 # format and then deletes the files.
 read_format_data <- function (urls, format, rounds) {
-  format_read <- switch(format, spss = haven::read_spss, stata = haven::read_dta)
-  format_ext <- c(".dta", ".sav")
-  format_dirs <- list.files(urls, pattern = paste0(format_ext, 
-                                                   "$", collapse = "|"), full.names = TRUE)
+  # Added this in different from essurvey
+  on.exit(unlink(format_dirs, recursive = TRUE, force = TRUE))
+  
+  format_read <- switch(format,
+                        spss = haven::read_spss,
+                        stata = haven::read_dta)
+  
+  # Added this different from essurvey
+  format_ext <- if (format == 'stata') ".dta" else c(".sav", ".por")
+  
+  format_path <- paste0(format_ext, "$", collapse = "|")
+  format_dirs <- list.files(urls, pattern = format_path,
+                            full.names = TRUE)
+  
   dataset <- lapply(format_dirs, format_read)
-  unlink(format_dirs, recursive = TRUE, force = TRUE)
+
   if (length(rounds) == 1) 
     dataset <- dataset[[1]]
   dataset
 }
 
-grab_sddf <- function(country, email) {
-  rounds <- 6 # don't change this one yet!!
+grab_sddf <- function(rounds, country, email) {
   #### Checking all main arguments are valid
   if (!rounds %in% show_rounds()) {
     stop(rounds, " is not a valid round.")
@@ -104,21 +99,27 @@ grab_sddf <- function(country, email) {
   # Because some countries don't have an sddf urls, they're missing
   # a slot in the list that returns all the country details.
   # Below I loop over the index of each country-info and grab
-  # the sddf url to donwload. Countries that don't have an sddf slot
-  # are replaced with an empty string '' and an empty attribute href.
-  # This is done so that the loop continues and doesn't crash.
-  # Later I remove the countries that don't have a sddf url.
+  # the sddf url to donwload are returned an empty string
   all_sddf <-
-    map_chr(seq_along(web_try), ~ {
-      grab_list_link <-
-        subscript_error_handler(
-          transpose(web_try[[.x]])[[1]][[5]],
-          structure(list(""), href = "")
-        )
+    vapply(seq_along(web_try), function(index) {
       
-      grab_actual_link <- attr(grab_list_link, "href")
-      grab_actual_link
-    })
+      cnt_slot <- web_try[[index]]
+      
+      index_sample <-
+        which(vapply(transpose(cnt_slot),
+               function(.x) grepl("SDDF", .x),
+               FUN.VALUE = logical(length(cnt_slot))))
+      
+      # If not SDDF file found then return empty chr, otherwise
+      # grab the href attr
+      if (length(index_sample) == 0) {
+        grabs_link <- ""
+      } else {
+        grabs_link <- attr(cnt_slot[[index_sample]][[1]], "href")
+      }
+      
+      grabs_link
+    }, FUN.VALUE = character(1))
   
   # This returns all sddf urls
   all_sddf
@@ -141,22 +142,27 @@ grab_sddf <- function(country, email) {
   # Grab the specific 'stata' (or 'spss') zip url from 
   # each country link and construct the full download path
   format_urls <-
-    map_chr(country_link, grab_link, ess_website = ess_website) %>% 
+    map_chr(country_link, grab_link, ess_website = ess_website, format = "stata") %>% 
     paste0(ess_website, .)
   
   # Download the data and read it in stata format
-  sddf_data <-
+  folder_data <-
     essurvey:::round_downloader(
       format_urls,
       country,
       tempdir()
     ) %>% 
-    dirname() %>% 
-    read_format_data(format = 'stata', rounds = rounds)
+    grep("SDDF", ., value = TRUE) %>% 
+    dirname()
+  
+  sddf_data <- read_format_data(folder_data, 
+                                format = 'stata',
+                                rounds = rounds)
+  
+  names(sddf_data) <- tolower(names(sddf_data))
   
   # all ready
   sddf_data
 }
 
-# grab_sddf(country, email)
 

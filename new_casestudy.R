@@ -21,11 +21,11 @@ country <- "Spain"
 # don't change this just yet. If you do, remember to change
 # the country and language where the `sqpr` package
 # extracts quality estimates from the SQP API.
-
+round <- 6
 
 ### Download ESS
 ess6es <-
-  import_country(country, 6) %>%
+  import_country(country, round) %>%
   recode_missings() 
 
 # Select all variables of the analysis available in the dataset
@@ -97,6 +97,7 @@ read.csv2("svydesign_info_ESS6.csv") %>%
 # Only grab svyinfo for selected country and create svy object
 ess_svy <- mk_ess_svy(svyinfo[[country]], 
                       ess6es,#ess6escorr, 
+                      round = round, # keep this one for now
                       Sys.getenv("ess_email"))
 
 ## ------------------------------------------------------------------------
