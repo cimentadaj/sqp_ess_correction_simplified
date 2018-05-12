@@ -37,14 +37,15 @@ mk_ess_svy  <- function(svyinfo, ess_data, round, email) {
       } else{
         ~ idno
       }
-    
+    svydata <- 
+      suppressWarnings(
+        full_join(ess_data, sddf_data, by = c("cntry", "idno"))
+        )
     svydesign(
       id = sta,
       strata = str,
-      weights = 1/sddf_data$prob,
-      data = suppressWarnings(
-        full_join(ess_data, sddf_data, by = c("cntry", "idno"))
-        )
+      weights = ~ dweight,
+      data = svydata
       # suppress 'has different attributes' warning of 'full_join'
     ) # merge ess data with sddf data so that all variables are
     # together
