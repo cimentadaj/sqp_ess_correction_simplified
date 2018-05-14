@@ -40,8 +40,6 @@ selected_vars <- c("stfdem", "imbgeco", "imueclt")
 # imueclt: Attitudes towards immigration , consequences :
 # cultural life enriched or undermined 10 enriched, 0 not enriched
 
-all_vars <- selected_vars # for using later
-
 ## ------------------------------------------------------------------------
 ess6es
 
