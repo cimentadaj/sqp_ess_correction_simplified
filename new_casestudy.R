@@ -3,6 +3,7 @@ library(survey)
 library(jtools)
 library(tidyverse)
 library(essurvey)
+library(plotly)
 
 #devtools::install_github("asqm/sqpr")
 library(sqpr)
@@ -18,7 +19,7 @@ Sys.setenv(SQP_USER = '')
 Sys.setenv(SQP_PW = '')
 
 # Chosen country. Select here.
-country <- "France"
+country <- "Spain"
 
 ## All available countries in the application
 all_countries <- c("Spain",
@@ -183,12 +184,16 @@ coef_table <-
   bind_rows() %>%
   mutate(model = rep(c("original", "corrected"), each = ncol(corrected_corr)))
 
-coef_table %>%
+p1 <-
+  coef_table %>%
   ggplot(aes(rhs, est, colour = model)) +
-  geom_linerange(aes(ymin = ci.lower, ymax = ci.upper), position = position_dodge(width = 0.5)) +
+  geom_linerange(aes(ymin = ci.lower, ymax = ci.upper),
+                 position = position_dodge(width = 0.5)) +
   geom_point(position = position_dodge(width = 0.5)) +
   labs(x = "Predictors", y = "Estimated coefficients") +
   theme_bw()
+
+ggplotly(p1)
 
 ## ------------------------------------------------------------------------
 # Relative increase (they don't only go up!):
