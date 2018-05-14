@@ -3,6 +3,7 @@ library(survey)
 library(jtools)
 library(tidyverse)
 library(essurvey)
+library(plotly)
 
 #devtools::install_github("asqm/sqpr")
 library(sqpr)
@@ -17,15 +18,26 @@ Sys.setenv(ess_email = 'stefan.zins@gesis.org')
 Sys.setenv(SQP_USER = 'sqpr_tests')
 Sys.setenv(SQP_PW = 'sqpr2018')
 
+# Chosen country. Select here.
 country <- "Spain"
-# don't change this just yet. If you do, remember to change
-# the country and language where the `sqpr` package
-# extracts quality estimates from the SQP API.
 
+## All available countries in the application
+all_countries <- c("Spain",
+                   "Germany",
+                   "Netherlands",
+                   "Portugal",
+                   "France",
+                   "United Kingdom",
+                   "Ireland")
+
+country_abbrv <- c("ES", "DE", "NL", "PT", "FR", "GB", "GB", "IE")
+
+chosen_cabbrv <- country_abbrv[which(country == all_countries)]
+round <- 6
 
 ### Download ESS
 ess6es <-
-  import_country(country, 6) %>%
+  import_country(country, round) %>%
   recode_missings() 
 
 # Select all variables of the analysis available in the dataset
@@ -41,8 +53,6 @@ admin_vars    <- c("cntry", "idno", "dweight", "pweight", "pspwght")
 # imueclt: Attitudes towards immigration , consequences :
 # cultural life enriched or undermined 10 enriched, 0 not enriched
 
-all_vars <- selected_vars # for using later
-
 ## ------------------------------------------------------------------------
 ess6es
 
@@ -56,7 +66,11 @@ study_id <- find_studies("ESS Round 6")$id
 questions <-
   study_id %>%
   find_questions(selected_vars) %>%
-  filter(country_iso == "ES", language_iso == "spa")
+  filter(country_iso == chosen_cabbrv)
+
+if (chosen_cabbrv == "ES") {
+  questions <- filter(questions, language_iso == "spa")
+}
 
 ## ------------------------------------------------------------------------
 # Just check all questions are present in SQP and in our dataset
@@ -185,12 +199,16 @@ coef_table <-
   bind_rows() %>%
   mutate(model = rep(c("original", "corrected"), each = ncol(corrected_corr)))
 
-coef_table %>%
+p1 <-
+  coef_table %>%
   ggplot(aes(rhs, est, colour = model)) +
-  geom_linerange(aes(ymin = ci.lower, ymax = ci.upper), position = position_dodge(width = 0.5)) +
+  geom_linerange(aes(ymin = ci.lower, ymax = ci.upper),
+                 position = position_dodge(width = 0.5)) +
   geom_point(position = position_dodge(width = 0.5)) +
   labs(x = "Predictors", y = "Estimated coefficients") +
   theme_bw()
+
+ggplotly(p1)
 
 ## ------------------------------------------------------------------------
 # Relative increase (they don't only go up!):

@@ -4,9 +4,7 @@
 source("download_sddf.R")
 
 
-mk_ess_svy  <- function(svyinfo,
-                        ess_data,
-                        email                                                            ) {
+mk_ess_svy  <- function(svyinfo, ess_data, round, email) {
   country <- as.character(svyinfo$country)
   #skip Austria
   if (country %in% c("Austria", "Israel")) {
@@ -14,9 +12,9 @@ mk_ess_svy  <- function(svyinfo,
     #Israel doesn't have weight data for round 6 in the SDDF
     return(NULL)
   } else {
-    print(country)
     sddf_data <-
-      grab_sddf(country = country,
+      grab_sddf(rounds = round,
+                country = country,
                 email = email)
     if (country == "Denmark") {
       sddf_data %<>%
