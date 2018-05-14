@@ -17,10 +17,21 @@ Sys.setenv(ess_email = '')
 Sys.setenv(SQP_USER = '')
 Sys.setenv(SQP_PW = '')
 
-country <- "Spain"
-# don't change this just yet. If you do, remember to change
-# the country and language where the `sqpr` package
-# extracts quality estimates from the SQP API.
+# Chosen country. Select here.
+country <- "France"
+
+## All available countries in the application
+all_countries <- c("Spain",
+                   "Germany",
+                   "Netherlands",
+                   "Portugal",
+                   "France",
+                   "United Kingdom",
+                   "Ireland")
+
+country_abbrv <- c("ES", "DE", "NL", "PT", "FR", "GB", "GB", "IE")
+
+chosen_cabbrv <- country_abbrv[which(country == all_countries)]
 round <- 6
 
 ### Download ESS
@@ -53,7 +64,11 @@ study_id <- find_studies("ESS Round 6")$id
 questions <-
   study_id %>%
   find_questions(selected_vars) %>%
-  filter(country_iso == "ES", language_iso == "spa")
+  filter(country_iso == chosen_cabbrv)
+
+if (chosen_cabbrv == "ES") {
+  questions <- filter(questions, language_iso == "spa")
+}
 
 ## ------------------------------------------------------------------------
 # Just check all questions are present in SQP and in our dataset
