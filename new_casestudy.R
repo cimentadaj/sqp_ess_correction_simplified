@@ -14,9 +14,9 @@ library(sqpr)
 # Register for SQP here: http://sqp.upf.edu/accounts/login/?next=/loadui/
 # Once you run the three lines below you can erase your credentials to 
 # how it was before and during this session you will be logged in.
-Sys.setenv(ess_email = '')
-Sys.setenv(SQP_USER = '')
-Sys.setenv(SQP_PW = '')
+Sys.setenv(ess_email = 'stefan.zins@gesis.org')
+Sys.setenv(SQP_USER = 'sqpr_tests')
+Sys.setenv(SQP_PW = 'sqpr2018')
 
 # Chosen country. Select here.
 country <- "Spain"
@@ -44,6 +44,7 @@ ess6es <-
 # Place the dependent variable as the first and all remaining independent
 # variables in whatever order
 selected_vars <- c("stfdem", "imbgeco", "imueclt")
+admin_vars    <- c("cntry", "idno", "dweight", "pweight", "pspwght")
 # stfdem: Stf w/ democracy
 
 # imbgeco: Attitudes towards immigration , consequences :
@@ -92,10 +93,12 @@ Quality
 Quality <- Quality[match(selected_vars, Quality$question), ]
 
 ## ------------------------------------------------------------------------
-# Select the variables
+# Select the variables | complete.case analysis
+# admin vars: "cntry", "idno", "dweight", "pweight", "pspwght"
+
 ess6escorr <- 
   ess6es %>%
-  select(c("cntry", "idno", selected_vars)) %>% 
+  select(c(admin_vars, selected_vars)) %>% 
   filter(complete.cases(.))
 
 # Download SDDF data and create svydesign object
@@ -109,26 +112,35 @@ read.csv2("svydesign_info_ESS6.csv") %>%
   svyinfo
 
 # Only grab svyinfo for selected country and create svy object
-ess_svy <- mk_ess_svy(svyinfo[[country]], 
-                      ess6es,#ess6escorr, 
-                      round = round, # keep this one for now
-                      Sys.getenv("ess_email"))
+ess_svy <- 
+  mk_ess_svy(svyinfo = svyinfo[[country]], 
+             ess_data = ess6escorr,
+             email = Sys.getenv("ess_email"))
 
 ## ------------------------------------------------------------------------
 # Correlation matrix without weights:
 original_corr_2 <- cor(ess6escorr[selected_vars],
-                       use = "complete.obs", method = "pearson")
+                       use = "complete.obs", 
+                       method = "pearson")
 
 original_corr_2
 ## ------------------------------------------------------------------------
 # Weighted correlation matrix and replacing the diagonal 
 # with the quality estimate of each variable
 
+selected_vars_formula <- 
+  eval(parse(text = 
+               paste0("~",
+                      paste0(selected_vars,
+                             collapse = "+"))
+             )
+       )
+
 #option to deal with lonegly PSUs
 options(survey.lonely.psu="adjust")
 
 corr_q2 <- 
-  svyvar(~ stfdem + imbgeco + imueclt, design = ess_svy, na.rm=TRUE) %>%
+  svyvar(selected_vars_formula, design = ess_svy, na.rm = TRUE) %>%
   as.matrix %>%
   cov2cor
 
@@ -141,7 +153,7 @@ corr_q2
 ## ------------------------------------------------------------------------
 #subtract the cmv from the observed correlation
 # Calculate the common method variance of some variables
-# and subtrct that common method variance from the correlation
+# and subtract that common method variance from the correlation
 # coefficients of the variables
 corr_q2_cmv <-
   sqp_cmv(x = corr_q2,
@@ -151,14 +163,17 @@ corr_q2_cmv <-
 corr_q2_cmv
 ## ------------------------------------------------------------------------
 ## ------------------------------------------------------------------------
-# Turn into a covariance matrix
+# Turn into a correlation matrix
 corrected_corr <- corr_q2_cmv %>% select(-rowname) %>% as.matrix() %>% cov2cor()
 
 # diag(corrected_corr) <- Quality$quality
 corrected_corr
 ## ------------------------------------------------------------------------
 # Create model formula
-model<- paste0(selected_vars[1], " ~ ", paste0(selected_vars[-1], collapse = " + "))
+model <- paste0(selected_vars[1], 
+                " ~ ", 
+                paste0(selected_vars[-1], collapse = " + "))
+
 sample_size <- nrow(ess6escorr)
 
 # Model based on original correlation matrix

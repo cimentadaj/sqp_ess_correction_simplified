@@ -37,9 +37,10 @@ mk_ess_svy  <- function(svyinfo, ess_data, round, email) {
       } else{
         ~ idno
       }
+    #ess_data is complete case data set only
     svydata <- 
       suppressWarnings(
-        full_join(ess_data, sddf_data, by = c("cntry", "idno"))
+        left_join(ess_data, sddf_data, by = c("cntry", "idno"))
         )
     svydesign(
       id = sta,
