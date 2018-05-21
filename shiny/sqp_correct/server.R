@@ -8,18 +8,24 @@
 #
 
 library(shiny)
+library(survey)
 
-
+# Replace w/ all ESS id's.
+all_ids <- c("id")
+# Replace w/ ess variables
 all_variables <- paste0("V", 1:9)
-toy_df <- as.data.frame(replicate(15, rpois(100, 10)))
+
+ess_df = cbind(id = 1:100, as.data.frame(replicate(15, rpois(100, 10))))
+sddf_data = data.frame(id = 1:100,
+                       stratify = sample(20, replace = TRUE),
+                       dweight = rnorm(100, mean = 1))
 
 server <- function(input, output, session) {
   
-  # Because the toy_df (ESS data) must be fresh to all users
-  # we leave it outside the session and create a subset that will
-  # be unique per user here. This way the user can have a
-  # non-conflicting copy of the data.
-  cp_toydf <- toy_df[all_variables]
+  # Because the ess_df (ESS data) must be fresh to all users
+  # we call it from `globals.R` in order for it to be available
+  # through out sessions. All countries are downloaded when
+  # the app is launched.
   
   observeEvent(input$ins_sscore, {
     # When user clicks insert, add
@@ -48,46 +54,93 @@ server <- function(input, output, session) {
                        selected = "def_model")
   })
   
-  new_df <-
+  ssnames <-
     eventReactive(input$def_model, {
+      if (input$ins_sscore == 0) return(character())
       
-      # If no sscore was defined, jump the above
-      if (input$ins_sscore == 0) return(cp_toydf)
+      # Create sscore names
+      vapply(1:input$ins_sscore,
+             function(x) input[[paste0("ssname", x)]],
+             FUN.VALUE = character(1))
+    })
+  
+  ## Define the three model parts
+  # Pick the dependent variable
+  output$dv <-
+    renderUI(
+      radioButtons("dv_ch",
+                   "Dependent variable",
+                   choices = c(all_variables, ssnames()),
+                   selected = all_variables[1])
+    )
+  
+  # Pick the independent variables
+  output$iv <-
+    renderUI(
+      checkboxGroupInput("iv_ch",
+                         "Independent variables",
+                         choices = setdiff(c(all_variables, ssnames()),
+                                           input$dv_ch))
+    )
+  
+  # Pick the variables that share CMV
+  output$cmv <-
+    renderUI(
+      checkboxGroupInput("cmv_ch",
+                         "Which variables have Common Method Variance?",
+                         choices = c(input$dv_ch, input$iv_ch))
+    )
+  
+  # YOU LEFT OFF HERE!
+  # rowSums below is generating an error when defining the model
+  # Maybe due to two things: tibble not being a matrix
+  # or I'm thinking it's a tibble but I've just subsetting something random
+  # Check it manually
+  
+  var_df <-
+    eventReactive(input$calc_model, {
+      # Choose country when user calculates model
+      upd_ess <- ess_df[[input$slid_cnt]][all_variables]
+      
+      # If no sscore was defined, return the same df the above
+      if (input$ins_sscore == 0) return(upd_ess)
       
       # We need to add new sscores to the origin df.
       # Calculate them here
       sscore <-
         lapply(1:input$ins_sscore, function(x) {
           all_sscore <- paste0("sscore", x)
-          rowSums(cp_toydf[input[[all_sscore]]], na.rm = TRUE)
+          rowSums(upd_ess[input[[all_sscore]]], na.rm = TRUE)
         })
       
-      # Create sscore names
-      ssnames <- vapply(1:input$ins_sscore,
-                        function(x) input[[paste0("ssname", x)]],
-                        FUN.VALUE = character(1))
-      
-      cbind(cp_toydf, as.data.frame(sscore, col.names = ssnames))
+      cbind(upd_ess, as.data.frame(sscore, col.names = ssnames()))
     })
   
-  output$dv <-
-    renderUI(
-      radioButtons("dv_ch",
-                   "Dependent variable",
-                   choices = names(new_df()),
-                   selected = names(new_df())[1])
-    )
+  # If calculate model is clicked, switch panel
+  observeEvent(input$calc_model, {
+    updateNavlistPanel(session,
+                       inputId = "menu",
+                       selected = "cre_model")
+  })
   
-  output$iv <-
-    renderUI(
-      checkboxGroupInput("iv_ch",
-                         "Independent variables",
-                         choices = setdiff(names(new_df()), input$dv_ch))
+  id_df <- reactive(
+    id_df <- ess_df[[input$slid_cnt]][all_ids]
+  )
+  
+  
+  ## Replace all of this w/ the sddf script
+  # Define svydesign object
+  weighted_data <-
+    reactive(
+    svydesign(
+      id = ~ id,
+      strata = ~ stratify,
+      weights = ~ dweight,
+      data = dplyr::left_join(cbind(id_df(), var_df()), sddf_data, by = all_ids)
     )
-  output$cmv <-
-    renderUI(
-      checkboxGroupInput("cmv_ch",
-                         "Which variables have Common Method Variance?",
-                         choices = names(new_df()))
-    )
+  )
+  
+  observe(
+    print(weighted_data())
+  )
 }

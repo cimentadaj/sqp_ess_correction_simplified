@@ -9,20 +9,9 @@
 
 library(shiny)
 
-toy_df <- as.data.frame(replicate(10, rnorm(100)))
 
 # Define UI for application that draws a histogram
 ui <- 
-  # mainPanel(
-  #   tabsetPanel(
-  #     tabPanel("Define sum scores",
-  #         actionButton('insertBtn', 'Insert new sum score'),
-  #         tags$div(id = 'placeholder'),
-  #         actionButton('whatever', 'Define model')
-  #       )
-  #     )
-  #   )
-  
   fluidPage(
     navlistPanel(id = "menu", widths = c(2, 8),
       tabPanel("Create sum scores",
@@ -31,8 +20,11 @@ ui <-
                actionButton('def_model', "I'm done, I want to define my model")
       ),
       tabPanel("Define the model", value = "def_model",
+               selectInput("slid_cnt", "Pick a country", choices = all_countries),
                fluidRow(column(3, uiOutput("dv")),
                         column(3, uiOutput("iv")),
-                        column(5, uiOutput("cmv"))))
+                        column(5, uiOutput("cmv"))),
+               actionButton("calc_model", "Create model")),
+      tabPanel("Create model", value = "cre_model")
     )
   )
