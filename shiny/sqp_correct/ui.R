@@ -24,12 +24,15 @@ ui <-
   #   )
   
   fluidPage(
-    navlistPanel(id = "menu",
+    navlistPanel(id = "menu", widths = c(2, 8),
       tabPanel("Create sum scores",
                actionButton('ins_sscore', 'Insert new sum score'),
                tags$div(id = 'placeholder'),
                actionButton('def_model', "I'm done, I want to define my model")
       ),
-      tabPanel("Define the model", value = "def_model")
+      tabPanel("Define the model", value = "def_model",
+               fluidRow(column(3, uiOutput("dv")),
+                        column(3, uiOutput("iv")),
+                        column(5, uiOutput("cmv"))))
     )
   )
