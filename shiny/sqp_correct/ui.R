@@ -9,11 +9,27 @@
 
 library(shiny)
 
+toy_df <- as.data.frame(replicate(10, rnorm(100)))
+
 # Define UI for application that draws a histogram
-shinyUI(
-    fluidPage( 
-      actionButton('insertBtn', 'Insert'), 
-      tags$div(id = 'placeholder') 
+ui <- 
+  # mainPanel(
+  #   tabsetPanel(
+  #     tabPanel("Define sum scores",
+  #         actionButton('insertBtn', 'Insert new sum score'),
+  #         tags$div(id = 'placeholder'),
+  #         actionButton('whatever', 'Define model')
+  #       )
+  #     )
+  #   )
+  
+  fluidPage(
+    navlistPanel(
+      tabPanel("Create sum scores",
+               actionButton('insertBtn', 'Insert new sum score'),
+               tags$div(id = 'placeholder'),
+               actionButton('whatever', 'Define model')
+      ),
+      tabPanel("Define the model")
+    )
   )
-    # Sidebar with a slider input for number of bins 
-)
