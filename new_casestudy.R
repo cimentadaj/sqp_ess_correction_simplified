@@ -115,7 +115,8 @@ read.csv2("svydesign_info_ESS6.csv") %>%
 ess_svy <- 
   mk_ess_svy(svyinfo = svyinfo[[country]], 
              ess_data = ess6escorr,
-             email = Sys.getenv("ess_email"))
+             email = Sys.getenv("ess_email"),
+             round = 6)
 
 ## ------------------------------------------------------------------------
 # Correlation matrix without weights:
