@@ -24,12 +24,12 @@ ui <-
   #   )
   
   fluidPage(
-    navlistPanel(
+    navlistPanel(id = "menu",
       tabPanel("Create sum scores",
-               actionButton('insertBtn', 'Insert new sum score'),
+               actionButton('ins_sscore', 'Insert new sum score'),
                tags$div(id = 'placeholder'),
-               actionButton('whatever', 'Define model')
+               actionButton('def_model', "I'm done, I want to define my model")
       ),
-      tabPanel("Define the model")
+      tabPanel("Define the model", value = "def_model")
     )
   )
