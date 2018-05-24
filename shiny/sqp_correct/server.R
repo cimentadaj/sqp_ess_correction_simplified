@@ -20,6 +20,18 @@ sddf_data = data.frame(id = 1:100,
                        stratify = sample(20, replace = TRUE),
                        dweight = rnorm(100, mean = 1))
 
+sqp_df <-
+  data.frame(question = paste0("V", 1:5),
+         quality = c(0.2, 0.3, 0.5, 0.6, 0.9),
+         reliability = c(0.1, 0.4, 0.5, 0.5, 0.7),
+         validity = c(0.3, 0.2, 0.6, 0.7, 0.8))
+
+sqp_df <- structure(sqp_df, class = c(class(sqp_df), "sqp"))
+
+
+#option to deal with lonegly PSUs
+options(survey.lonely.psu="adjust")
+
 server <- function(input, output, session) {
   
   # Because the ess_df (ESS data) must be fresh to all users
@@ -91,16 +103,12 @@ server <- function(input, output, session) {
                          choices = c(input$dv_ch, input$iv_ch))
     )
   
-  # YOU LEFT OFF HERE!
-  # rowSums below is generating an error when defining the model
-  # Maybe due to two things: tibble not being a matrix
-  # or I'm thinking it's a tibble but I've just subsetting something random
-  # Check it manually
-  
   var_df <-
     eventReactive(input$calc_model, {
       # Choose country when user calculates model
-      upd_ess <- ess_df[[input$slid_cnt]][all_variables]
+      # This is for when the ess data is available
+      # upd_ess <- ess_df[[input$slid_cnt]][all_variables]
+      upd_ess <- ess_df[all_variables]
       
       # If no sscore was defined, return the same df the above
       if (input$ins_sscore == 0) return(upd_ess)
@@ -112,7 +120,7 @@ server <- function(input, output, session) {
           all_sscore <- paste0("sscore", x)
           rowSums(upd_ess[input[[all_sscore]]], na.rm = TRUE)
         })
-      
+
       cbind(upd_ess, as.data.frame(sscore, col.names = ssnames()))
     })
   
@@ -123,24 +131,80 @@ server <- function(input, output, session) {
                        selected = "cre_model")
   })
   
-  id_df <- reactive(
-    id_df <- ess_df[[input$slid_cnt]][all_ids]
-  )
+  matrices <- eventReactive(input$calc_model, {
+    
+    # For when the ess data is in
+    # id_df <- ess_df[[input$slid_cnt]][all_ids]
+    id_df <- ess_df[all_ids]
+    
+    
+    ## Replace all of this w/ the sddf script
+    # Define svydesign object
+    weighted_data <-
+        svydesign(
+          id = ~ id,
+          strata = ~ stratify,
+          weights = ~ dweight,
+          data = dplyr::left_join(cbind(id_df, var_df()), sddf_data, by = all_ids)
+        )
+    
+    ch_vars <- c(input$dv_ch, input$iv_ch)
+    
+    ### Calculations begin ####
+    
+    # Correlation matrix without weights:
+    original <- cor(var_df()[ch_vars],
+                    use = "complete.obs",
+                    method = "pearson")
+    
+    selected_vars_formula <- 
+      eval(
+        parse(text = paste0("~", paste0(ch_vars,collapse = "+"))
+        )
+      )
+    
+    
+    # We get the covariance of the variables instead of the
+    # correlation
+    cor_q2 <- 
+      cov2cor(
+        as.matrix(
+          svyvar(selected_vars_formula, design = weighted_data, na.rm = TRUE)
+        )
+      )
+
+    attr(cor_q2,"statistic") <- "covariance"
+    
+    # Subset chosen variables in sqp_df
+    filtered_sqp <- sqp_df[sqp_df[[1]] %in% ch_vars, ]
+    
+    # Replace diagonal by multiplying it with the quality of each variable
+    diag(cor_q2) <- diag(cor_q2) * filtered_sqp$quality
+    
+    #subtract the cmv from the observed correlation
+    # Calculate the common method variance of some variables
+    # and subtract that common method variance from the correlation
+    # coefficients of the variables.
+    
+    # The sqpr::sqp_cmv is a bit strange for programming
+    # because it uses non standard evaluation. I defined
+    # sqp_cmv_str in `globals.R` to be the same
+    # but it accepts a string in cmv_vars instead of `...`
+    # in sqpr::sqp_cmv
+    corrected <-
+      cov2cor(
+        as.matrix(
+          sqp_cmv_str(x = cor_q2,
+                      sqp_data = filtered_sqp,
+                      cmv_vars = input$cmv_ch)[-1]
+        )
+      )
+
+    list(original = original, corrected = corrected)
+  })
   
+  observe({
+    print(matrices())
+  })
   
-  ## Replace all of this w/ the sddf script
-  # Define svydesign object
-  weighted_data <-
-    reactive(
-    svydesign(
-      id = ~ id,
-      strata = ~ stratify,
-      weights = ~ dweight,
-      data = dplyr::left_join(cbind(id_df(), var_df()), sddf_data, by = all_ids)
-    )
-  )
-  
-  observe(
-    print(weighted_data())
-  )
 }
