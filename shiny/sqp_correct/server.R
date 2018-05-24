@@ -9,16 +9,22 @@
 
 library(shiny)
 library(survey)
+library(ggplot2)
+library(lavaan)
+library(jtools)
+library(dplyr)
+library(purrr)
 
+set.seed(2311)
 # Replace w/ all ESS id's.
 all_ids <- c("id")
 # Replace w/ ess variables
 all_variables <- paste0("V", 1:9)
 
-ess_df = cbind(id = 1:100, as.data.frame(replicate(15, rpois(100, 10))))
-sddf_data = data.frame(id = 1:100,
+ess_df <- cbind(id = 1:100, as.data.frame(replicate(15, rpois(100, 10))))
+sddf_data <- data.frame(id = 1:100,
                        stratify = sample(20, replace = TRUE),
-                       dweight = rnorm(100, mean = 1))
+                       dweight = runif(100))
 
 sqp_df <-
   data.frame(question = paste0("V", 1:5),
@@ -75,6 +81,10 @@ server <- function(input, output, session) {
              function(x) input[[paste0("ssname", x)]],
              FUN.VALUE = character(1))
     })
+  # Delete any sumscores that are empty!
+  clean_ssnames <- reactive({
+    ssnames()[ssnames() != ""]
+  })
   
   ## Define the three model parts
   # Pick the dependent variable
@@ -82,7 +92,7 @@ server <- function(input, output, session) {
     renderUI(
       radioButtons("dv_ch",
                    "Dependent variable",
-                   choices = c(all_variables, ssnames()),
+                   choices = c(all_variables, clean_ssnames()),
                    selected = all_variables[1])
     )
   
@@ -91,7 +101,7 @@ server <- function(input, output, session) {
     renderUI(
       checkboxGroupInput("iv_ch",
                          "Independent variables",
-                         choices = setdiff(c(all_variables, ssnames()),
+                         choices = setdiff(c(all_variables, clean_ssnames()),
                                            input$dv_ch))
     )
   
@@ -120,7 +130,6 @@ server <- function(input, output, session) {
           all_sscore <- paste0("sscore", x)
           rowSums(upd_ess[input[[all_sscore]]], na.rm = TRUE)
         })
-
       cbind(upd_ess, as.data.frame(sscore, col.names = ssnames()))
     })
   
@@ -131,7 +140,7 @@ server <- function(input, output, session) {
                        selected = "cre_model")
   })
   
-  matrices <- eventReactive(input$calc_model, {
+  models_coef <- eventReactive(input$calc_model, {
     
     # For when the ess data is in
     # id_df <- ess_df[[input$slid_cnt]][all_ids]
@@ -166,20 +175,20 @@ server <- function(input, output, session) {
     
     # We get the covariance of the variables instead of the
     # correlation
-    cor_q2 <- 
+    corrected <- 
       cov2cor(
         as.matrix(
           svyvar(selected_vars_formula, design = weighted_data, na.rm = TRUE)
         )
       )
 
-    attr(cor_q2,"statistic") <- "covariance"
+    attr(corrected, "statistic") <- "covariance"
     
     # Subset chosen variables in sqp_df
     filtered_sqp <- sqp_df[sqp_df[[1]] %in% ch_vars, ]
     
     # Replace diagonal by multiplying it with the quality of each variable
-    diag(cor_q2) <- diag(cor_q2) * filtered_sqp$quality
+    diag(corrected) <- diag(corrected) * filtered_sqp$quality
     
     #subtract the cmv from the observed correlation
     # Calculate the common method variance of some variables
@@ -191,20 +200,57 @@ server <- function(input, output, session) {
     # sqp_cmv_str in `globals.R` to be the same
     # but it accepts a string in cmv_vars instead of `...`
     # in sqpr::sqp_cmv
-    corrected <-
-      cov2cor(
-        as.matrix(
-          sqp_cmv_str(x = cor_q2,
-                      sqp_data = filtered_sqp,
-                      cmv_vars = input$cmv_ch)[-1]
+    
+    if (length(input$cmv_ch) > 1) {
+      corrected <-
+        cov2cor(
+          as.matrix(
+            sqp_cmv_str(x = corrected,
+                        sqp_data = filtered_sqp,
+                        cmv_vars = input$cmv_ch)[-1]
+          )
         )
-      )
-
-    list(original = original, corrected = corrected)
+    }
+    
+    # Create model formula
+    model <- paste0(ch_vars[1], 
+                    " ~ ", 
+                    paste0(ch_vars[-1], collapse = " + "))
+    
+    sample_size <- nrow(var_df())
+    
+    # Model based on original correlation matrix
+    fit <-
+      sem(model,
+          sample.cov = original,
+          sample.nobs = sample_size)
+    
+    # Model based on corrected covariance matrix 
+    fit.corrected <-
+      sem(model,
+          sample.cov=corrected,
+          sample.nobs= sample_size)
+    
+    ## ---- fig.width = 7, fig.with = 9----------------------------------------
+    # Difference in coefficients between models
+    
+    coef_table <-
+      list(fit, fit.corrected) %>%
+      map(parameterestimates) %>%
+      map(~ filter(.x, lhs == ch_vars[1])) %>%
+      map(~ select(.x, rhs, est, ci.lower, ci.upper)) %>%
+      bind_rows() %>%
+      mutate(model = rep(c("original", "corrected"), each = ncol(original)))
   })
   
-  observe({
-    print(matrices())
+  output$model_plot <-
+    renderPlot({
+      ggplot(models_coef(), aes(rhs, est, colour = model)) +
+      geom_linerange(aes(ymin = ci.lower, ymax = ci.upper),
+                     position = position_dodge(width = 0.5)) +
+      geom_point(position = position_dodge(width = 0.5)) +
+      labs(x = "Predictors", y = "Estimated coefficients") +
+      theme_bw()
+    
   })
-  
 }

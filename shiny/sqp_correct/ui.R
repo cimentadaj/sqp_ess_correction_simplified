@@ -25,6 +25,7 @@ ui <-
                         column(3, uiOutput("iv")),
                         column(5, uiOutput("cmv"))),
                actionButton("calc_model", "Create model")),
-      tabPanel("Create model", value = "cre_model")
+      tabPanel("Create model", value = "cre_model",
+               plotOutput("model_plot"))
     )
   )
