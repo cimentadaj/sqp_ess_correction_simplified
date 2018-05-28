@@ -38,7 +38,85 @@ sqp_df <- structure(sqp_df, class = c(class(sqp_df), "sqp"))
 #option to deal with lonegly PSUs
 options(survey.lonely.psu="adjust")
 
+
+valid_email <- tags$span(style="color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
+
+ui1 <- function() {
+  tagList(
+    div(id = "login",
+        wellPanel(textInput("essemail", "Registered ESS email"),
+                  # passwordInput("passwd", "Password"),
+                  br(),
+                  uiOutput("emailValid"),
+                  actionButton("Login", "Log in"))),
+    tags$style(type="text/css",
+               "#login {font-size:10px;   text-align: left;position:absolute;top: 40%;left: 50%;margin-top: -100px;margin-left: -150px; width: 25%;}")
+  )}
+
+
+
+# Define UI for application that draws a histogram
+ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
+               tabPanel("Create sum scores",
+                        actionButton('ins_sscore', 'Insert new sum score'),
+                        tags$div(id = 'placeholder'),
+                        actionButton('def_model', "I'm done, I want to define my model")
+               ),
+               tabPanel("Define the model", value = "def_model",
+                        selectInput("slid_cnt", "Pick a country", choices = all_countries),
+                        fluidRow(column(3, uiOutput("dv")),
+                                 column(3, uiOutput("iv")),
+                                 column(5, uiOutput("cmv"))),
+                        actionButton("calc_model", "Create model")),
+               tabPanel("Create model", value = "cre_model",
+                        plotOutput("model_plot"))
+  )
+
+# For checking when the ess email is valid or not
+is_error <- function(x) {
+  if (is(try(x, silent = TRUE), "try-error")) {
+    return(TRUE)
+  }
+  
+  FALSE
+}
+
 server <- function(input, output, session) {
+
+  USER <- reactiveValues(Logged = FALSE)
+  
+  observe({ 
+    if (USER$Logged == FALSE) {
+      if (!is.null(input$Login)) {
+        if (input$Login > 0) {
+          email <- isolate(input$essemail)
+          # Password <- isolate(input$passwd)
+          # Id.username <- which(my_username == Username)
+          # Id.password <- which(my_password == Password)
+            auth <- is_error(essurvey:::authenticate(email))
+            if (auth || email == "") {
+              output$emailValid <- renderUI(p(valid_email))
+            } else {
+              USER$Logged <- TRUE
+            }
+          }
+        }
+      }
+  })
+
+  observe({
+    if (USER$Logged == FALSE) {
+      output$page <- renderUI({
+        div(class="outer", do.call(bootstrapPage, c("",ui1())))
+      })
+    }
+    
+    if (USER$Logged == TRUE) {
+      output$page <- renderUI({
+        div(class="outer", fluidPage(ui2))
+      })
+    }
+  })
   
   # Because the ess_df (ESS data) must be fresh to all users
   # we call it from `globals.R` in order for it to be available
