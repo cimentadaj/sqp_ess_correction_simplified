@@ -47,3 +47,49 @@ sqp_cmv_str <- function(x, sqp_data, cmv_vars, standardized = TRUE, original_dat
   corrected_corr <- tibble::as_tibble(sqpr:::corr2cmv(x, cmv, cmv_vars))
   corrected_corr
 }
+
+
+sqp_sscore_str <- function (sqp_data, df, new_name, vars_names, wt = NULL, drop = TRUE) {
+  sqp_data <- sqpr:::sqp_reconstruct(sqp_data)
+  summary_name <- new_name
+  vars_not_matched <- !vars_names %in% names(df)
+  if (any(vars_not_matched)) {
+    stop("One or more variables are not present in `df`: ", 
+         paste0(vars_names[vars_not_matched], collapse = ", "), 
+         call. = FALSE)
+  }
+  vars_not_matched <- !vars_names %in% sqp_data[[1]]
+  if (any(vars_not_matched)) {
+    stop("One or more variables are not present in `sqp_data`: ", 
+         paste0(vars_names[vars_not_matched], collapse = ", "), 
+         call. = FALSE)
+  }
+  the_vars <- df[vars_names]
+  if (!all(purrr::map_lgl(the_vars, is.numeric))) {
+    stop(paste0(vars_names, collapse = ", "), " must be numeric variables in `df`")
+  }
+  if (ncol(the_vars) < 2) 
+    stop("`df` must have at least two columns")
+  rows_to_pick <- sqp_data[[1]] %in% vars_names
+  sqp_scores <- sqp_data[rows_to_pick, sqpr:::sqp_env$sqp_columns]
+  if (anyNA(sqp_scores)) {
+    stop("`sqp_data` must have non-missing values at variable/s: ", 
+         paste0(sqpr:::sqp_env$sqp_columns, collapse = ", "))
+  }
+  new_estimate <- sqpr:::columns_sqp("quality", sqpr:::estimate_sscore(sqp_scores, 
+                                                                       the_vars, wt = wt))
+  additional_rows <- sqpr:::generic_sqp(summary_name, new_estimate)
+  if (!drop) {
+    rows_to_pick <- rep(TRUE, length(rows_to_pick))
+  }
+  else {
+    rows_to_pick <- !rows_to_pick
+  }
+  combined_matrix <- dplyr::bind_rows(sqp_data[rows_to_pick, 
+                                               ], additional_rows)
+  correct_order <- c("question", sqpr:::sqp_env$sqp_columns)
+  new_order <- combined_matrix[c(correct_order, setdiff(names(combined_matrix), 
+                                                        correct_order))]
+  final_df <- sqpr:::sqp_reconstruct(new_order)
+  final_df
+}

@@ -30,10 +30,10 @@ sddf_data <- data.frame(id = 1:100,
                        dweight = runif(100))
 
 sqp_df <-
-  data.frame(question = paste0("V", 1:5),
-         quality = c(0.2, 0.3, 0.5, 0.6, 0.9),
-         reliability = c(0.1, 0.4, 0.5, 0.5, 0.7),
-         validity = c(0.3, 0.2, 0.6, 0.7, 0.8))
+  data.frame(question = paste0("V", 1:9),
+         quality = c(0.2, 0.3, 0.5, 0.6, 0.9, 0.5, 0.6, 0.8, 0.1),
+         reliability = c(0.1, 0.4, 0.5, 0.5, 0.7, 0.2, 0.5, 0.6, 0.9),
+         validity = c(0.3, 0.2, 0.6, 0.7, 0.8, 0.4, 0.3, 0.7, 0.8))
 
 sqp_df <- structure(sqp_df, class = c(class(sqp_df), "sqp"))
 
@@ -124,6 +124,17 @@ is_error <- function(x) {
   }
   FALSE
 }
+
+# For calculating sscore of quality scores and only returnig the row of
+# the newly created qualtiy score
+iterative_sscore <- function(x, y, sqp_df, data_df) {
+  sqp_sscore_str(sqp_data = sqp_df,
+                 df = data_df,
+                 new_name = x,
+                 vars_names = y) %>% 
+    filter(question == x)
+}
+
 
 server <- function(input, output, session) {
   
@@ -225,20 +236,18 @@ server <- function(input, output, session) {
                        selected = "def_model")
   })
   
-  ssnames <-
+  clean_ssnames <-
     eventReactive(input$def_model, {
       if (input$ins_sscore == 0) return(character())
       
       # Create sscore names
-      vapply(1:input$ins_sscore,
+      all_names <- 
+        vapply(1:input$ins_sscore,
              function(x) input[[paste0("ssname", x)]],
              FUN.VALUE = character(1))
+      all_names[all_names != ""]
     })
-  # Delete any sumscores that are empty!
-  clean_ssnames <- reactive({
-    ssnames()[ssnames() != ""]
-  })
-  
+
   ## Define the three model parts
   # Pick the dependent variable
   output$dv <-
@@ -266,6 +275,18 @@ server <- function(input, output, session) {
                          choices = c(input$dv_ch, input$iv_ch))
     )
   
+  # Get a list where each slot contains
+  # the variables that compose each sscore.
+  # The counterpart of this is clean_ssnames()
+  # which contains the variable names of each sscore
+  sscore_list <-
+    eventReactive(input$calc_model, {
+        lapply(1:input$ins_sscore, function(x) {
+          all_sscore <- paste0("sscore", x)
+          input[[all_sscore]]
+        })
+    })
+  
   var_df <-
     eventReactive(input$calc_model, {
       # Choose country when user calculates model
@@ -279,12 +300,24 @@ server <- function(input, output, session) {
       # We need to add new sscores to the origin df.
       # Calculate them here
       sscore <-
-        lapply(1:input$ins_sscore, function(x) {
-          all_sscore <- paste0("sscore", x)
-          rowSums(upd_ess[input[[all_sscore]]], na.rm = TRUE)
+        lapply(sscore_list(), function(x) {
+          rowSums(upd_ess[x], na.rm = TRUE)
         })
       
-      cbind(upd_ess, as.data.frame(sscore, col.names = ssnames()))
+      cbind(upd_ess, as.data.frame(sscore, col.names = clean_ssnames()))
+    })
+  
+  upd_sqpdf <-
+    eventReactive(input$calc_model, {
+      
+      # Calculate the quality of sumscore of each name-variables pairs
+      # and then bind them together with the sqp_df. The final output
+      # is the sqp_df with the quality of the N sum scores created.
+      q_sscore <- lapply(seq_along(clean_ssnames()), function(index) {
+        iterative_sscore(clean_ssnames()[index], sscore_list()[[index]], sqp_df, var_df())
+      })
+      
+      bind_rows(sqp_df, q_sscore)
     })
   
   # If calculate model is clicked, switch panel
@@ -338,8 +371,9 @@ server <- function(input, output, session) {
 
     attr(corrected, "statistic") <- "covariance"
     
-    # Subset chosen variables in sqp_df
-    filtered_sqp <- sqp_df[sqp_df[[1]] %in% ch_vars, ]
+    # Subset chosen variables in sqp_df and
+    # create quality estimate for the
+    filtered_sqp <- upd_sqpdf()[upd_sqpdf()[[1]] %in% ch_vars, ]
     
     # Replace diagonal by multiplying it with the quality of each variable
     diag(corrected) <- diag(corrected) * filtered_sqp$quality
