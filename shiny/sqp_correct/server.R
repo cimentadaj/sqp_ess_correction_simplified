@@ -24,7 +24,14 @@ all_variables <- paste0("V", 1:9)
 all_variables_label <- paste0("V", 1:9)
 var_n_labels <- paste0(all_variables, ": ", all_variables_label)
 
-ess_df <- cbind(id = 1:100, as.data.frame(replicate(15, rpois(100, 10))))
+# ESS data as a list with every country in a slot
+ess_df <- 
+  set_names(
+    lapply(seq_along(all_countries),
+         function(x) cbind(id = 1:100, as.data.frame(replicate(15, rpois(100, 10))))),
+    all_countries
+  )
+
 sddf_data <- data.frame(id = 1:100,
                        stratify = sample(20, replace = TRUE),
                        dweight = runif(100))
@@ -291,8 +298,8 @@ server <- function(input, output, session) {
     eventReactive(input$calc_model, {
       # Choose country when user calculates model
       # This is for when the ess data is available
-      # upd_ess <- ess_df[[input$slid_cnt]][chosen_vars()]
-      upd_ess <- ess_df[chosen_vars()]
+      upd_ess <- ess_df[[input$slid_cnt]][chosen_vars()]
+      # upd_ess <- ess_df[chosen_vars()]
       
       # If no sscore was defined, return the same df the above
       if (input$ins_sscore == 0) return(upd_ess)
@@ -330,8 +337,8 @@ server <- function(input, output, session) {
   models_coef <- eventReactive(input$calc_model, {
     
     # For when the ess data is in
-    # id_df <- ess_df[[input$slid_cnt]][all_ids]
-    id_df <- ess_df[all_ids]
+    id_df <- ess_df[[input$slid_cnt]][all_ids]
+    # id_df <- ess_df[all_ids]
     
     
     ## Replace all of this w/ the sddf script
