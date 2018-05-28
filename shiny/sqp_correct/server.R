@@ -20,6 +20,8 @@ set.seed(2311)
 all_ids <- c("id")
 # Replace w/ ess variables
 all_variables <- paste0("V", 1:9)
+all_variables_label <- paste0("V", 1:9)
+var_n_labels <- paste0(all_variables, ": ", all_variables_label)
 
 ess_df <- cbind(id = 1:100, as.data.frame(replicate(15, rpois(100, 10))))
 sddf_data <- data.frame(id = 1:100,
@@ -39,10 +41,10 @@ sqp_df <- structure(sqp_df, class = c(class(sqp_df), "sqp"))
 options(survey.lonely.psu="adjust")
 
 
-valid_email <- tags$span(style="color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
+valid_email_error <- tags$span(style="color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
+minimum_var_error <- tags$span(style="color:red; font-size: 15px;", "Please select at least two variables for modeling.")
 
-ui1 <- function() {
-  tagList(
+ui1 <- tagList(
     div(id = "login",
         wellPanel(textInput("essemail", "Registered ESS email"),
                   # passwordInput("passwd", "Password"),
@@ -50,20 +52,33 @@ ui1 <- function() {
                   uiOutput("emailValid"),
                   actionButton("Login", "Log in"))),
     tags$style(type="text/css",
-               "#login {font-size:10px;   text-align: left;position:absolute;top: 40%;left: 50%;margin-top: -100px;margin-left: -150px; width: 25%;}")
-  )}
-
+               "#login {
+               font-size: 10px;
+               text-align: left;
+               position: absolute;
+               top: 50%;
+               left: 50%;
+               margin-top: -100px;
+               margin-left: -150px; 
+               width: 25%;
+               }")
+  )
 
 
 # Define UI for application that draws a histogram
 ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
-               tabPanel("Create sum scores",
+               tabPanel("Select variables and country",
+                 selectInput("slid_cnt", "Pick a country", choices = all_countries),
+                 uiOutput('chosen_vars'),
+                 uiOutput('length_vars'),
+                 actionButton("def_sscore", "I'm done, let me define my sum scores")
+               ),
+               tabPanel("Create sum scores", value = "def_sscore",
                         actionButton('ins_sscore', 'Insert new sum score'),
                         tags$div(id = 'placeholder'),
                         actionButton('def_model', "I'm done, I want to define my model")
                ),
                tabPanel("Define the model", value = "def_model",
-                        selectInput("slid_cnt", "Pick a country", choices = all_countries),
                         fluidRow(column(3, uiOutput("dv")),
                                  column(3, uiOutput("iv")),
                                  column(5, uiOutput("cmv"))),
@@ -82,9 +97,11 @@ is_error <- function(x) {
 }
 
 server <- function(input, output, session) {
-
+  
+  # Record whether user logged in
   USER <- reactiveValues(Logged = FALSE)
   
+  # Update the login state if email is valid
   observe({ 
     if (USER$Logged == FALSE) {
       if (!is.null(input$Login)) {
@@ -95,7 +112,7 @@ server <- function(input, output, session) {
           # Id.password <- which(my_password == Password)
             auth <- is_error(essurvey:::authenticate(email))
             if (auth || email == "") {
-              output$emailValid <- renderUI(p(valid_email))
+              output$emailValid <- renderUI(p(valid_email_error))
             } else {
               USER$Logged <- TRUE
             }
@@ -104,10 +121,15 @@ server <- function(input, output, session) {
       }
   })
 
+  # Change UI based on whether the user is logged in or not.
   observe({
     if (USER$Logged == FALSE) {
       output$page <- renderUI({
-        div(class="outer", do.call(bootstrapPage, c("",ui1())))
+        div(class="outer",
+            fluidPage(
+              img(src = "ess_logo.png", height = 90, width = 250),
+              ui1)
+            )
       })
     }
     
@@ -118,6 +140,34 @@ server <- function(input, output, session) {
     }
   })
   
+  output$chosen_vars <-
+    renderUI({
+      selectInput('vars_ch',
+                  'Choose variables to use in the modeling',
+                  var_n_labels,
+                  multiple = TRUE,
+                  selectize = FALSE)
+      
+    })
+  
+  # This is a turning point. We want to ensure that there
+  # are at least two variables chosen for the modeling.
+  # If they are, we jumpt to sscore tabs
+  observeEvent(input$def_sscore, {
+    if (length(input$vars_ch) < 2) {
+      output$length_vars <- renderUI(p(minimum_var_error))
+    } else {
+      updateTabsetPanel(session,
+                        inputId = "menu",
+                        selected = "def_sscore")
+    }
+  })
+  
+  # Remove labels from the chosen variables
+  chosen_vars <- reactive({
+    gsub(":.*$", "", input$vars_ch)
+  })
+
   # Because the ess_df (ESS data) must be fresh to all users
   # we call it from `globals.R` in order for it to be available
   # through out sessions. All countries are downloaded when
@@ -131,7 +181,7 @@ server <- function(input, output, session) {
         textInput(paste0("ssname", input$ins_sscore), "Name of sum score"),
         selectInput(paste0("sscore", input$ins_sscore),
                     'Variables that compose the sum score',
-                    choices = all_variables, multiple = TRUE),
+                    choices = chosen_vars(), multiple = TRUE),
         cellWidths = c("17%", "83%")
       )
     # Interactively add a sumscore to the UI
@@ -170,8 +220,8 @@ server <- function(input, output, session) {
     renderUI(
       radioButtons("dv_ch",
                    "Dependent variable",
-                   choices = c(all_variables, clean_ssnames()),
-                   selected = all_variables[1])
+                   choices = c(chosen_vars(), clean_ssnames()),
+                   selected = chosen_vars()[1])
     )
   
   # Pick the independent variables
@@ -179,7 +229,7 @@ server <- function(input, output, session) {
     renderUI(
       checkboxGroupInput("iv_ch",
                          "Independent variables",
-                         choices = setdiff(c(all_variables, clean_ssnames()),
+                         choices = setdiff(c(chosen_vars(), clean_ssnames()),
                                            input$dv_ch))
     )
   
@@ -195,8 +245,8 @@ server <- function(input, output, session) {
     eventReactive(input$calc_model, {
       # Choose country when user calculates model
       # This is for when the ess data is available
-      # upd_ess <- ess_df[[input$slid_cnt]][all_variables]
-      upd_ess <- ess_df[all_variables]
+      # upd_ess <- ess_df[[input$slid_cnt]][chosen_vars()]
+      upd_ess <- ess_df[chosen_vars()]
       
       # If no sscore was defined, return the same df the above
       if (input$ins_sscore == 0) return(upd_ess)
