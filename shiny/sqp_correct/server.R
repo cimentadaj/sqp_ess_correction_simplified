@@ -14,6 +14,7 @@ library(lavaan)
 library(jtools)
 library(dplyr)
 library(purrr)
+library(kableExtra)
 
 set.seed(2311)
 # Replace w/ all ESS id's.
@@ -44,16 +45,37 @@ options(survey.lonely.psu="adjust")
 valid_email_error <- tags$span(style="color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
 minimum_var_error <- tags$span(style="color:red; font-size: 15px;", "Please select at least two variables for modeling.")
 
+main_page <- function(...) {
+  div(id = "fluidp",
+      fluidPage(
+        img(id = "ess_logo",
+            src = "http://www.europeansocialsurvey.org/common/ess_eric/img/ess-logo-top.png",
+            height = 45),
+        br(),
+        br(),
+        ...
+      ),
+      tags$style(type="text/css",
+              "#fluidp {
+               background-color: red;
+               height: 70px;
+               }
+               #ess_logo {
+               margin-top: 13px;
+               }")
+  )
+}
+
 ui1 <- tagList(
     div(id = "login",
-        wellPanel(textInput("essemail", "Registered ESS email"),
+        textInput("essemail", "Registered ESS email"),
                   # passwordInput("passwd", "Password"),
                   br(),
                   uiOutput("emailValid"),
-                  actionButton("Login", "Log in"))),
+                  actionButton("Login", "Log in")),
     tags$style(type="text/css",
                "#login {
-               font-size: 10px;
+               font-size: 14px;
                text-align: left;
                position: absolute;
                top: 50%;
@@ -65,34 +87,41 @@ ui1 <- tagList(
   )
 
 
-# Define UI for application that draws a histogram
+#Define UI for application that draws a histogram
 ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
-               tabPanel("Select variables and country",
-                 selectInput("slid_cnt", "Pick a country", choices = all_countries),
-                 uiOutput('chosen_vars'),
-                 uiOutput('length_vars'),
-                 actionButton("def_sscore", "I'm done, let me define my sum scores")
-               ),
-               tabPanel("Create sum scores", value = "def_sscore",
-                        actionButton('ins_sscore', 'Insert new sum score'),
-                        tags$div(id = 'placeholder'),
-                        actionButton('def_model', "I'm done, I want to define my model")
-               ),
-               tabPanel("Define the model", value = "def_model",
-                        fluidRow(column(3, uiOutput("dv")),
-                                 column(3, uiOutput("iv")),
-                                 column(5, uiOutput("cmv"))),
-                        actionButton("calc_model", "Create model")),
-               tabPanel("Create model", value = "cre_model",
-                        plotOutput("model_plot"))
-  )
+                   tabPanel("Select variables and country",
+                            selectInput("slid_cnt", "Pick a country", choices = all_countries),
+                            uiOutput('chosen_vars'),
+                            uiOutput('length_vars'),
+                            actionButton("def_sscore", "I'm done, let me define my sum scores")
+                   ),
+                   tabPanel("Create sum scores", value = "def_sscore",
+                            p("Would you like to create additional sumscore variables?
+                              Sum scores are the addition fo several variables into one single
+                              variable. click on 'Insert new sum score' to create your sum score."),
+                            actionButton('ins_sscore', 'Insert new sum score'),
+                            br(),
+                            div(id = 'placeholder'),
+                            actionButton('def_model', "I'm done, I want to define my model")
+                   ),
+                   tabPanel("Define the model", value = "def_model",
+                            fluidRow(column(3, uiOutput("dv")),
+                                     column(3, uiOutput("iv")),
+                                     column(5, uiOutput("cmv"))),
+                            actionButton("calc_model", "Create model")),
+                   tabPanel("Create model", value = "cre_model",
+                            tabsetPanel(
+                            tabPanel("Plot of results", plotOutput("model_plot")),
+                            tabPanel("Table of results", tableOutput("model_table"))
+                              )
+                            )
+      )
 
 # For checking when the ess email is valid or not
 is_error <- function(x) {
   if (is(try(x, silent = TRUE), "try-error")) {
     return(TRUE)
   }
-  
   FALSE
 }
 
@@ -125,17 +154,13 @@ server <- function(input, output, session) {
   observe({
     if (USER$Logged == FALSE) {
       output$page <- renderUI({
-        div(class="outer",
-            fluidPage(
-              img(src = "ess_logo.png", height = 90, width = 250),
-              ui1)
-            )
+        main_page(ui1)
       })
     }
     
     if (USER$Logged == TRUE) {
       output$page <- renderUI({
-        div(class="outer", fluidPage(ui2))
+        div(main_page(ui2))
       })
     }
   })
@@ -258,6 +283,7 @@ server <- function(input, output, session) {
           all_sscore <- paste0("sscore", x)
           rowSums(upd_ess[input[[all_sscore]]], na.rm = TRUE)
         })
+      
       cbind(upd_ess, as.data.frame(sscore, col.names = ssnames()))
     })
   
@@ -359,26 +385,40 @@ server <- function(input, output, session) {
           sample.cov=corrected,
           sample.nobs= sample_size)
     
-    ## ---- fig.width = 7, fig.with = 9----------------------------------------
-    # Difference in coefficients between models
-    
+
+    # Why do I leave it incomplete and not bind everything into a data frame ready to plot?
+    # Because the table and the plot do different computations so I leave it up to the
+    # point that both operations have common ground.
     coef_table <-
       list(fit, fit.corrected) %>%
       map(parameterestimates) %>%
       map(~ filter(.x, lhs == ch_vars[1])) %>%
-      map(~ select(.x, rhs, est, ci.lower, ci.upper)) %>%
-      bind_rows() %>%
-      mutate(model = rep(c("original", "corrected"), each = ncol(original)))
+      map(~ select(.x, rhs, pvalue, est, ci.lower, ci.upper))
+    
+    coef_table
   })
-  
+
+  output$model_table <-
+    reactive({
+      models_coef() %>% 
+        reduce(left_join, by = "rhs") %>% 
+        mutate_if(is.numeric, function(x) round(x, 3)) %>% 
+        set_names(c("Covariates", rep(c("Estimate", "P-val", "Lower CI", "Upper CI"), times = 2))) %>% 
+        kable() %>% 
+        kable_styling("striped", full_width = F) %>% 
+        add_header_above(c(" ", "Original" = 4, "Corrected" = 4))
+    })
+
   output$model_plot <-
     renderPlot({
-      ggplot(models_coef(), aes(rhs, est, colour = model)) +
-      geom_linerange(aes(ymin = ci.lower, ymax = ci.upper),
-                     position = position_dodge(width = 0.5)) +
-      geom_point(position = position_dodge(width = 0.5)) +
-      labs(x = "Predictors", y = "Estimated coefficients") +
-      theme_bw()
-    
+      models_coef() %>% 
+        bind_rows() %>%
+        mutate(model = rep(c("original", "corrected"), each = length(unique(.$rhs)))) %>% 
+        ggplot(aes(rhs, est, colour = model)) +
+        geom_linerange(aes(ymin = ci.lower, ymax = ci.upper),
+                       position = position_dodge(width = 0.5)) +
+        geom_point(position = position_dodge(width = 0.5)) +
+        labs(x = "Predictors", y = "Estimated coefficients") +
+        theme_bw()
   })
 }
