@@ -1,12 +1,3 @@
-#
-# This is the server logic of a Shiny web application. You can run the 
-# application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-# 
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
 library(survey)
 library(ggplot2)
@@ -32,6 +23,9 @@ ess_df <-
     all_countries
   )
 
+
+## Turn this sddf into a section where you can download the sddf automatically
+# when the user picks a country.
 sddf_data <- data.frame(id = 1:100,
                        stratify = sample(20, replace = TRUE),
                        dweight = runif(100))
@@ -94,7 +88,6 @@ ui1 <- tagList(
   )
 
 
-#Define UI for application that draws a histogram
 ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                    tabPanel("Select variables and country",
                             selectInput("slid_cnt", "Pick a country", choices = all_countries),
@@ -439,6 +432,7 @@ server <- function(input, output, session) {
     coef_table
   })
 
+  # Final table
   output$model_table <-
     reactive({
       models_coef() %>% 
@@ -450,6 +444,7 @@ server <- function(input, output, session) {
         add_header_above(c(" ", "Original" = 4, "Corrected" = 4))
     })
 
+  # Final plot
   output$model_plot <-
     renderPlot({
       models_coef() %>% 
