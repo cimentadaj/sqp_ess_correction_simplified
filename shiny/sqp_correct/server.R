@@ -336,7 +336,6 @@ server <- function(input, output, session) {
   
   upd_sqpdf <-
     eventReactive(input$calc_model, {
-      
       # Calculate the quality of sumscore of each name-variables pairs
       # and then bind them together with the sqp_df. The final output
       # is the sqp_df with the quality of the N sum scores created.
@@ -356,13 +355,6 @@ server <- function(input, output, session) {
                    id_vars = all_ids)
       
     })
-  
-  # If calculate model is clicked, switch panel
-  observeEvent(input$calc_model, {
-    updateNavlistPanel(session,
-                       inputId = "menu",
-                       selected = "cre_model")
-  })
   
   ### Calculations begin ####
   models_coef <- eventReactive(input$calc_model, {
@@ -456,31 +448,37 @@ server <- function(input, output, session) {
     coef_table
   })
   
-  observe({print(models_coef())})
-
-  # Final table
-  output$model_table <-
-    reactive({
-      models_coef() %>% 
-        reduce(left_join, by = "rhs") %>% 
-        mutate_if(is.numeric, function(x) round(x, 3)) %>% 
-        set_names(c("Covariates", rep(c("Estimate", "P-val", "Lower CI", "Upper CI"), times = 2))) %>% 
-        kable() %>% 
-        kable_styling("striped", full_width = F) %>% 
-        add_header_above(c(" ", "Original" = 4, "Corrected" = 4))
-    })
-  
-  # Final plot
-  output$model_plot <-
-    renderPlot({
-      models_coef() %>% 
-        bind_rows() %>%
-        mutate(model = rep(c("original", "corrected"), each = length(unique(.$rhs)))) %>% 
-        ggplot(aes(rhs, est, colour = model)) +
-        geom_linerange(aes(ymin = ci.lower, ymax = ci.upper),
-                       position = position_dodge(width = 0.5)) +
-        geom_point(position = position_dodge(width = 0.5)) +
-        labs(x = "Predictors", y = "Estimated coefficients") +
-        theme_bw()
-    })
+    
+  observeEvent(input$calc_model, {
+    # If calculate model is clicked, switch panel
+    updateNavlistPanel(session,
+                       inputId = "menu",
+                       selected = "cre_model")
+    
+    # Final table
+    output$model_table <-
+      reactive({
+        models_coef() %>% 
+          reduce(left_join, by = "rhs") %>% 
+          mutate_if(is.numeric, function(x) round(x, 3)) %>% 
+          set_names(c("Covariates", rep(c("Estimate", "P-val", "Lower CI", "Upper CI"), times = 2))) %>% 
+          kable() %>% 
+          kable_styling("striped", full_width = F) %>% 
+          add_header_above(c(" ", "Original" = 4, "Corrected" = 4))
+      })
+    
+    # Final plot
+    output$model_plot <-
+      renderPlot({
+        models_coef() %>% 
+          bind_rows() %>%
+          mutate(model = rep(c("original", "corrected"), each = length(unique(.$rhs)))) %>% 
+          ggplot(aes(rhs, est, colour = model)) +
+          geom_linerange(aes(ymin = ci.lower, ymax = ci.upper),
+                         position = position_dodge(width = 0.5)) +
+          geom_point(position = position_dodge(width = 0.5)) +
+          labs(x = "Predictors", y = "Estimated coefficients") +
+          theme_bw()
+      })
+  })
 }
