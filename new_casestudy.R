@@ -14,7 +14,7 @@ library(sqpr)
 # Register for SQP here: http://sqp.upf.edu/accounts/login/?next=/loadui/
 # Once you run the three lines below you can erase your credentials to 
 # how it was before and during this session you will be logged in.
-Sys.setenv(ess_email = 'stefan.zins@gesis.org')
+Sys.setenv(ess_email = '')
 Sys.setenv(SQP_USER = 'sqpr_tests')
 Sys.setenv(SQP_PW = 'sqpr2018')
 

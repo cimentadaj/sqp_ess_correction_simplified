@@ -1,4 +1,8 @@
 library(essurvey)
+library(purrr)
+
+# Remove whe ess data is used
+set.seed(2311)
 
 
 Sys.setenv("ess_email" = "cimentadaj@gmail.com")
@@ -10,12 +14,22 @@ all_countries <- c("Spain",
                    "France",
                    "United Kingdom",
                    "Ireland")
+
+# ESS data as a list with every country in a slot
+ess_df <- 
+  set_names(
+    lapply(seq_along(all_countries),
+           function(x) cbind(id = 1:100, as.data.frame(replicate(15, rpois(100, 10))))),
+    all_countries
+  )
+
 # ess_df <-
 #   setNames(
 #     lapply(all_countries,
 #            function(x) recode_missings(import_country(x, rounds = 6, ess_email = Sys.getenv("ess_email")))),
 #     all_countries)
 
+# Same as sqp_cmv but good for programming with. cmv_vars accepts a vector rather than ...
 sqp_cmv_str <- function(x, sqp_data, cmv_vars, standardized = TRUE, original_data, 
                         cmv = NULL) {
   if (!(is.data.frame(x) | is.matrix(x))) {
@@ -49,6 +63,7 @@ sqp_cmv_str <- function(x, sqp_data, cmv_vars, standardized = TRUE, original_dat
 }
 
 
+# Same as sqp_sscore but good for programming with. vars_names accepts a vector rather than ...
 sqp_sscore_str <- function (sqp_data, df, new_name, vars_names, wt = NULL, drop = TRUE) {
   sqp_data <- sqpr:::sqp_reconstruct(sqp_data)
   summary_name <- new_name

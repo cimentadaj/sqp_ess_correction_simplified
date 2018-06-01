@@ -1,28 +1,22 @@
 library(shiny)
+library(shinycssloaders)
+library(kableExtra)
 library(survey)
 library(ggplot2)
 library(lavaan)
 library(jtools)
 library(dplyr)
-library(purrr)
-library(kableExtra)
+
+
 
 set.seed(2311)
+
 # Replace w/ all ESS id's.
 all_ids <- c("id")
 # Replace w/ ess variables
 all_variables <- paste0("V", 1:9)
 all_variables_label <- paste0("V", 1:9)
 var_n_labels <- paste0(all_variables, ": ", all_variables_label)
-
-# ESS data as a list with every country in a slot
-ess_df <- 
-  set_names(
-    lapply(seq_along(all_countries),
-         function(x) cbind(id = 1:100, as.data.frame(replicate(15, rpois(100, 10))))),
-    all_countries
-  )
-
 
 ## Turn this sddf into a section where you can download the sddf automatically
 # when the user picks a country.
@@ -46,6 +40,8 @@ options(survey.lonely.psu="adjust")
 valid_email_error <- tags$span(style="color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
 minimum_var_error <- tags$span(style="color:red; font-size: 15px;", "Please select at least two variables for modeling.")
 
+
+# Main wrapper of the page that contains the red banner on top
 main_page <- function(...) {
   div(id = "fluidp",
       fluidPage(
@@ -67,6 +63,7 @@ main_page <- function(...) {
   )
 }
 
+# First tab for logging in
 ui1 <- tagList(
     div(id = "login",
         textInput("essemail", "Registered ESS email"),
@@ -88,6 +85,7 @@ ui1 <- tagList(
   )
 
 
+# Second tab for defining model and selecting vars/countries
 ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                    tabPanel("Select variables and country",
                             selectInput("slid_cnt", "Pick a country", choices = all_countries),
@@ -111,8 +109,8 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                             actionButton("calc_model", "Create model")),
                    tabPanel("Create model", value = "cre_model",
                             tabsetPanel(
-                            tabPanel("Plot of results", plotOutput("model_plot")),
-                            tabPanel("Table of results", tableOutput("model_table"))
+                            tabPanel("Plot of results", withSpinner(plotOutput("model_plot"))),
+                            tabPanel("Table of results", withSpinner(tableOutput("model_table")))
                               )
                             )
       )
@@ -138,6 +136,7 @@ iterative_sscore <- function(x, y, sqp_df, data_df) {
 
 server <- function(input, output, session) {
   
+  ### Loging in ####
   # Record whether user logged in
   USER <- reactiveValues(Logged = FALSE)
   
@@ -175,6 +174,8 @@ server <- function(input, output, session) {
       })
     }
   })
+  
+  #####
   
   output$chosen_vars <-
     renderUI({
@@ -327,6 +328,7 @@ server <- function(input, output, session) {
                        selected = "cre_model")
   })
   
+  ### Calculations begin ####
   models_coef <- eventReactive(input$calc_model, {
     
     # For when the ess data is in
@@ -345,8 +347,6 @@ server <- function(input, output, session) {
         )
     
     ch_vars <- c(input$dv_ch, input$iv_ch)
-    
-    ### Calculations begin ####
     
     # Correlation matrix without weights:
     original <- cor(var_df()[ch_vars],
@@ -383,7 +383,7 @@ server <- function(input, output, session) {
     # and subtract that common method variance from the correlation
     # coefficients of the variables.
     
-    # The sqpr::sqp_cmv is a bit strange for programming
+    # sqpr::sqp_cmv is a bit strange for programming
     # because it uses non standard evaluation. I defined
     # sqp_cmv_str in `globals.R` to be the same
     # but it accepts a string in cmv_vars instead of `...`
