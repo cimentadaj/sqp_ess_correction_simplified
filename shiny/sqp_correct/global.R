@@ -11,8 +11,7 @@ all_countries <- c("Spain",
                    "United Kingdom",
                    "Ireland")
 
-all_ids <- c("cntry", "id")
-wt_vars <- c("dweight", "stratify", "stratex1", "psu")
+all_ids <- c("cntry", "idno")
 
 # To bring the function to extract sddf data.
 source("mk_svyConfig.R")

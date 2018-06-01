@@ -7,9 +7,7 @@ library(lavaan)
 library(jtools)
 library(dplyr)
 
-# Replace w/ all ESS id's.
-all_ids <- c("cntry", "idno")
-# Replace w/ ess variables
+
 all_variables <-
   c("polintr",
     "ppltrst",
@@ -32,6 +30,7 @@ all_variables_label <-
     "Trust in country's parliament",
     "Trust in political parties")
 
+# Variables pasted together with labels
 var_n_labels <- paste0(all_variables, ": ", all_variables_label)
 
 
@@ -53,6 +52,7 @@ sqp_df <- structure(sqp_df, class = c(class(sqp_df), "sqp"))
 options(survey.lonely.psu="adjust")
 
 
+# Text for errors when email is wrong or when 1 variable is selected as model
 valid_email_error <- tags$span(style="color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
 minimum_var_error <- tags$span(style="color:red; font-size: 15px;", "Please select at least two variables for modeling.")
 
@@ -126,10 +126,10 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                             actionButton("calc_model", "Create model")),
                    tabPanel("Create model", value = "cre_model",
                             tabsetPanel(
-                            tabPanel("Plot of results", withSpinner(plotOutput("model_plot"),
-                                                                    color = "#ff0000")),
-                            tabPanel("Table of results", withSpinner(tableOutput("model_table"),
-                                                                     color = "#ff0000"))
+                            tabPanel("Plot of results",
+                                     withSpinner(plotOutput("model_plot"), color = "#ff0000")),
+                            tabPanel("Table of results",
+                                     withSpinner(tableOutput("model_table"), color = "#ff0000"))
                               )
                             )
       )
@@ -347,6 +347,16 @@ server <- function(input, output, session) {
       bind_rows(sqp_df, q_sscore)
     })
   
+    weighted_data <- eventReactive(input$calc_model, {
+      # Define svydesign object thas has ALL columns of ess_data + sscore columns
+        mk_ess_svy(svyinfo = svyinfo[[input$slid_cnt]], # svyinfo comes from globals.R
+                   ess_data = var_df(),
+                   round = 6,
+                   email = Sys.getenv("ess_email"),
+                   id_vars = all_ids)
+      
+    })
+  
   # If calculate model is clicked, switch panel
   observeEvent(input$calc_model, {
     updateNavlistPanel(session,
@@ -356,15 +366,6 @@ server <- function(input, output, session) {
   
   ### Calculations begin ####
   models_coef <- eventReactive(input$calc_model, {
-
-    ## Replace all of this w/ the sddf script
-    # Define svydesign object
-    weighted_data <- 
-      mk_ess_svy(svyinfo = svyinfo[[input$slid_cnt]], 
-                 ess_data = var_df(),
-                 round = 6,
-                 email = Sys.getenv("ess_email"),
-                 id_vars = all_ids)
 
     ch_vars <- c(input$dv_ch, input$iv_ch)
     
@@ -385,7 +386,7 @@ server <- function(input, output, session) {
     corrected <- 
       cov2cor(
         as.matrix(
-          svyvar(selected_vars_formula, design = weighted_data, na.rm = TRUE)
+          svyvar(selected_vars_formula, design = weighted_data(), na.rm = TRUE)
         )
       )
 
@@ -450,10 +451,12 @@ server <- function(input, output, session) {
       list(fit, fit.corrected) %>%
       map(parameterestimates) %>%
       map(~ filter(.x, lhs == ch_vars[1])) %>%
-      map(~ select(.x, rhs, pvalue, est, ci.lower, ci.upper))
+      map(~ select(.x, rhs, est, pvalue, ci.lower, ci.upper))
     
     coef_table
   })
+  
+  observe({print(models_coef())})
 
   # Final table
   output$model_table <-
@@ -466,7 +469,7 @@ server <- function(input, output, session) {
         kable_styling("striped", full_width = F) %>% 
         add_header_above(c(" ", "Original" = 4, "Corrected" = 4))
     })
-
+  
   # Final plot
   output$model_plot <-
     renderPlot({
@@ -479,5 +482,5 @@ server <- function(input, output, session) {
         geom_point(position = position_dodge(width = 0.5)) +
         labs(x = "Predictors", y = "Estimated coefficients") +
         theme_bw()
-  })
+    })
 }
