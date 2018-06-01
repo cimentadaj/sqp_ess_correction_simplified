@@ -1,11 +1,7 @@
 library(essurvey)
 library(purrr)
 
-# Remove whe ess data is used
-set.seed(2311)
-
-
-Sys.setenv("ess_email" = "cimentadaj@gmail.com")
+set_email("cimentadaj@gmail.com")
 # Replace w/ available countries
 all_countries <- c("Spain",
                    "Germany",
@@ -15,35 +11,48 @@ all_countries <- c("Spain",
                    "United Kingdom",
                    "Ireland")
 
+all_ids <- c("cntry", "id")
+
+# To bring the function to extract sddf data.
+source("mk_svyConfig.R")
+
+# Country-specific data on spficif sampling strata, which variables
+# haave the weights, etcc...
+read.csv2("svydesign_info_ESS6.csv") %>%
+  filter(domains %% 1 == 0) %>%
+  split(., .$country) ->
+  svyinfo
+
+
 # ESS data as a list with every country in a slot
-ess_df <- 
-  set_names(
-    lapply(seq_along(all_countries),
-           function(x) cbind(id = 1:100, as.data.frame(replicate(15, rpois(100, 10))))),
-    all_countries
-  )
+# ess_df <- 
+#   set_names(
+#     lapply(seq_along(all_countries),
+#            function(x) cbind(id = 1:100, as.data.frame(replicate(15, rpois(100, 10))))),
+#     all_countries
+#   )
+# 
+# # This can be removed with the actual ess data is used below.
+# 
+# ess_df <- lapply(ess_df, function(x) {
+#   names(x)[1:10] <-   c("id",
+#                        "polintr",
+#                             "ppltrst",
+#                             "stfeco",
+#                             "stfedu",
+#                             "stfhlth",
+#                             "stflife", 
+#                             "trstplt",
+#                             "trstprl",
+#                             "trstprt")
+#   x
+# })
 
-# This can be removed with the actual ess data is used below.
-
-ess_df <- lapply(ess_df, function(x) {
-  names(x)[1:10] <-   c("id",
-                       "polintr",
-                            "ppltrst",
-                            "stfeco",
-                            "stfedu",
-                            "stfhlth",
-                            "stflife", 
-                            "trstplt",
-                            "trstprl",
-                            "trstprt")
-  x
-})
-
-# ess_df <-
-#   setNames(
-#     lapply(all_countries,
-#            function(x) recode_missings(import_country(x, rounds = 6, ess_email = Sys.getenv("ess_email")))),
-#     all_countries)
+ess_df <-
+  setNames(
+    lapply(all_countries,
+           function(x) recode_missings(import_country(x, rounds = 6))),
+    all_countries)
 
 
 # Same as sqp_cmv but good for programming with. cmv_vars accepts a vector rather than ...

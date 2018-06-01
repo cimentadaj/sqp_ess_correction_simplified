@@ -7,10 +7,8 @@ library(lavaan)
 library(jtools)
 library(dplyr)
 
-set.seed(2311)
-
 # Replace w/ all ESS id's.
-all_ids <- c("id")
+all_ids <- c("cntry", "idno")
 # Replace w/ ess variables
 all_variables <-
   c("polintr",
@@ -39,9 +37,6 @@ var_n_labels <- paste0(all_variables, ": ", all_variables_label)
 
 ## Turn this sddf into a section where you can download the sddf automatically
 # when the user picks a country.
-sddf_data <- data.frame(id = 1:100,
-                       stratify = sample(20, replace = TRUE),
-                       dweight = runif(100))
 
 sqp_df <-
   data.frame(question = all_variables,
@@ -229,6 +224,9 @@ server <- function(input, output, session) {
     gsub(":.*$", "", input$vars_ch)
   })
 
+  observe({
+    print(chosen_vars())
+  })
   # Because the ess_df (ESS data) must be fresh to all users
   # we call it from `globals.R` in order for it to be available
   # through out sessions. All countries are downloaded when
@@ -312,7 +310,7 @@ server <- function(input, output, session) {
     eventReactive(input$calc_model, {
         lapply(1:input$ins_sscore, function(x) {
           all_sscore <- paste0("sscore", x)
-          input[[all_sscore]]
+          gsub(":.*$", "", input[[all_sscore]])
         })
     })
   
@@ -320,7 +318,7 @@ server <- function(input, output, session) {
     eventReactive(input$calc_model, {
       # Choose country when user calculates model
       # This is for when the ess data is available
-      upd_ess <- ess_df[[input$slid_cnt]][chosen_vars()]
+      upd_ess <- ess_df[[input$slid_cnt]][c(all_ids, chosen_vars())]
       # upd_ess <- ess_df[chosen_vars()]
       
       # If no sscore was defined, return the same df the above
@@ -358,21 +356,15 @@ server <- function(input, output, session) {
   
   ### Calculations begin ####
   models_coef <- eventReactive(input$calc_model, {
-    # For when the ess data is in
-    id_df <- ess_df[[input$slid_cnt]][all_ids]
-    # id_df <- ess_df[all_ids]
-    
-    
+
     ## Replace all of this w/ the sddf script
     # Define svydesign object
-    weighted_data <-
-        svydesign(
-          id = ~ id,
-          strata = ~ stratify,
-          weights = ~ dweight,
-          data = dplyr::left_join(cbind(id_df, var_df()), sddf_data, by = all_ids)
-        )
-    
+    weighted_data <- 
+      mk_ess_svy(svyinfo = svyinfo[[input$slid_cnt]], 
+                 ess_data = ess_df[[input$slid_cnt]],
+                 email = Sys.getenv("ess_email"),
+                 round = 6)
+
     ch_vars <- c(input$dv_ch, input$iv_ch)
     
     # Correlation matrix without weights:
