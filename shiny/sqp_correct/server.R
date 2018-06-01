@@ -7,16 +7,35 @@ library(lavaan)
 library(jtools)
 library(dplyr)
 
-
-
 set.seed(2311)
 
 # Replace w/ all ESS id's.
 all_ids <- c("id")
 # Replace w/ ess variables
-all_variables <- paste0("V", 1:9)
-all_variables_label <- paste0("V", 1:9)
+all_variables <-
+  c("polintr",
+    "ppltrst",
+    "stfeco",
+    "stfedu",
+    "stfhlth",
+    "stflife", 
+    "trstplt",
+    "trstprl",
+    "trstprt")
+
+all_variables_label <- 
+  c("How interested in politics",
+    "Most people can be trusted or you can't be too careful",
+    "How satisfied with present state of economy in country",
+    "State of education in country nowadays",
+    "State of health services in country nowadays",
+    "How satisfied with life as a whole", 
+    "Trust in politicians",
+    "Trust in country's parliament",
+    "Trust in political parties")
+
 var_n_labels <- paste0(all_variables, ": ", all_variables_label)
+
 
 ## Turn this sddf into a section where you can download the sddf automatically
 # when the user picks a country.
@@ -25,7 +44,7 @@ sddf_data <- data.frame(id = 1:100,
                        dweight = runif(100))
 
 sqp_df <-
-  data.frame(question = paste0("V", 1:9),
+  data.frame(question = all_variables,
          quality = c(0.2, 0.3, 0.5, 0.6, 0.9, 0.5, 0.6, 0.8, 0.1),
          reliability = c(0.1, 0.4, 0.5, 0.5, 0.7, 0.2, 0.5, 0.6, 0.9),
          validity = c(0.3, 0.2, 0.6, 0.7, 0.8, 0.4, 0.3, 0.7, 0.8))
@@ -99,6 +118,7 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                               variable. click on 'Insert new sum score' to create your sum score."),
                             actionButton('ins_sscore', 'Insert new sum score'),
                             br(),
+                            tags$hr(style="z-index: 10000;"),
                             div(id = 'placeholder'),
                             actionButton('def_model', "I'm done, I want to define my model")
                    ),
@@ -109,8 +129,10 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                             actionButton("calc_model", "Create model")),
                    tabPanel("Create model", value = "cre_model",
                             tabsetPanel(
-                            tabPanel("Plot of results", withSpinner(plotOutput("model_plot"))),
-                            tabPanel("Table of results", withSpinner(tableOutput("model_table")))
+                            tabPanel("Plot of results", withSpinner(plotOutput("model_plot"),
+                                                                    color = "#ff0000")),
+                            tabPanel("Table of results", withSpinner(tableOutput("model_table"),
+                                                                     color = "#ff0000"))
                               )
                             )
       )
@@ -183,7 +205,9 @@ server <- function(input, output, session) {
                   'Choose variables to use in the modeling',
                   var_n_labels,
                   multiple = TRUE,
-                  selectize = FALSE)
+                  selectize = FALSE,
+                  width = '500px',
+                  size = length(var_n_labels))
       
     })
   
@@ -218,7 +242,11 @@ server <- function(input, output, session) {
         textInput(paste0("ssname", input$ins_sscore), "Name of sum score"),
         selectInput(paste0("sscore", input$ins_sscore),
                     'Variables that compose the sum score',
-                    choices = chosen_vars(), multiple = TRUE),
+                    choices = input$vars_ch,
+                    multiple = TRUE,
+                    selectize = FALSE,
+                    width = '500px',
+                    size = length(input$vars_ch)),
         cellWidths = c("17%", "83%")
       )
     # Interactively add a sumscore to the UI
@@ -330,7 +358,6 @@ server <- function(input, output, session) {
   
   ### Calculations begin ####
   models_coef <- eventReactive(input$calc_model, {
-    
     # For when the ess data is in
     id_df <- ess_df[[input$slid_cnt]][all_ids]
     # id_df <- ess_df[all_ids]

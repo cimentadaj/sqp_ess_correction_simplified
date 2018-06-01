@@ -23,11 +23,28 @@ ess_df <-
     all_countries
   )
 
+# This can be removed with the actual ess data is used below.
+
+ess_df <- lapply(ess_df, function(x) {
+  names(x)[1:10] <-   c("id",
+                       "polintr",
+                            "ppltrst",
+                            "stfeco",
+                            "stfedu",
+                            "stfhlth",
+                            "stflife", 
+                            "trstplt",
+                            "trstprl",
+                            "trstprt")
+  x
+})
+
 # ess_df <-
 #   setNames(
 #     lapply(all_countries,
 #            function(x) recode_missings(import_country(x, rounds = 6, ess_email = Sys.getenv("ess_email")))),
 #     all_countries)
+
 
 # Same as sqp_cmv but good for programming with. cmv_vars accepts a vector rather than ...
 sqp_cmv_str <- function(x, sqp_data, cmv_vars, standardized = TRUE, original_data, 
