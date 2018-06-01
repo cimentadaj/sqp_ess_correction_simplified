@@ -1,8 +1,4 @@
-# email   <- "stefan.zins@gesis.org" 
-# rounds  <- 6 # don't change this one yet!!
-# country <- "Albania"
 source("download_sddf.R")
-
 
 mk_ess_svy  <- function(svyinfo, ess_data, round, email) {
   country <- as.character(svyinfo$country)

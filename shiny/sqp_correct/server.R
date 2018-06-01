@@ -35,8 +35,10 @@ all_variables_label <-
 var_n_labels <- paste0(all_variables, ": ", all_variables_label)
 
 
-## Turn this sddf into a section where you can download the sddf automatically
-# when the user picks a country.
+#### NOTE #######
+# Only thing left is to replace the sqp data w/ the actual SQP
+# and delete the the toy dataset blow
+######
 
 sqp_df <-
   data.frame(question = all_variables,
@@ -224,9 +226,6 @@ server <- function(input, output, session) {
     gsub(":.*$", "", input$vars_ch)
   })
 
-  observe({
-    print(chosen_vars())
-  })
   # Because the ess_df (ESS data) must be fresh to all users
   # we call it from `globals.R` in order for it to be available
   # through out sessions. All countries are downloaded when
@@ -314,11 +313,12 @@ server <- function(input, output, session) {
         })
     })
   
+  # This is the ess data w/ only the selected variables
   var_df <-
     eventReactive(input$calc_model, {
       # Choose country when user calculates model
       # This is for when the ess data is available
-      upd_ess <- ess_df[[input$slid_cnt]][c(all_ids, chosen_vars())]
+      upd_ess <- ess_df[[input$slid_cnt]]
       # upd_ess <- ess_df[chosen_vars()]
       
       # If no sscore was defined, return the same df the above
@@ -361,9 +361,10 @@ server <- function(input, output, session) {
     # Define svydesign object
     weighted_data <- 
       mk_ess_svy(svyinfo = svyinfo[[input$slid_cnt]], 
-                 ess_data = ess_df[[input$slid_cnt]],
+                 ess_data = var_df(),
+                 round = 6,
                  email = Sys.getenv("ess_email"),
-                 round = 6)
+                 id_vars = all_ids)
 
     ch_vars <- c(input$dv_ch, input$iv_ch)
     
@@ -394,6 +395,9 @@ server <- function(input, output, session) {
     # create quality estimate for the
     filtered_sqp <- upd_sqpdf()[upd_sqpdf()[[1]] %in% ch_vars, ]
     
+    # Replace all NA's so that there's no error.
+    filtered_sqp <- map_dfc(filtered_sqp, ~ {.x[is.na(.x)] <- 0; .x})
+    
     # Replace diagonal by multiplying it with the quality of each variable
     diag(corrected) <- diag(corrected) * filtered_sqp$quality
     
@@ -401,7 +405,7 @@ server <- function(input, output, session) {
     # Calculate the common method variance of some variables
     # and subtract that common method variance from the correlation
     # coefficients of the variables.
-    
+
     # sqpr::sqp_cmv is a bit strange for programming
     # because it uses non standard evaluation. I defined
     # sqp_cmv_str in `globals.R` to be the same
