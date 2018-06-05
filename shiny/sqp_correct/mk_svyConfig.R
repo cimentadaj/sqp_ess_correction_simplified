@@ -1,6 +1,10 @@
+# email   <- "stefan.zins@gesis.org" 
+# rounds  <- 6 # don't change this one yet!!
+# country <- "Albania"
 source("download_sddf.R")
 
-mk_ess_svy  <- function(svyinfo, ess_data, round, email) {
+
+mk_ess_svy  <- function(svyinfo, ess_data, round, email, id_vars) {
   country <- as.character(svyinfo$country)
   #skip Austria
   if (country %in% c("Austria", "Israel")) {
@@ -36,7 +40,7 @@ mk_ess_svy  <- function(svyinfo, ess_data, round, email) {
     #ess_data is complete case data set only
     svydata <- 
       suppressWarnings(
-        left_join(ess_data, sddf_data, by = c("cntry", "idno"))
+        left_join(ess_data, sddf_data, by = id_vars)
         )
     svydesign(
       id = sta,

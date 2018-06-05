@@ -14,7 +14,7 @@ library(sqpr)
 # Register for SQP here: http://sqp.upf.edu/accounts/login/?next=/loadui/
 # Once you run the three lines below you can erase your credentials to 
 # how it was before and during this session you will be logged in.
-Sys.setenv(ess_email = 'stefan.zins@gesis.org')
+Sys.setenv(ess_email = '')
 Sys.setenv(SQP_USER = 'sqpr_tests')
 Sys.setenv(SQP_PW = 'sqpr2018')
 
@@ -118,14 +118,12 @@ ess_svy <-
              email = Sys.getenv("ess_email"),
              round = 6)
 
-## ------------------------------------------------------------------------
-# Correlation matrix without weights:
-original_corr_2 <- cor(ess6escorr[selected_vars],
-                       use = "complete.obs", 
-                       method = "pearson")
+#### Covariance ####
 
-original_corr_2
-## ------------------------------------------------------------------------
+# Correlation matrix without weights:
+original_cov <- cov(ess6escorr[selected_vars])
+
+original_cov
 # Weighted correlation matrix and replacing the diagonal 
 # with the quality estimate of each variable
 
@@ -140,31 +138,94 @@ selected_vars_formula <-
 #option to deal with lonegly PSUs
 options(survey.lonely.psu = "adjust")
 
-corr_q2 <- 
+# We get the covariance of the variables instead of the
+# correlation
+cov_q2 <- 
   svyvar(selected_vars_formula, design = ess_svy, na.rm = TRUE) %>%
-  as.matrix %>%
-  cov2cor
+  as.matrix
 
-attr(corr_q2,"statistic") <- "covariance"
-# Replace diagonal
-diag(corr_q2) <- Quality$quality
+attr(cov_q2,"statistic") <- "covariance"
 
-corr_q2
+# Replace diagonal by multiplying it with the quality of each variable
+diag(cov_q2) <- diag(cov_q2) * Quality$quality
 
-## ------------------------------------------------------------------------
+cov_q2
+
 #subtract the cmv from the observed correlation
 # Calculate the common method variance of some variables
 # and subtract that common method variance from the correlation
-corr_q2_cmv <-
-  sqp_cmv(x = corr_q2,
-          sqp_data = Quality,
-          imbgeco, imueclt)
+# coefficients of the variables.
 
-corr_q2_cmv
-## ------------------------------------------------------------------------
+# We set standardized to FALSE so that `sqp_cmv` can accept a
+# covariance in argument `x` rather than a correlation. This way
+# the CMV coefficient is multiplied by the standard deviation
+# of the variables in the original data.
+corrected_cov <-
+  sqp_cmv(x = cov_q2,
+          sqp_data = Quality,
+          imbgeco, imueclt,
+          standardized = FALSE,
+          original_data = ess6escorr) %>% 
+  select_if(is.numeric) %>% 
+  as.matrix()
+
+# Still a covariance matrix
+corrected_cov
+#### Covariance ends ####
+
+#### Correlation ####
+
+# Correlation matrix without weights:
+original <- cor(ess6escorr[selected_vars],
+                use = "complete.obs",
+                method = "pearson")
+
+original
+
+selected_vars_formula <- 
+  eval(parse(text = 
+               paste0("~",
+                      paste0(selected_vars,
+                             collapse = "+"))
+    )
+  )
+
+#option to deal with lonegly PSUs
+options(survey.lonely.psu="adjust")
+
+cor_q2 <- 
+  svyvar(selected_vars_formula, design = ess_svy, na.rm = TRUE) %>%
+  as.matrix() %>% 
+  cov2cor()
+
+attr(cor_q2,"statistic") <- "covariance"
+
+# Replace diagonal by multiplying it with the quality of each variable
+diag(cor_q2) <- diag(cor_q2) * Quality$quality
+
+cor_q2
+
+#subtract the cmv from the observed correlation
+# Calculate the common method variance of some variables
+# and subtract that common method variance from the correlation
+# coefficients of the variables.
+corrected <-
+  sqp_cmv(x = cor_q2,
+          sqp_data = Quality,
+          imbgeco, imueclt) %>% 
+  select_if(is.numeric) %>% 
+  as.matrix() %>% 
+  cov2cor()
+
+
+corrected
+
+#### Correlation ends ####
+
 ## ------------------------------------------------------------------------
 # Turn into a correlation matrix
-corrected_corr <- corr_q2_cmv %>% select(-rowname) %>% as.matrix() %>% cov2cor()
+# corrected_corr <- corr_q2_cmv %>% select(-rowname) %>% as.matrix() %>% cov2cor()
+
 
 # diag(corrected_corr) <- Quality$quality
 var_corrected_corr <- attr(corr_q2,"var") 
@@ -179,13 +240,13 @@ sample_size <- nrow(ess6escorr)
 # Model based on original correlation matrix
 fit <-
   sem(model,
-      sample.cov=original_corr_2,
-      sample.nobs= sample_size) 
+      sample.cov = original,
+      sample.nobs = sample_size)
 
 # Model based on corrected covariance matrix 
 fit.corrected <-
   sem(model,
-      sample.cov=corrected_corr,
+      sample.cov=corrected,
       sample.nobs= sample_size)
 
 ## ---- fig.width = 7, fig.with = 9----------------------------------------
@@ -197,7 +258,7 @@ coef_table <-
   map(~ filter(.x, lhs == selected_vars[1])) %>%
   map(~ select(.x, rhs, est, ci.lower, ci.upper)) %>%
   bind_rows() %>%
-  mutate(model = rep(c("original", "corrected"), each = ncol(corrected_corr)))
+  mutate(model = rep(c("original", "corrected"), each = ncol(corrected_cov)))
 
 p1 <-
   coef_table %>%
