@@ -1,11 +1,14 @@
+library(lavaan.survey)
+###### A multiple group example #######
+
 data(HolzingerSwineford1939)
 
 # The Holzinger and Swineford (1939) example - some model with complex restrictions
 HS.model <- ' visual  =~ x1 + x2 + c(lam31, lam31)*x3
-              textual =~ x4 + x5 + c(lam62, lam62)*x6
-              speed   =~ x7 + x8 + c(lam93, lam93)*x9 
-             speed ~ textual 
-             textual ~ visual'
+textual =~ x4 + x5 + c(lam62, lam62)*x6
+speed   =~ x7 + x8 + c(lam93, lam93)*x9 
+speed ~ textual 
+textual ~ visual'
 
 # Fit multiple group per school
 fit <- lavaan(HS.model, data=HolzingerSwineford1939,
@@ -17,20 +20,22 @@ summary(fit, fit.measures=TRUE)
 # Create fictional clusters in the HS data
 set.seed(20121025)
 HolzingerSwineford1939$clus <- sample(1:100, size=nrow(HolzingerSwineford1939), replace=TRUE)
-survey.design <- svydesign(ids=~clus, prob=~1, data=HolzingerSwineford1939)
+survey.design <- svydesign(ids=~clus, 
+                           prob=~1, 
+                           data=HolzingerSwineford1939)
 
 summary(fit.survey <- lavaan.survey(fit, survey.design))
 
 
+# For more examples, please see the Journal of Statistical Software Paper, 
+#  the accompanying datasets ?cardinale ?ess4.gb ?liss ?pisa.be.2003
+#  and my homepage http://daob.nl/ 
 
-summary(fit.survey <- lavaan.survey(fit, survey.design))
 
-
-summary(lavaan.survey(lavaan.fit = fit,survey.design = ess_svy))
-summary(fit)
+################################################################################
 
 lavaan.fit = fit
-survey.design = ess_svy
+survey.design = survey.design
 estimator = "MLM"
 estimator.gamma = "default"
 
@@ -40,22 +45,24 @@ function (lavaan.fit,
           estimator = c("MLM", "MLMV",
                         "MLMVS", "WLS", "DWLS", "ML"),
           estimator.gamma = c("default",
-                              "Yuan-Bentler"))
-{
+                              "Yuan-Bentler")){
   estimator <- match.arg(estimator)
   if (estimator == "ML")
     warning("Estimator 'ML' will not correct standard errors and chi-square statistic.")
   estimator.gamma <- match.arg(estimator.gamma)
   
+  #observed variables
   ov.names <- lavaanNames(lavaan.fit, type = "ov", group = 1)
   Dplus <- lavaan::lav_matrix_duplication_ginv(length(ov.names))
+  # formula observed variables
   ov.formula <-
     as.formula(paste("~", paste(ov.names, collapse = "+")))
   ngroups <- lavInspect(lavaan.fit, "ngroups")
   Gamma <- vector("list", ngroups)
-  sample.cov <- vector("list", ngroups)
+  sample.cov  <- vector("list", ngroups)
   sample.mean <- vector("list", ngroups)
   sample.nobs <- vector("list", ngroups)
+  
   for (g in seq(ngroups)) {
     if (ngroups > 1) {
       survey.design.g <-
@@ -63,21 +70,27 @@ function (lavaan.fit,
           text = sprintf(
             "%s == '%s'",
             lavInspect(lavaan.fit, "group"),
-            lavInspect(lavaan.fit,
-                       "group.label")[[g]]
+            lavInspect(lavaan.fit, "group.label")[[g]]
           )
         )))
     } else {
       survey.design.g <- survey.design
     }
-    get.stats.design <- function(survey.design.g, ,sample.nobs.g) {
+    get.stats.design <- function(survey.design.g, sample.nobs.g) {
+      
+      #estimation of covaraince matrix
       sample.cov.g <-
-        as.matrix(svyvar(ov.formula, design = survey.design.g,
+        as.matrix(svyvar(ov.formula, 
+                         design = survey.design.g,
                          na.rm = TRUE))
+      #sqp correction here
+      
+      
       Gamma.cov.g <- attr(sample.cov.g, "var")
       Gamma.cov.g <- Dplus %*% Gamma.cov.g %*% t(Dplus)
       sample.mean.g <-
-        svymean(ov.formula, design = survey.design.g,
+        svymean(ov.formula, 
+                design = survey.design.g,
                 na.rm = TRUE)
       Gamma.mean.g <- attr(sample.mean.g, "var")
       Gamma.g <- lavaan::lav_matrix_bdiag(Gamma.mean.g,
@@ -102,6 +115,7 @@ function (lavaan.fit,
       sample.nobs.g <- lavInspect(lavaan.fit, "nobs")[[g]]
       stats <- get.stats.design(survey.design.g, sample.nobs.g)
     } else {
+      #for imputed survey data
       sample.nobs.g <- get.sample.nobs(survey.design.g,
                                        lavInspect(lavaan.fit, "group"))
       stats.list <- lapply(survey.design.g[[1]], get.stats.design,

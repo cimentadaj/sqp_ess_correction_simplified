@@ -138,7 +138,7 @@ selected_vars_formula <-
        )
 
 #option to deal with lonegly PSUs
-options(survey.lonely.psu="adjust")
+options(survey.lonely.psu = "adjust")
 
 corr_q2 <- 
   svyvar(selected_vars_formula, design = ess_svy, na.rm = TRUE) %>%
@@ -155,7 +155,6 @@ corr_q2
 #subtract the cmv from the observed correlation
 # Calculate the common method variance of some variables
 # and subtract that common method variance from the correlation
-# coefficients of the variables
 corr_q2_cmv <-
   sqp_cmv(x = corr_q2,
           sqp_data = Quality,
@@ -168,7 +167,7 @@ corr_q2_cmv
 corrected_corr <- corr_q2_cmv %>% select(-rowname) %>% as.matrix() %>% cov2cor()
 
 # diag(corrected_corr) <- Quality$quality
-corrected_corr
+var_corrected_corr <- attr(corr_q2,"var") 
 ## ------------------------------------------------------------------------
 # Create model formula
 model <- paste0(selected_vars[1], 
