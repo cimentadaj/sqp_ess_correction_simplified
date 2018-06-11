@@ -5,8 +5,8 @@ account: cimentadaj
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 356154
-bundleId: 1423058
+bundleId: 1423128
 url: https://cimentadaj.shinyapps.io/sqp_measurement_error/
-when: 1528728138.73658
+when: 1528729887.49134
 asMultiple: FALSE
 asStatic: FALSE

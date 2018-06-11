@@ -1,5 +1,8 @@
 library(essurvey)
 library(purrr)
+
+set_email("cimentadaj@gmail.com")
+
 filter <- dplyr::filter
 select <- dplyr::select
 
