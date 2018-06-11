@@ -57,7 +57,7 @@ options(survey.lonely.psu="adjust")
 # Text for errors when email is wrong or when 1 variable is selected as model
 valid_email_error <- tags$span(style="color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
 minimum_var_error <- tags$span(style="color:red; font-size: 15px;", "Please select at least two variables for modeling.")
-
+minimum_iv_error <- tags$span(style="color:red; font-size: 15px;", "Please select at least one independent variable.")
 
 # Main wrapper of the page that contains the red banner on top
 main_page <- function(...) {
@@ -112,8 +112,8 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                              actionButton("def_sscore", "I'm done, let me define my sum scores")
                     ),
                     tabPanel("Create sum scores", value = "def_sscore",
-                             p("Would you like to create additional sumscore variables?
-                              Sum scores are the addition fo several variables into one single
+                             p("Would you like to create additional sum score variables?
+                              Sum scores are the addition to several variables into one single
                               variable. click on 'Insert new sum score' to create your sum score."),
                              actionButton('ins_sscore', 'Insert new sum score'),
                              br(),
@@ -124,6 +124,9 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                              fluidRow(column(3, uiOutput("dv")),
                                       column(3, uiOutput("iv")),
                                       column(5, uiOutput("cmv"))),
+                             fluidRow(column(3, ""),
+                                      column(3, uiOutput('length_iv')),
+                                      column(3, "")),
                              actionButton("calc_model", "Create model")),
                     tabPanel("Create model", value = "cre_model",
                              tabsetPanel(
@@ -262,13 +265,11 @@ server <- function(input, output, session) {
   # define model and we switch to the define model
   # tab to select dependent and independent variables
   observeEvent(input$def_model, {
-    
-    # If they clicked, jump to the model tab
-    updateNavlistPanel(session,
-                       inputId = "menu",
-                       selected = "def_model")
+      updateTabsetPanel(session,
+                        inputId = "menu",
+                        selected = "def_model")
   })
-  
+
   clean_ssnames <-
     eventReactive(input$def_model, {
       if (input$ins_sscore == 0) return(character())
@@ -307,6 +308,16 @@ server <- function(input, output, session) {
                          "Which variables have Common Method Variance?",
                          choices = c(input$dv_ch, input$iv_ch))
     )
+  
+  observeEvent(input$calc_model, {
+    if (length(input$iv_ch) < 1) {
+      output$length_iv <- renderUI(p(minimum_iv_error))
+    } else {
+      updateTabsetPanel(session,
+                        inputId = "menu",
+                        selected = "cre_model")
+    }
+  })
   
   # Get a list where each slot contains
   # the variables that compose each sscore.
@@ -456,20 +467,12 @@ server <- function(input, output, session) {
     coef_table
   })
   
-  
-  observeEvent(input$calc_model, {
-    # If calculate model is clicked, switch panel
-    updateNavlistPanel(session,
-                       inputId = "menu",
-                       selected = "cre_model")
-  })
-  
   # Final table
   output$model_table <-
     reactive({
       models_coef() %>% 
         reduce(left_join, by = "rhs") %>% 
-        mutate_if(is.numeric, function(x) round(x, 3)) %>% 
+        mutate_if(is.numeric, function(x) as.character(round(x, 3))) %>% 
         set_names(c("Covariates", rep(c("Estimate", "P-val", "Lower CI", "Upper CI"), times = 2))) %>% 
         kable() %>% 
         kable_styling("striped", full_width = F) %>% 
@@ -487,6 +490,6 @@ server <- function(input, output, session) {
                        position = position_dodge(width = 0.5)) +
         geom_point(position = position_dodge(width = 0.5)) +
         labs(x = "Predictors", y = "Estimated coefficients") +
-        theme_bw()
+        theme_bw(base_size = 16)
     })
 }
