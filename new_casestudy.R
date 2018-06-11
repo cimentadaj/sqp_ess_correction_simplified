@@ -136,7 +136,7 @@ selected_vars_formula <-
        )
 
 #option to deal with lonegly PSUs
-options(survey.lonely.psu="adjust")
+options(survey.lonely.psu = "adjust")
 
 # We get the covariance of the variables instead of the
 # correlation
@@ -226,6 +226,10 @@ corrected
 # Turn into a correlation matrix
 # corrected_corr <- corr_q2_cmv %>% select(-rowname) %>% as.matrix() %>% cov2cor()
 
+
+# diag(corrected_corr) <- Quality$quality
+var_corrected_corr <- attr(corr_q2,"var") 
+## ------------------------------------------------------------------------
 # Create model formula
 model <- paste0(selected_vars[1], 
                 " ~ ", 
