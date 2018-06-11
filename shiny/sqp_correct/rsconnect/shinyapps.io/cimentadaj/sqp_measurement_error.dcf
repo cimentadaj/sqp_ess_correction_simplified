@@ -1,0 +1,12 @@
+name: sqp_measurement_error
+title: sqp_measurement_error
+username:
+account: cimentadaj
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 356154
+bundleId: 1423058
+url: https://cimentadaj.shinyapps.io/sqp_measurement_error/
+when: 1528728138.73658
+asMultiple: FALSE
+asStatic: FALSE

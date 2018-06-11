@@ -33,6 +33,8 @@ all_variables_label <-
 # Variables pasted together with labels
 var_n_labels <- paste0(all_variables, ": ", all_variables_label)
 
+ess_website <- "http://www.europeansocialsurvey.org"
+path_login <- "/user/login"
 
 #### NOTE #######
 # Only thing left is to replace the sqp data w/ the actual SQP
@@ -169,7 +171,11 @@ server <- function(input, output, session) {
           # Password <- isolate(input$passwd)
           # Id.username <- which(my_username == Username)
           # Id.password <- which(my_password == Password)
-          auth <- is_error(essurvey:::authenticate(email))
+          
+          # I was using essurvey:::authenticate here but because the .global_vars
+          # are not in the .Globalenv, the handle of the website was not shared
+          # across requests. I have input the website variables manually
+          auth <- is_error(authenticate_ess(email, ess_website, path_login))
           if (auth || email == "") {
             output$emailValid <- renderUI(p(valid_email_error))
           } else {
@@ -353,7 +359,8 @@ server <- function(input, output, session) {
                ess_data = var_df(),
                round = 6,
                email = Sys.getenv("ess_email"),
-               id_vars = all_ids)
+               id_vars = all_ids,
+               ess_website = ess_website)
     
   })
   

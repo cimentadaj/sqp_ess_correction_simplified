@@ -1,7 +1,8 @@
 library(essurvey)
 library(purrr)
+filter <- dplyr::filter
+select <- dplyr::select
 
-set_email("cimentadaj@gmail.com")
 # Replace w/ available countries
 all_countries <- c("Spain",
                    "Germany",

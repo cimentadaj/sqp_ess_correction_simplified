@@ -1,8 +1,6 @@
-library(essurvey)
 library(xml2)
 library(httr)
 library(haven)
-library(tidyverse)
 
 #### Functions
 
@@ -55,13 +53,27 @@ read_format_data <- function (urls, format, rounds) {
                             full.names = TRUE)
   
   dataset <- lapply(format_dirs, format_read)
+  
+  print(head(dataset))
 
-  if (length(rounds) == 1) 
-    dataset <- dataset[[1]]
+  if (length(rounds) == 1) dataset <- dataset[[1]]
+  
   dataset
 }
 
-grab_sddf <- function(rounds, country, email) {
+round_downloader <- function(each_url, which_round, which_folder) {
+  message(paste("Downloading", which_round))
+  temp_download <- file.path(which_folder, paste0(which_round, ".zip"))
+  print(temp_download)
+  current_file <- safe_GET(each_url,
+                           write_disk(temp_download, overwrite = TRUE),
+                           httr::progress())
+  print(current_file)
+  print(list.files(dirname(temp_download)))
+  unzip(temp_download, exdir = which_folder)
+}
+
+grab_sddf <- function(rounds, country, email, ess_website) {
   #### Checking all main arguments are valid
   if (!rounds %in% show_rounds()) {
     stop(rounds, " is not a valid round.")
@@ -72,29 +84,17 @@ grab_sddf <- function(rounds, country, email) {
   }
   
   ## Define all important links
-  ess_website <- "http://www.europeansocialsurvey.org"
   ess_url <- paste0(ess_website, "/data/download.html?r=")
-  path_login <- "/user/login"
   final_url <- paste0(ess_url, rounds)
-  ##
-  
-  ## Authenticate in ESS website
-  authenticate_ess(email, ess_website, path_login)
-  ###
   
   # Grab all country names
   cnts <-
-    final_url %>% 
-    read_html() %>% 
-    xml_find_all(xpath = "//h4") %>% 
-    xml_text()
+    xml_text(xml_find_all(read_html(final_url), xpath = "//h4"))
+  
   
   # Grab all urls that have an sddf file
   web_try <-
-    final_url %>%
-    read_html() %>% 
-    xml_find_all(xpath = "//div[@class='round_files']//ul") %>% 
-    as_list()
+    as_list(xml_find_all(read_html(final_url), xpath = "//div[@class='round_files']//ul"))
   
   # Because some countries don't have an sddf urls, they're missing
   # a slot in the list that returns all the country details.
@@ -121,9 +121,6 @@ grab_sddf <- function(rounds, country, email) {
       grabs_link
     }, FUN.VALUE = character(1))
   
-  # This returns all sddf urls
-  all_sddf
-  
   # Which countries are available in the sddf website?
   country_available <- country %in% cnts
   
@@ -142,18 +139,18 @@ grab_sddf <- function(rounds, country, email) {
   # Grab the specific 'stata' (or 'spss') zip url from 
   # each country link and construct the full download path
   format_urls <-
-    map_chr(country_link, grab_link, ess_website = ess_website, format = "stata") %>% 
-    paste0(ess_website, .)
+    paste0(ess_website,
+           map_chr(country_link, grab_link, ess_website = ess_website, format = "stata"))
   
   # Download the data and read it in stata format
-  folder_data <-
-    essurvey:::round_downloader(
+  all_paths <-
+    round_downloader(
       format_urls,
       country,
       tempdir()
-    ) %>% 
-    grep("SDDF", ., value = TRUE) %>% 
-    dirname()
+    )
+  
+  folder_data <- dirname(grep("SDDF", all_paths, value = TRUE))
   
   sddf_data <- read_format_data(folder_data, 
                                 format = 'stata',

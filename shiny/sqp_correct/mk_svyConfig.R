@@ -4,7 +4,7 @@
 source("download_sddf.R")
 
 
-mk_ess_svy  <- function(svyinfo, ess_data, round, email, id_vars) {
+mk_ess_svy  <- function(svyinfo, ess_data, round, email, id_vars, ess_website) {
   country <- as.character(svyinfo$country)
   #skip Austria
   if (country %in% c("Austria", "Israel")) {
@@ -15,7 +15,8 @@ mk_ess_svy  <- function(svyinfo, ess_data, round, email, id_vars) {
     sddf_data <-
       grab_sddf(rounds = round,
                 country = country,
-                email = email)
+                email = email,
+                ess_website = ess_website)
     if (country == "Denmark") {
       sddf_data %<>%
         filter(!is.na(idno))
