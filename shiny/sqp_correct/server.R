@@ -467,6 +467,17 @@ server <- function(input, output, session) {
     coef_table
   })
   
+<<<<<<< HEAD
+=======
+  
+  # observeEvent(input$calc_model, {
+  #   # If calculate model is clicked, switch panel
+  #   updateNavlistPanel(session,
+  #                      inputId = "menu",
+  #                      selected = "cre_model")
+  # })
+  
+>>>>>>> 13b2149937715226da643828cddc6833eac5d591
   # Final table
   output$model_table <-
     reactive({
