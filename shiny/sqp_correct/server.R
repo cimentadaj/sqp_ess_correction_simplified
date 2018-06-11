@@ -51,7 +51,7 @@ sqp_df <- structure(sqp_df, class = c(class(sqp_df), "sqp"))
 
 
 #option to deal with lonegly PSUs
-options(survey.lonely.psu="adjust")
+options(survey.lonely.psu = "adjust")
 
 
 # Text for errors when email is wrong or when 1 variable is selected as model
@@ -131,10 +131,10 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                     tabPanel("Create model", value = "cre_model",
                              tabsetPanel(
                                tabPanel("Plot of results",
-                                        withSpinner(plotOutput("model_plot"),
+                                        withSpinner(tagList(plotOutput("model_plot")),
                                                     color = "#ff0000")),
                                tabPanel("Table of results",
-                                        withSpinner(tableOutput("model_table"),
+                                        withSpinner(tagList(tableOutput("model_table")),
                                                     color = "#ff0000"))
                              )
                     )
@@ -465,6 +465,17 @@ server <- function(input, output, session) {
       map(~ select(.x, rhs, est, pvalue, ci.lower, ci.upper))
     
     coef_table
+  })
+  
+  observeEvent(input$calc_model, {
+    if (length(input$iv_ch) < 1) {
+      output$length_iv <- renderUI(p(minimum_iv_error))
+    } else {
+      output$length_iv <- renderUI(p(""))
+      updateTabsetPanel(session,
+                        inputId = "menu",
+                        selected = "cre_model")
+    }
   })
   
   # Final table
