@@ -308,7 +308,7 @@ server <- function(input, output, session) {
                function(x) input[[paste0("ssname", x)]],
                FUN.VALUE = character(1))
       all_names[all_names != ""]
-    }, ignoreInit = TRUE)
+    })
   
   # Get a list where each slot contains
   # the variables that compose each sscore.
@@ -357,6 +357,38 @@ server <- function(input, output, session) {
   #   # print(exists_sscorelist())
   # })
   
+  # This preservers the order of variables picked if the user already
+  # choose a dependent variable
+  preserve_order_dv <- function(equation_side) {
+    selected <- reactive({
+      # If no variable has been chosen, choose first
+      if (is.null(input[[equation_side]]))  {
+        chosen_vars()[1]
+        # If a variable has been chosen but it was later deleted from the chosen variables
+        # return to the first variable
+      } else if (!is.null(input[[equation_side]]) & !input[[equation_side]] %in% chosen_vars()) {
+        chosen_vars()[1] 
+        # Otherwise return the already picked dependent variable
+      } else { 
+        input[[equation_side]]
+      }
+    })
+    selected()
+  }
+  
+  preserve_order <- function(equation_side) {
+    selected <- reactive({
+      # If no variable has been chosen, don't select anything
+      if (is.null(input[[equation_side]]))  {
+        NULL
+        # If any of the variables selected are in the chosen variables, the bring only these ones
+      } else if (any(index <- input[[equation_side]] %in% chosen_vars())) {
+        input[[equation_side]][index]
+      }
+    })
+    selected()
+  }
+  
   # Define the three model parts
   # Pick the dependent variable
   output$dv <-
@@ -364,9 +396,13 @@ server <- function(input, output, session) {
       radioButtons("dv_ch",
                    "Dependent variable",
                    choices = setdiff(c(chosen_vars(), exists_cleanssnames()), exists_sscorelist()),
-                   selected = chosen_vars()[1]
+                   selected = preserve_order_dv("dv_ch")
       )
     )
+  
+  observe({
+    print(input$dv_ch)
+  })
   
   # Pick the independent variables
   output$iv <-
@@ -374,7 +410,8 @@ server <- function(input, output, session) {
       checkboxGroupInput("iv_ch",
                          "Independent variables",
                          choices = setdiff(c(chosen_vars(), exists_cleanssnames()),
-                                           c(input$dv_ch, exists_sscorelist())))
+                                           c(input$dv_ch, exists_sscorelist())),
+                         selected = preserve_order("iv_ch"))
     )
   
   
@@ -383,10 +420,8 @@ server <- function(input, output, session) {
     renderUI(
       checkboxGroupInput("cmv_ch",
                          "Which variables are measured with the same method?",
-                         # Because polintr is always selected (pre-selected in the widget)
-                         # even if you haven't selected any variables it will appear. This makes
-                         # sure that it appears only when variables have been selected.
-                         choices = c(input$dv_ch, input$iv_ch))
+                         choices = c(input$dv_ch, input$iv_ch),
+                         selected = preserve_order("cmv_ch"))
     )
   
   observeEvent(input$calc_model, {
