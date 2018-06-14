@@ -116,6 +116,7 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                               Sum scores are the addition to several variables into one single
                               variable. click on 'Create sum score' to create your sum score."),
                              actionButton('ins_sscore', 'Create sum score'),
+                             actionButton('del_sscore', 'Delete sum score'),
                              br(),
                              div(id = 'placeholder'),
                              actionButton('def_model', "I'm done, I want to define my model")
@@ -273,19 +274,32 @@ server <- function(input, output, session) {
     # the sscore name and variables to the ui
     whole_html <-
       splitLayout(
+        tagList(div(id = paste0("splitlayout", input$ins_sscore)),
         textInput(paste0("ssname", input$ins_sscore), "Name of sum score"),
-        selectInput(paste0("sscore", input$ins_sscore),
-                    'Variables that compose the sum score',
+        selectInput(inputId = paste0("sscore", input$ins_sscore),
+                    label = 'Variables that compose the sum score',
                     choices = input$vars_ch,
                     multiple = TRUE,
                     selectize = FALSE,
                     width = '500px',
                     size = length(input$vars_ch)),
-        cellWidths = c("17%", "83%")
+        )
       )
-    
     # Interactively add a sumscore to the UI
     insertUI(selector = '#placeholder', ui = whole_html)
+  })
+  
+  
+  observeEvent(input$del_sscore, {
+    if (input$del_sscore == 0) return(character())
+    
+    # removeUI(
+    #   selector = paste0("div:has(> #ssname", input$ins_sscore, ")")
+    # )
+    removeUI(
+      selector = paste0("div:has(> #splitlayout", input$ins_sscore, ")"),
+      multiple = TRUE
+    )
   })
   
   # When the sumscores are ready, the user clicks
