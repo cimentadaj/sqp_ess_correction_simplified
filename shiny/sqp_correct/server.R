@@ -64,8 +64,7 @@ main_page <- function(...) {
   div(id = "fluidp",
       fluidPage(
         img(id = "ess_logo",
-            src = "http://www.europeansocialsurvey.org/common/ess_eric/img/ess-logo-top.png",
-            height = 45),
+            src = "http://www.europeansocialsurvey.org/common/ess_eric/img/ess-logo-top.png"),
         br(),
         br(),
         ...
@@ -105,7 +104,7 @@ ui1 <- tagList(
 
 # Second tab for defining model and selecting vars/countries
 ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
-                    tabPanel("Select variables and country",
+                    tabPanel("Select country and model", value = "country_n_vars",
                              selectInput("slid_cnt", "Pick a country", choices = all_countries),
                              uiOutput('chosen_vars'),
                              uiOutput('length_vars'),
@@ -114,8 +113,8 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                     tabPanel("Create sum scores", value = "def_sscore",
                              p("Would you like to create additional sum score variables?
                               Sum scores are the addition to several variables into one single
-                              variable. click on 'Insert new sum score' to create your sum score."),
-                             actionButton('ins_sscore', 'Insert new sum score'),
+                              variable. click on 'Create sum score' to create your sum score."),
+                             actionButton('ins_sscore', 'Create sum score'),
                              br(),
                              div(id = 'placeholder'),
                              actionButton('def_model', "I'm done, I want to define my model")
@@ -127,18 +126,21 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                              fluidRow(column(3, ""),
                                       column(3, uiOutput('length_iv')),
                                       column(3, "")),
-                             actionButton("calc_model", "Create model")),
+                             actionButton("calc_model", "Create model")
+                    ),
                     tabPanel("Create model", value = "cre_model",
                              tabsetPanel(
                                tabPanel("Plot of results",
                                         withSpinner(tagList(plotOutput("model_plot")),
-                                                    color = "#ff0000")),
+                                                    color = "#ff0000")
+                                        ),
                                tabPanel("Table of results",
                                         withSpinner(tagList(tableOutput("model_table")),
-                                                    color = "#ff0000"))
+                                                    color = "#ff0000")
+                                        )
+                               )
                              )
                     )
-)
 
 # For checking when the ess email is valid or not
 is_error <- function(x) {
@@ -206,15 +208,19 @@ server <- function(input, output, session) {
   
   #####
   
+  observe({
+    print(input$def_sscore)
+    print(input$menu)
+  })
+  
   output$chosen_vars <-
     renderUI({
       selectInput('vars_ch',
                   'Choose variables to use in the modeling',
                   var_n_labels,
                   multiple = TRUE,
-                  selectize = FALSE,
-                  width = '500px',
-                  size = length(var_n_labels))
+                  selectize = TRUE,
+                  width = '500px')
       
     })
   
@@ -282,13 +288,30 @@ server <- function(input, output, session) {
       all_names[all_names != ""]
     })
   
+  # Get a list where each slot contains
+  # the variables that compose each sscore.
+  # The counterpart of this is clean_ssnames()
+  # which contains the variable names of each sscore
+  sscore_list <-
+    eventReactive(input$def_model, {
+      lapply(1:input$ins_sscore, function(x) {
+        all_sscore <- paste0("sscore", x)
+        gsub(":.*$", "", input[[all_sscore]])
+      })
+    })
+  
+  observe({
+    print(unlist(sscore_list()))
+  })
+  
   ## Define the three model parts
   # Pick the dependent variable
   output$dv <-
     renderUI(
       radioButtons("dv_ch",
                    "Dependent variable",
-                   choices = c(chosen_vars(), clean_ssnames()),
+                   choices = setdiff(c(chosen_vars(), clean_ssnames()),
+                                     unlist(sscore_list())),
                    selected = chosen_vars()[1])
     )
   
@@ -298,7 +321,7 @@ server <- function(input, output, session) {
       checkboxGroupInput("iv_ch",
                          "Independent variables",
                          choices = setdiff(c(chosen_vars(), clean_ssnames()),
-                                           input$dv_ch))
+                                           c(input$dv_ch, unlist(sscore_list()))))
     )
   
   # Pick the variables that share CMV
@@ -319,17 +342,6 @@ server <- function(input, output, session) {
     }
   })
   
-  # Get a list where each slot contains
-  # the variables that compose each sscore.
-  # The counterpart of this is clean_ssnames()
-  # which contains the variable names of each sscore
-  sscore_list <-
-    eventReactive(input$calc_model, {
-      lapply(1:input$ins_sscore, function(x) {
-        all_sscore <- paste0("sscore", x)
-        gsub(":.*$", "", input[[all_sscore]])
-      })
-    })
   
   # This is the ess data w/ only the selected variables
   var_df <-
