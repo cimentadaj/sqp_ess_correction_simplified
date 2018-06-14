@@ -210,14 +210,6 @@ server <- function(input, output, session) {
   div(main_page(ui2))
   })
 
-  
-  #####
-  
-  # observe({
-  #   print(input$def_sscore)
-  #   print(input$menu)
-  # })
-  
   output$chosen_vars <-
     renderUI({
       checkboxGroupInput(
@@ -237,7 +229,7 @@ server <- function(input, output, session) {
     is_specific_tab()
   }
   
-  observe(print(is_tab("def_sscore")))
+  # observe(print(is_tab("def_sscore")))
   
   # This is a turning point. We want to ensure that there
   # are at least two variables chosen for the modeling.
@@ -316,7 +308,7 @@ server <- function(input, output, session) {
                function(x) input[[paste0("ssname", x)]],
                FUN.VALUE = character(1))
       all_names[all_names != ""]
-    })
+    }, ignoreInit = TRUE)
   
   # Get a list where each slot contains
   # the variables that compose each sscore.
@@ -330,8 +322,17 @@ server <- function(input, output, session) {
       })
     })
   
+  # When clean_ssnames() and sscore_list()
+  # are first run when the shiny app starts
+  # they contain a silent error because the
+  # eventReactive counter is at 0.
+  # With is_error I test whether it has been ran or not
+  # and based on that return the same variable or an empty characther.
+  # this is because these two functions are passed to the list
+  # of independent and dependent variables and an error
+  # will crash it.
   exists_cleanssnames <- reactive({
-    if (exists("clean_ssnames")) {
+    if (!is_error(clean_ssnames())) {
       clean_ssnames()
     } else {
       character()
@@ -339,58 +340,43 @@ server <- function(input, output, session) {
   })
   
   exists_sscorelist <- reactive({
-    if (exists("sscore_list")) {
+    if (!is_error(sscore_list())) {
       unlist(sscore_list())
     } else {
-      ""
+      character()
     }
   })
   
 
-  observe({
-    print(exists_cleanssnames())
-    # print("Does it exists?:", exists("clean_ssnames"))
-    # print(chosen_vars(), exists_cleanssnames())
-    # print(exists_cleanssnames())
-    # print(exists_sscorelist())
-  })
+  # observe({
+  #   print(exists_cleanssnames())
+  #   print(sscore_list)
+  #   # print("Does it exists?:", exists("clean_ssnames"))
+  #   # print(chosen_vars(), exists_cleanssnames())
+  #   # print(exists_cleanssnames())
+  #   # print(exists_sscorelist())
+  # })
   
-  ## Define the three model parts
+  # Define the three model parts
   # Pick the dependent variable
-  # output$dv <-
-  #   renderUI(
-  #     radioButtons("dv_ch",
-  #                  "Dependent variable",
-  #                  choices = c(chosen_vars(), if (exists("clean_ssnames")) clean_ssnames() else ""),
-  #                  selected = chosen_vars()[1]
-  #     )
-  #   )
-  
   output$dv <-
     renderUI(
       radioButtons("dv_ch",
                    "Dependent variable",
-                   choices = c(chosen_vars(), exists_cleanssnames()),
+                   choices = setdiff(c(chosen_vars(), exists_cleanssnames()), exists_sscorelist()),
                    selected = chosen_vars()[1]
       )
     )
-  
-  # # Pick the independent variables
-  # output$iv <-
-  #   renderUI(
-  #     checkboxGroupInput("iv_ch",
-  #                        "Independent variables",
-  #                        choices = setdiff(c(chosen_vars(), clean_ssnames()),
-  #                                          c(input$dv_ch, unlist(sscore_list()))))
-  #   )
   
   # Pick the independent variables
   output$iv <-
     renderUI(
       checkboxGroupInput("iv_ch",
                          "Independent variables",
-                         choices = chosen_vars())
+                         choices = setdiff(c(chosen_vars(), exists_cleanssnames()),
+                                           c(input$dv_ch, exists_sscorelist())))
     )
+  
   
   # Pick the variables that share CMV
   output$cmv <-
@@ -400,8 +386,7 @@ server <- function(input, output, session) {
                          # Because polintr is always selected (pre-selected in the widget)
                          # even if you haven't selected any variables it will appear. This makes
                          # sure that it appears only when variables have been selected.
-                         choices = c(input$dv_ch,
-                                     input$iv_ch))
+                         choices = c(input$dv_ch, input$iv_ch))
     )
   
   observeEvent(input$calc_model, {
@@ -433,7 +418,7 @@ server <- function(input, output, session) {
           rowSums(upd_ess[x], na.rm = TRUE)
         })
       
-      cbind(upd_ess, as.data.frame(sscore, col.names = clean_ssnames()))
+      cbind(upd_ess, as.data.frame(sscore, col.names = exists_cleanssnames()))
     })
   
   upd_sqpdf <-
@@ -441,8 +426,8 @@ server <- function(input, output, session) {
       # Calculate the quality of sumscore of each name-variables pairs
       # and then bind them together with the sqp_df. The final output
       # is the sqp_df with the quality of the N sum scores created.
-      q_sscore <- lapply(seq_along(clean_ssnames()), function(index) {
-        iterative_sscore(clean_ssnames()[index], sscore_list()[[index]], sqp_df, var_df())
+      q_sscore <- lapply(seq_along(exists_cleanssnames()), function(index) {
+        iterative_sscore(exists_cleanssnames()[index], sscore_list()[[index]], sqp_df, var_df())
       })
       
       bind_rows(sqp_df, q_sscore)
