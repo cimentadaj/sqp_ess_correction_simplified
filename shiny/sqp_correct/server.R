@@ -71,12 +71,13 @@ main_page <- function(...) {
       ),
       tags$style(type="text/css",
                  "#fluidp {
-               background-color: red;
-               height: 70px;
-               }
-               #ess_logo {
-               margin-top: 13px;
-               }")
+                 background-color: #AD1400;
+                 height: 70px;
+                 }
+                 #ess_logo {
+                 margin-top: 15px;
+                 position: relative
+                 }")
   )
 }
 
