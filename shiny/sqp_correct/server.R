@@ -229,8 +229,6 @@ server <- function(input, output, session) {
     is_specific_tab()
   }
   
-  # observe(print(is_tab("def_sscore")))
-  
   # This is a turning point. We want to ensure that there
   # are at least two variables chosen for the modeling.
   # If they are, we jumpt to sscore tabs.
@@ -307,6 +305,7 @@ server <- function(input, output, session) {
         vapply(1:input$ins_sscore,
                function(x) input[[paste0("ssname", x)]],
                FUN.VALUE = character(1))
+      
       all_names[all_names != ""]
     })
   
@@ -316,10 +315,14 @@ server <- function(input, output, session) {
   # which contains the variable names of each sscore
   sscore_list <-
     eventReactive(input$def_model, {
-      lapply(1:input$ins_sscore, function(x) {
+      list_df <- lapply(1:input$ins_sscore, function(x) {
         all_sscore <- paste0("sscore", x)
         gsub(":.*$", "", input[[all_sscore]])
       })
+      
+      list_df[vapply(1:input$ins_sscore,
+             function(x) input[[paste0("ssname", x)]] != "",
+             FUN.VALUE = logical(1))]
     })
   
   # When clean_ssnames() and sscore_list()
@@ -347,47 +350,44 @@ server <- function(input, output, session) {
     }
   })
   
-
-  # observe({
-  #   print(exists_cleanssnames())
-  #   print(sscore_list)
-  #   # print("Does it exists?:", exists("clean_ssnames"))
-  #   # print(chosen_vars(), exists_cleanssnames())
-  #   # print(exists_cleanssnames())
-  #   # print(exists_sscorelist())
-  # })
-  
   # This preservers the order of variables picked if the user already
   # choose a dependent variable
-  preserve_order_dv <- function(equation_side) {
+  preserve_order_dv <- function(equation_side, which_vars) {
     selected <- reactive({
       # If no variable has been chosen, choose first
       if (is.null(input[[equation_side]]))  {
-        chosen_vars()[1]
+        which_vars[1]
         # If a variable has been chosen but it was later deleted from the chosen variables
         # return to the first variable
-      } else if (!is.null(input[[equation_side]]) & !input[[equation_side]] %in% chosen_vars()) {
-        chosen_vars()[1] 
+      } else if (!input[[equation_side]] %in% which_vars) {
+        which_vars[1]
         # Otherwise return the already picked dependent variable
-      } else { 
+      } else {
         input[[equation_side]]
       }
     })
+    
     selected()
   }
   
+  # This one is generic to independent and cmvs. See above for an explanation of the function
   preserve_order <- function(equation_side) {
     selected <- reactive({
       # If no variable has been chosen, don't select anything
       if (is.null(input[[equation_side]]))  {
         NULL
         # If any of the variables selected are in the chosen variables, the bring only these ones
-      } else if (any(index <- input[[equation_side]] %in% chosen_vars())) {
+      } else if (any(index <- input[[equation_side]] %in% c(chosen_vars(), exists_cleanssnames()))) {
         input[[equation_side]][index]
       }
     })
+    
     selected()
   }
+  
+  # Define the reactive number of variables available. This will change a lot when
+  # choosing/unchoosing sumscore variables and dv and iv's, so we save it on it's own.
+  available_vars <- reactive(setdiff(c(chosen_vars(), exists_cleanssnames()), exists_sscorelist()))
   
   # Define the three model parts
   # Pick the dependent variable
@@ -395,14 +395,12 @@ server <- function(input, output, session) {
     renderUI(
       radioButtons("dv_ch",
                    "Dependent variable",
-                   choices = setdiff(c(chosen_vars(), exists_cleanssnames()), exists_sscorelist()),
-                   selected = preserve_order_dv("dv_ch")
+                   choices = available_vars(),
+                   selected = preserve_order_dv("dv_ch", available_vars()) 
+                   # function to preserver order if some were chosen before
       )
     )
-  
-  observe({
-    print(input$dv_ch)
-  })
+
   
   # Pick the independent variables
   output$iv <-
@@ -411,7 +409,7 @@ server <- function(input, output, session) {
                          "Independent variables",
                          choices = setdiff(c(chosen_vars(), exists_cleanssnames()),
                                            c(input$dv_ch, exists_sscorelist())),
-                         selected = preserve_order("iv_ch"))
+                         selected = preserve_order("iv_ch")) # function to preserver order if some were chosen before
     )
   
   
@@ -421,7 +419,7 @@ server <- function(input, output, session) {
       checkboxGroupInput("cmv_ch",
                          "Which variables are measured with the same method?",
                          choices = c(input$dv_ch, input$iv_ch),
-                         selected = preserve_order("cmv_ch"))
+                         selected = preserve_order("cmv_ch")) # function to preserver order if some were chosen before
     )
   
   observeEvent(input$calc_model, {
