@@ -124,7 +124,7 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                                       column(3, uiOutput("iv")),
                                       column(5, uiOutput("cmv"))),
                              fluidRow(column(3, ""),
-                                      column(3, uiOutput('length_iv')),
+                                      column(3, uiOutput('length_iv')), # three rows just to raise an error
                                       column(3, "")),
                              actionButton("calc_model", "Create model")
                     ),
@@ -163,70 +163,85 @@ iterative_sscore <- function(x, y, sqp_df, data_df) {
 
 server <- function(input, output, session) {
   
-  ### Loging in ####
-  # Record whether user logged in
-  USER <- reactiveValues(Logged = FALSE)
+  # ### Loging in ####
+  # # Record whether user logged in
+  # USER <- reactiveValues(Logged = FALSE)
+  # 
+  # # Update the login state if email is valid
+  # observe({ 
+  #   if (USER$Logged == FALSE) {
+  #     if (!is.null(input$Login)) {
+  #       if (input$Login > 0) {
+  #         email <- isolate(input$essemail)
+  #         # Password <- isolate(input$passwd)
+  #         # Id.username <- which(my_username == Username)
+  #         # Id.password <- which(my_password == Password)
+  #         
+  #         # I was using essurvey:::authenticate here but because the .global_vars
+  #         # are not in the .Globalenv, the handle of the website was not shared
+  #         # across requests. I have input the website variables manually
+  #         auth <- is_error(authenticate_ess(email, ess_website, path_login))
+  #         if (auth || email == "") {
+  #           output$emailValid <- renderUI(p(valid_email_error))
+  #         } else {
+  #           USER$Logged <- TRUE
+  #         }
+  #       }
+  #     }
+  #   }
+  # })
+  # 
+  # # Change UI based on whether the user is logged in or not.
+  # observe({
+  #   if (USER$Logged == FALSE) {
+  #     output$page <- renderUI({
+  #       main_page(ui1)
+  #     })
+  #   }
+  #   
+  #   if (USER$Logged == TRUE) {
+  #     output$page <- renderUI({
+  #       div(main_page(ui2))
+  #     })
+  #   }
+  # })
   
-  # Update the login state if email is valid
-  observe({ 
-    if (USER$Logged == FALSE) {
-      if (!is.null(input$Login)) {
-        if (input$Login > 0) {
-          email <- isolate(input$essemail)
-          # Password <- isolate(input$passwd)
-          # Id.username <- which(my_username == Username)
-          # Id.password <- which(my_password == Password)
-          
-          # I was using essurvey:::authenticate here but because the .global_vars
-          # are not in the .Globalenv, the handle of the website was not shared
-          # across requests. I have input the website variables manually
-          auth <- is_error(authenticate_ess(email, ess_website, path_login))
-          if (auth || email == "") {
-            output$emailValid <- renderUI(p(valid_email_error))
-          } else {
-            USER$Logged <- TRUE
-          }
-        }
-      }
-    }
+  output$page <- renderUI({
+  div(main_page(ui2))
   })
-  
-  # Change UI based on whether the user is logged in or not.
-  observe({
-    if (USER$Logged == FALSE) {
-      output$page <- renderUI({
-        main_page(ui1)
-      })
-    }
-    
-    if (USER$Logged == TRUE) {
-      output$page <- renderUI({
-        div(main_page(ui2))
-      })
-    }
-  })
+
   
   #####
   
-  observe({
-    print(input$def_sscore)
-    print(input$menu)
-  })
+  # observe({
+  #   print(input$def_sscore)
+  #   print(input$menu)
+  # })
   
   output$chosen_vars <-
     renderUI({
-      selectInput('vars_ch',
-                  'Choose variables to use in the modeling',
-                  var_n_labels,
-                  multiple = TRUE,
-                  selectize = TRUE,
-                  width = '500px')
+      checkboxGroupInput(
+        'vars_ch',
+        'Choose variables to use in the modeling',
+        var_n_labels,
+        width = '500px')
       
     })
   
+  # Checks whether you are in `tab`
+  is_tab <- function(tab) {
+    is_specific_tab <- reactive({
+      if (is.null(input$menu) || input$menu != tab) FALSE else TRUE
+    })
+    
+    is_specific_tab()
+  }
+  
+  observe(print(is_tab("def_sscore")))
+  
   # This is a turning point. We want to ensure that there
   # are at least two variables chosen for the modeling.
-  # If they are, we jumpt to sscore tabs
+  # If they are, we jumpt to sscore tabs.
   observeEvent(input$def_sscore, {
     if (length(input$vars_ch) < 2) {
       output$length_vars <- renderUI(p(minimum_var_error))
@@ -234,6 +249,19 @@ server <- function(input, output, session) {
       updateTabsetPanel(session,
                         inputId = "menu",
                         selected = "def_sscore")
+    }
+  })
+  
+  
+  # But if the user changes the tab manually, then check that we have the number
+  # of variables
+  observeEvent(is_tab("def_sscore"), {
+    # input$df_sscore at the beginning is null, that's why I check that the length
+    # is different from zero.
+    if (length(input$vars_ch) < 2 && (length(input$def_sscore) != 0 && input$def_sscore != 0)) {
+      output$length_vars <- renderUI(p(minimum_var_error))
+    } else {
+      output$length_vars <- renderUI(p(" "))
     }
   })
   
@@ -248,6 +276,8 @@ server <- function(input, output, session) {
   # the app is launched.
   
   observeEvent(input$ins_sscore, {
+    if (input$ins_sscore == 0) return(character())
+    
     # When user clicks insert, add
     # the sscore name and variables to the ui
     whole_html <-
@@ -262,10 +292,10 @@ server <- function(input, output, session) {
                     size = length(input$vars_ch)),
         cellWidths = c("17%", "83%")
       )
+    
     # Interactively add a sumscore to the UI
     insertUI(selector = '#placeholder', ui = whole_html)
   })
-  
   
   # When the sumscores are ready, the user clicks
   # define model and we switch to the define model
@@ -300,36 +330,78 @@ server <- function(input, output, session) {
       })
     })
   
+  exists_cleanssnames <- reactive({
+    if (exists("clean_ssnames")) {
+      clean_ssnames()
+    } else {
+      character()
+    }
+  })
+  
+  exists_sscorelist <- reactive({
+    if (exists("sscore_list")) {
+      unlist(sscore_list())
+    } else {
+      ""
+    }
+  })
+  
+
   observe({
-    print(unlist(sscore_list()))
+    print(exists_cleanssnames())
+    # print("Does it exists?:", exists("clean_ssnames"))
+    # print(chosen_vars(), exists_cleanssnames())
+    # print(exists_cleanssnames())
+    # print(exists_sscorelist())
   })
   
   ## Define the three model parts
   # Pick the dependent variable
+  # output$dv <-
+  #   renderUI(
+  #     radioButtons("dv_ch",
+  #                  "Dependent variable",
+  #                  choices = c(chosen_vars(), if (exists("clean_ssnames")) clean_ssnames() else ""),
+  #                  selected = chosen_vars()[1]
+  #     )
+  #   )
+  
   output$dv <-
     renderUI(
       radioButtons("dv_ch",
                    "Dependent variable",
-                   choices = setdiff(c(chosen_vars(), clean_ssnames()),
-                                     unlist(sscore_list())),
-                   selected = chosen_vars()[1])
+                   choices = c(chosen_vars(), exists_cleanssnames()),
+                   selected = chosen_vars()[1]
+      )
     )
+  
+  # # Pick the independent variables
+  # output$iv <-
+  #   renderUI(
+  #     checkboxGroupInput("iv_ch",
+  #                        "Independent variables",
+  #                        choices = setdiff(c(chosen_vars(), clean_ssnames()),
+  #                                          c(input$dv_ch, unlist(sscore_list()))))
+  #   )
   
   # Pick the independent variables
   output$iv <-
     renderUI(
       checkboxGroupInput("iv_ch",
                          "Independent variables",
-                         choices = setdiff(c(chosen_vars(), clean_ssnames()),
-                                           c(input$dv_ch, unlist(sscore_list()))))
+                         choices = chosen_vars())
     )
   
   # Pick the variables that share CMV
   output$cmv <-
     renderUI(
       checkboxGroupInput("cmv_ch",
-                         "Which variables have Common Method Variance?",
-                         choices = c(input$dv_ch, input$iv_ch))
+                         "Which variables are measured with the same method?",
+                         # Because polintr is always selected (pre-selected in the widget)
+                         # even if you haven't selected any variables it will appear. This makes
+                         # sure that it appears only when variables have been selected.
+                         choices = c(input$dv_ch,
+                                     input$iv_ch))
     )
   
   observeEvent(input$calc_model, {
