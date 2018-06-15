@@ -1,4 +1,5 @@
 library(essurvey)
+library(readr)
 library(purrr)
 
 set_email("cimentadaj@gmail.com")
@@ -22,16 +23,16 @@ source("mk_svyConfig.R")
 
 # Country-specific data on spficif sampling strata, which variables
 # haave the weights, etcc...
-read.csv2("svydesign_info_ESS6.csv") %>%
+read_csv2("svydesign_info_ESS6.csv") %>%
   filter(domains %% 1 == 0) %>%
   split(., .$country) ->
   svyinfo
 
-# ess_df <-
-#   setNames(
-#     lapply(all_countries,
-#            function(x) recode_missings(import_country(x, rounds = 6))),
-#     all_countries)
+ess_df <-
+  setNames(
+    map(all_countries, ~ recode_missings(import_country(.x, rounds = 6))),
+    all_countries
+  )
 
 
 # Same as sqp_cmv but good for programming with. cmv_vars accepts a vector rather than ...
@@ -105,8 +106,7 @@ sqp_sscore_str <- function (sqp_data, df, new_name, vars_names, wt = NULL, drop 
   else {
     rows_to_pick <- !rows_to_pick
   }
-  combined_matrix <- dplyr::bind_rows(sqp_data[rows_to_pick, 
-                                               ], additional_rows)
+  combined_matrix <- dplyr::bind_rows(sqp_data[rows_to_pick, ], additional_rows)
   correct_order <- c("question", sqpr:::sqp_env$sqp_columns)
   new_order <- combined_matrix[c(correct_order, setdiff(names(combined_matrix), 
                                                         correct_order))]

@@ -175,48 +175,48 @@ pick_list <- function(exclude, the_list) {
 
 server <- function(input, output, session) {
   
-  # ### Loging in ####
-  # # Record whether user logged in
-  # USER <- reactiveValues(Logged = FALSE)
-  # 
-  # # Update the login state if email is valid
-  # observe({ 
-  #   if (USER$Logged == FALSE) {
-  #     if (!is.null(input$Login)) {
-  #       if (input$Login > 0) {
-  #         email <- isolate(input$essemail)
-  #         # Password <- isolate(input$passwd)
-  #         # Id.username <- which(my_username == Username)
-  #         # Id.password <- which(my_password == Password)
-  #         
-  #         # I was using essurvey:::authenticate here but because the .global_vars
-  #         # are not in the .Globalenv, the handle of the website was not shared
-  #         # across requests. I have input the website variables manually
-  #         auth <- is_error(authenticate_ess(email, ess_website, path_login))
-  #         if (auth || email == "") {
-  #           output$emailValid <- renderUI(p(valid_email_error))
-  #         } else {
-  #           USER$Logged <- TRUE
-  #         }
-  #       }
-  #     }
-  #   }
-  # })
-  # 
-  # # Change UI based on whether the user is logged in or not.
-  # observe({
-  #   if (USER$Logged == FALSE) {
-  #     output$page <- renderUI({
-  #       main_page(ui1)
-  #     })
-  #   }
-  #   
-  #   if (USER$Logged == TRUE) {
-  #     output$page <- renderUI({
-  #       div(main_page(ui2))
-  #     })
-  #   }
-  # })
+  ### Loging in ####
+  # Record whether user logged in
+  USER <- reactiveValues(Logged = FALSE)
+
+  # Update the login state if email is valid
+  observe({
+    if (USER$Logged == FALSE) {
+      if (!is.null(input$Login)) {
+        if (input$Login > 0) {
+          email <- isolate(input$essemail)
+          # Password <- isolate(input$passwd)
+          # Id.username <- which(my_username == Username)
+          # Id.password <- which(my_password == Password)
+
+          # I was using essurvey:::authenticate here but because the .global_vars
+          # are not in the .Globalenv, the handle of the website was not shared
+          # across requests. I have input the website variables manually
+          auth <- is_error(authenticate_ess(email, ess_website, path_login))
+          if (auth || email == "") {
+            output$emailValid <- renderUI(p(valid_email_error))
+          } else {
+            USER$Logged <- TRUE
+          }
+        }
+      }
+    }
+  })
+
+  # Change UI based on whether the user is logged in or not.
+  observe({
+    if (USER$Logged == FALSE) {
+      output$page <- renderUI({
+        main_page(ui1)
+      })
+    }
+
+    if (USER$Logged == TRUE) {
+      output$page <- renderUI({
+        div(main_page(ui2))
+      })
+    }
+  })
   
   output$page <- renderUI({
     div(main_page(ui2))
@@ -228,7 +228,6 @@ server <- function(input, output, session) {
         'vars_ch',
         'Choose variables to use in the modeling',
         var_n_labels,
-        selected = var_n_labels,
         width = '500px')
       
     })
@@ -316,44 +315,56 @@ server <- function(input, output, session) {
   ## Deleting sum scores
   observeEvent(input$del_sscore, {
     if (input$del_sscore == 0 | is_empty(input$list_sscore)) return(character())
+
+    # print(possible_ssnames())
     
-    ssnames <-
-      unlist(lapply(grep("^ssname", names(input), value = TRUE),
-             function(x) if (!is_empty(x)) input[[x]] else ""))
-    
-    print(possible_ssnames())
+    # These are all the inputs from the app temporarily stored without the input
+    # list_sscore. Why do I exclude list_sscore? See the paragraph below.
+    # Why do I save this into a temp list? Because I acess this same data below
+    # a few times.
+    temp_input <- pick_list("list_sscore", reactiveValuesToList(input))
 
     # list_sscore stores the name of the sscore whenever it was picked
     # so when I compare which variable was picked agaisnt all available
     # inputs, I exclude list_sscore from the list because, for example,
-    # var1 will both ssname1 and list_sscore. By removing it, it will
+    # var1 will match both ssname1 and list_sscore. By removing it, it will
     # only match sscore1 and be able to delete only that score
-    semi_index <-
-      which(input$list_sscore == pick_list("list_sscore", reactiveValuesToList(input)))
+    semi_index <- which(input$list_sscore == temp_input)
     
-    index_names <- gsub("ssname", "", names(pick_list("list_sscore", reactiveValuesToList(input)))[semi_index])
+    # Because I interactively add/delete sscores, only keeping the index is unreliable
+    # because it will change as soon as I add a new sscore. So I grab the name of the index
+    index_names <- gsub("ssname", "", names(temp_input)[semi_index])
 
-    explore_index <-
-          as.data.frame(
-            lapply(input$list_sscore, function(x) x == pick_list("list_sscore", reactiveValuesToList(input)))
-          ) %>% mutate(inside = substr(pick_list("list_sscore", reactiveValuesToList(input)), 1, 10),
-                       name = names(pick_list("list_sscore", reactiveValuesToList(input))))
-
+    # explore_index <-
+    #       as.data.frame(
+    #         lapply(input$list_sscore, function(x) x == pick_list("list_sscore", reactiveValuesToList(input)))
+    #       ) %>% mutate(inside = substr(pick_list("list_sscore", reactiveValuesToList(input)), 1, 10),
+    #                    name = names(pick_list("list_sscore", reactiveValuesToList(input))))
+    # print(explore_index)
     
-    print(index_names)
+    # print(index_names)
     
+    # To avoid deleting the sscore and ssname separately, I just delete the whole layout
+    # that has both things together.
     splits_del <- paste0("#splitlayout", index_names)
-
     removeUI(
       selector = paste0("div:has(> ", splits_del, ")"),
       multiple = TRUE,
       immediate = TRUE
     )
-
-    for (i in names(pick_list("list_sscore", reactiveValuesToList(input)))[semi_index]) {
-      session$sendCustomMessage(type = "resetValue", message = i)
-      session$sendCustomMessage(type = "resetValue", message = i)
-    }
+    
+    # Regardless of whether I deleted the splitlayout or not, the
+    # input names ssname* and sscore* where created. Even if I delete
+    # the splitlayout, there's still there. This is a loop that
+    # sets both ssname* and sscore* for the chosen sscore to
+    # NULL using a custom javascript message. The counterparty
+    # of this is in the UI where I define the function.
+    session$sendCustomMessage(type = "resetValue", message = names(temp_input)[semi_index])
+    
+    # Everything above was to delete the ssname. To delete sscore we have the index_names
+    # of ssname which is, for example, 1. We just have to delete sscore1
+    session$sendCustomMessage(type = "resetValue", message = paste0("sscore", index_names))
+    
   })
   
   # When the sumscores are ready, the user clicks
@@ -369,28 +380,34 @@ server <- function(input, output, session) {
     eventReactive(input$def_model, {
       if (input$ins_sscore == 0) return(character())
       
-      non_null_name <- grepl("^ssname", names(!is.null(reactiveValues(input))), value = TRUE)
-
-      non_null_name[non_null_name != ""]
+      # I want to grab the value in all ssname* in which
+      # the value is neither "" nor NULL (because if it's NULL)
+      # it means it was deleted previously.
+      
+      temp_input <- reactiveValuesToList(input)
+      non_null_name <- grepl("^ssname", names(temp_input[!is.null(temp_input)]))
+      all_ssnames <- non_null_name[non_null_name != ""]
+      unlist(temp_input[all_ssnames])
     })
-  
+
   # Get a list where each slot contains
-  # the variables that compose each sscore.
+  # the variables names as strings that
+  # compose each sscore.
   # The counterpart of this is clean_ssnames()
   # which contains the variable names of each sscore
   sscore_list <-
     eventReactive(input$def_model, {
+
+      temp_input <- reactiveValuesToList(input)
       
-      non_null_name <- grepl("^ssname", names(!is.null(reactiveValues(input))), value = TRUE)
-      non_null_scores <- grepl("^sscore", names(!is.null(reactiveValues(input))), value = TRUE)
+      non_null_sscore <- grepl("^sscore", names(temp_input[!is.null(temp_input) & !is_empty(temp_input)]))
+      final_sscore <- temp_input[non_null_sscore]
       
-      list_df <- lapply(non_null_scores, function(x) {
-        gsub(":.*$", "", input[[x]])
+      list_sscore <- lapply(final_sscore, function(x) {
+        gsub(":.*$", "", x)
       })
-      
-      list_df[vapply(non_null_name,
-                     function(x) input[[non_null_name]] != "",
-                     FUN.VALUE = logical(1))]
+
+      list_sscore
     })
   
   # When clean_ssnames() and sscore_list()
@@ -522,17 +539,32 @@ server <- function(input, output, session) {
       cbind(upd_ess, as.data.frame(sscore, col.names = exists_cleanssnames()))
     })
   
+  # observe({
+  #   print(head(var_df()))
+  #   print(dim(var_df()))
+  # })
+  
+  observe({
+    print(exists_cleanssnames())
+    print(exists_sscorelist())
+  })
+
+  
   upd_sqpdf <-
     eventReactive(input$calc_model, {
       # Calculate the quality of sumscore of each name-variables pairs
       # and then bind them together with the sqp_df. The final output
       # is the sqp_df with the quality of the N sum scores created.
       q_sscore <- lapply(seq_along(exists_cleanssnames()), function(index) {
-        iterative_sscore(exists_cleanssnames()[index], sscore_list()[[index]], sqp_df, var_df())
+        iterative_sscore(unname(exists_cleanssnames()[index]), sscore_list()[[index]], sqp_df, var_df())
       })
       
       bind_rows(sqp_df, q_sscore)
     })
+  
+  observe({
+    print(upd_sqpdf())
+  })
   
   weighted_data <- eventReactive(input$calc_model, {
     # Define svydesign object thas has ALL columns of ess_data + sscore columns
