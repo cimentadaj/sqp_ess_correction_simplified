@@ -119,9 +119,10 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                               Sum scores are the addition to several variables into one single
                               variable. click on 'Create sum score' to create your sum score."),
                              br(),
-                             fluidRow(column(2, actionButton('ins_sscore', 'Create sum score')),
-                                      column(2, uiOutput("del_sscore")),
-                                      column(3, uiOutput("list_sscore"))),
+                             br(),
+                             fluidRow(column(4, actionButton('ins_sscore', 'Create sum score')),
+                                      column(3, uiOutput("list_sscore", style = "margin-top: -25px;")),
+                                      column(2, uiOutput("del_sscore"))),
                              br(),
                              div(id = 'placeholder'),
                              actionButton('def_model', "I'm done, I want to define my model"),
@@ -324,7 +325,7 @@ server <- function(input, output, session) {
                 tags$style(type = "text/css", paste0(paste0("#splitlayout", input$ins_sscore), " {overflow-x: hidden;}"))
                 
         ),
-        cellWidths = c("110%", "100%")
+        cellWidths = c("70%", "100%")
       )
     # Interactively add a sumscore to the UI
     insertUI(selector = '#placeholder', ui = whole_html)
