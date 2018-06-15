@@ -106,7 +106,10 @@ ui1 <- tagList(
 # Second tab for defining model and selecting vars/countries
 ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                     tabPanel("Select country and model", value = "country_n_vars",
-                             selectInput("slid_cnt", "Pick a country", choices = all_countries),
+                             fluidRow(
+                               column(3, selectInput("slid_cnt", "Pick a country", choices = all_countries)),
+                               column(3, actionButton("select_all", "Select all variables"))
+                               ),
                              uiOutput('chosen_vars'),
                              uiOutput('length_vars'),
                              actionButton("def_sscore", "I'm done, let me define my sum scores")
@@ -115,9 +118,10 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                              p("Would you like to create additional sum score variables?
                               Sum scores are the addition to several variables into one single
                               variable. click on 'Create sum score' to create your sum score."),
-                             actionButton('ins_sscore', 'Create sum score'),
-                             uiOutput("list_sscore"),
-                             uiOutput("del_sscore"),
+                             br(),
+                             fluidRow(column(2, actionButton('ins_sscore', 'Create sum score')),
+                                      column(2, uiOutput("del_sscore")),
+                                      column(3, uiOutput("list_sscore"))),
                              br(),
                              div(id = 'placeholder'),
                              actionButton('def_model', "I'm done, I want to define my model"),
@@ -168,6 +172,7 @@ iterative_sscore <- function(x, y, sqp_df, data_df) {
     filter(question == x)
 }
 
+# for excluding a named slot from a list
 pick_list <- function(exclude, the_list) {
   the_list[!names(the_list) == exclude]
 }
@@ -175,48 +180,48 @@ pick_list <- function(exclude, the_list) {
 
 server <- function(input, output, session) {
   
-  ### Loging in ####
-  # Record whether user logged in
-  USER <- reactiveValues(Logged = FALSE)
-
-  # Update the login state if email is valid
-  observe({
-    if (USER$Logged == FALSE) {
-      if (!is.null(input$Login)) {
-        if (input$Login > 0) {
-          email <- isolate(input$essemail)
-          # Password <- isolate(input$passwd)
-          # Id.username <- which(my_username == Username)
-          # Id.password <- which(my_password == Password)
-
-          # I was using essurvey:::authenticate here but because the .global_vars
-          # are not in the .Globalenv, the handle of the website was not shared
-          # across requests. I have input the website variables manually
-          auth <- is_error(authenticate_ess(email, ess_website, path_login))
-          if (auth || email == "") {
-            output$emailValid <- renderUI(p(valid_email_error))
-          } else {
-            USER$Logged <- TRUE
-          }
-        }
-      }
-    }
-  })
-
-  # Change UI based on whether the user is logged in or not.
-  observe({
-    if (USER$Logged == FALSE) {
-      output$page <- renderUI({
-        main_page(ui1)
-      })
-    }
-
-    if (USER$Logged == TRUE) {
-      output$page <- renderUI({
-        div(main_page(ui2))
-      })
-    }
-  })
+  # ### Loging in ####
+  # # Record whether user logged in
+  # USER <- reactiveValues(Logged = FALSE)
+  # 
+  # # Update the login state if email is valid
+  # observe({
+  #   if (USER$Logged == FALSE) {
+  #     if (!is.null(input$Login)) {
+  #       if (input$Login > 0) {
+  #         email <- isolate(input$essemail)
+  #         # Password <- isolate(input$passwd)
+  #         # Id.username <- which(my_username == Username)
+  #         # Id.password <- which(my_password == Password)
+  # 
+  #         # I was using essurvey:::authenticate here but because the .global_vars
+  #         # are not in the .Globalenv, the handle of the website was not shared
+  #         # across requests. I have input the website variables manually
+  #         auth <- is_error(authenticate_ess(email, ess_website, path_login))
+  #         if (auth || email == "") {
+  #           output$emailValid <- renderUI(p(valid_email_error))
+  #         } else {
+  #           USER$Logged <- TRUE
+  #         }
+  #       }
+  #     }
+  #   }
+  # })
+  # 
+  # # Change UI based on whether the user is logged in or not.
+  # observe({
+  #   if (USER$Logged == FALSE) {
+  #     output$page <- renderUI({
+  #       main_page(ui1)
+  #     })
+  #   }
+  # 
+  #   if (USER$Logged == TRUE) {
+  #     output$page <- renderUI({
+  #       div(main_page(ui2))
+  #     })
+  #   }
+  # })
   
   output$page <- renderUI({
     div(main_page(ui2))
@@ -231,6 +236,15 @@ server <- function(input, output, session) {
         width = '500px')
       
     })
+  
+  observeEvent(input$select_all, {
+        updateCheckboxGroupInput(
+          session,
+          'vars_ch',
+          'Choose variables to use in the modeling',
+          var_n_labels,
+          choices = var_n_labels)
+  })
   
   # Checks whether you are in `tab`
   is_tab <- function(tab) {
@@ -280,7 +294,19 @@ server <- function(input, output, session) {
   observeEvent(input$ins_sscore, {
     if (input$ins_sscore == 0) return(character())
     
+    # so that the user knows he/she can click there to add more sum scores after the first one
+    if (input$ins_sscore == 1)  {
+      updateActionButton(session, 'ins_sscore', 'Create another sum score') 
+    }
+    
+    
     output$del_sscore <- renderUI({actionButton('del_sscore', 'Delete sum score')})
+    
+    # And create a list of those names to delete
+    output$list_sscore <- renderUI({selectInput('list_sscore',
+                                                label = "Which sum scores to delete?",
+                                                choices = possible_ssnames())
+    })
     
     
     # When user clicks insert, add
@@ -288,12 +314,14 @@ server <- function(input, output, session) {
     whole_html <-
       splitLayout(
         tagList(div(id = paste0("splitlayout", input$ins_sscore)),
-                textInput(paste0("ssname", input$ins_sscore), "Name of sum score"),
-                checkboxGroupInput(inputId = paste0("sscore", input$ins_sscore),
-                            label = 'Variables that compose the sum score',
-                            choices = input$vars_ch,
-                            width = '500px')
-        )
+                fluidRow(
+                  column(6, textInput(paste0("ssname", input$ins_sscore), "Name of sum score")),
+                  column(6, checkboxGroupInput(inputId = paste0("sscore", input$ins_sscore),
+                                               label = 'Variables that compose the sum score',
+                                               choices = input$vars_ch))
+                )
+        ),
+        cellWidths = c("100%", "100%")
       )
     # Interactively add a sumscore to the UI
     insertUI(selector = '#placeholder', ui = whole_html)
@@ -304,13 +332,6 @@ server <- function(input, output, session) {
     unname(unlist(lapply(grep("^ssname", names(input), value = TRUE),
            function(x) if (!is_empty(x)) input[[x]] else "")))
   })
-
-  # And create a list of those names to delete
-  output$list_sscore <- renderUI({selectInput('list_sscore',
-                                              label = "Which sum scores to delete?",
-                                              choices = possible_ssnames())
-  })
-  
   
   ## Deleting sum scores
   observeEvent(input$del_sscore, {
