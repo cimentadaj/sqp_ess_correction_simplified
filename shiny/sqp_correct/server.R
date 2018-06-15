@@ -181,48 +181,48 @@ pick_list <- function(exclude, the_list) {
 
 server <- function(input, output, session) {
   
-  # ### Loging in ####
-  # # Record whether user logged in
-  # USER <- reactiveValues(Logged = FALSE)
-  # 
-  # # Update the login state if email is valid
-  # observe({
-  #   if (USER$Logged == FALSE) {
-  #     if (!is.null(input$Login)) {
-  #       if (input$Login > 0) {
-  #         email <- isolate(input$essemail)
-  #         # Password <- isolate(input$passwd)
-  #         # Id.username <- which(my_username == Username)
-  #         # Id.password <- which(my_password == Password)
-  # 
-  #         # I was using essurvey:::authenticate here but because the .global_vars
-  #         # are not in the .Globalenv, the handle of the website was not shared
-  #         # across requests. I have input the website variables manually
-  #         auth <- is_error(authenticate_ess(email, ess_website, path_login))
-  #         if (auth || email == "") {
-  #           output$emailValid <- renderUI(p(valid_email_error))
-  #         } else {
-  #           USER$Logged <- TRUE
-  #         }
-  #       }
-  #     }
-  #   }
-  # })
-  # 
-  # # Change UI based on whether the user is logged in or not.
-  # observe({
-  #   if (USER$Logged == FALSE) {
-  #     output$page <- renderUI({
-  #       main_page(ui1)
-  #     })
-  #   }
-  # 
-  #   if (USER$Logged == TRUE) {
-  #     output$page <- renderUI({
-  #       div(main_page(ui2))
-  #     })
-  #   }
-  # })
+  ### Loging in ####
+  # Record whether user logged in
+  USER <- reactiveValues(Logged = FALSE)
+
+  # Update the login state if email is valid
+  observe({
+    if (USER$Logged == FALSE) {
+      if (!is.null(input$Login)) {
+        if (input$Login > 0) {
+          email <- isolate(input$essemail)
+          # Password <- isolate(input$passwd)
+          # Id.username <- which(my_username == Username)
+          # Id.password <- which(my_password == Password)
+
+          # I was using essurvey:::authenticate here but because the .global_vars
+          # are not in the .Globalenv, the handle of the website was not shared
+          # across requests. I have input the website variables manually
+          auth <- is_error(authenticate_ess(email, ess_website, path_login))
+          if (auth || email == "") {
+            output$emailValid <- renderUI(p(valid_email_error))
+          } else {
+            USER$Logged <- TRUE
+          }
+        }
+      }
+    }
+  })
+
+  # Change UI based on whether the user is logged in or not.
+  observe({
+    if (USER$Logged == FALSE) {
+      output$page <- renderUI({
+        main_page(ui1)
+      })
+    }
+
+    if (USER$Logged == TRUE) {
+      output$page <- renderUI({
+        div(main_page(ui2))
+      })
+    }
+  })
   
   output$page <- renderUI({
     div(main_page(ui2))
