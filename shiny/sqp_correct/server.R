@@ -108,7 +108,7 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                     tabPanel("Select country and model", value = "country_n_vars",
                              fluidRow(
                                column(3, selectInput("slid_cnt", "Pick a country", choices = all_countries)),
-                               column(3, actionButton("select_all", "Select all variables"))
+                               column(7, style = "margin-top: 25px;", actionButton("select_all", "Select all variables"))
                                ),
                              uiOutput('chosen_vars'),
                              uiOutput('length_vars'),
@@ -313,15 +313,18 @@ server <- function(input, output, session) {
     # the sscore name and variables to the ui
     whole_html <-
       splitLayout(
-        tagList(div(id = paste0("splitlayout", input$ins_sscore)),
+        tags$div(id = paste0("splitlayout", input$ins_sscore),
                 fluidRow(
                   column(6, textInput(paste0("ssname", input$ins_sscore), "Name of sum score")),
                   column(6, checkboxGroupInput(inputId = paste0("sscore", input$ins_sscore),
                                                label = 'Variables that compose the sum score',
                                                choices = input$vars_ch))
-                )
+                ),
+                # To remove the horizontall scroll bar
+                tags$style(type = "text/css", paste0(paste0("#splitlayout", input$ins_sscore), " {overflow-x: hidden;}"))
+                
         ),
-        cellWidths = c("100%", "100%")
+        cellWidths = c("110%", "100%")
       )
     # Interactively add a sumscore to the UI
     insertUI(selector = '#placeholder', ui = whole_html)
