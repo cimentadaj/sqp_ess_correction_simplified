@@ -116,10 +116,16 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                               Sum scores are the addition to several variables into one single
                               variable. click on 'Create sum score' to create your sum score."),
                              actionButton('ins_sscore', 'Create sum score'),
-                             actionButton('del_sscore', 'Delete sum score'),
+                             uiOutput("list_sscore"),
+                             uiOutput("del_sscore"),
                              br(),
                              div(id = 'placeholder'),
-                             actionButton('def_model', "I'm done, I want to define my model")
+                             actionButton('def_model', "I'm done, I want to define my model"),
+                             tags$script("
+                             Shiny.addCustomMessageHandler('resetValue', function(variableName) {
+                                Shiny.onInputChange(variableName, null);
+                            });
+                            ")
                     ),
                     tabPanel("Define the model", value = "def_model",
                              fluidRow(column(3, uiOutput("dv")),
@@ -135,14 +141,14 @@ ui2 <- navlistPanel(id = "menu", widths = c(2, 8),
                                tabPanel("Plot of results",
                                         withSpinner(tagList(plotOutput("model_plot")),
                                                     color = "#ff0000")
-                                        ),
+                               ),
                                tabPanel("Table of results",
                                         withSpinner(tagList(tableOutput("model_table")),
                                                     color = "#ff0000")
-                                        )
                                )
                              )
                     )
+)
 
 # For checking when the ess email is valid or not
 is_error <- function(x) {
@@ -160,6 +166,10 @@ iterative_sscore <- function(x, y, sqp_df, data_df) {
                  new_name = x,
                  vars_names = y) %>% 
     filter(question == x)
+}
+
+pick_list <- function(exclude, the_list) {
+  the_list[!names(the_list) == exclude]
 }
 
 
@@ -209,15 +219,16 @@ server <- function(input, output, session) {
   # })
   
   output$page <- renderUI({
-  div(main_page(ui2))
+    div(main_page(ui2))
   })
-
+  
   output$chosen_vars <-
     renderUI({
       checkboxGroupInput(
         'vars_ch',
         'Choose variables to use in the modeling',
         var_n_labels,
+        selected = var_n_labels,
         width = '500px')
       
     })
@@ -270,58 +281,97 @@ server <- function(input, output, session) {
   observeEvent(input$ins_sscore, {
     if (input$ins_sscore == 0) return(character())
     
+    output$del_sscore <- renderUI({actionButton('del_sscore', 'Delete sum score')})
+    
+    
     # When user clicks insert, add
     # the sscore name and variables to the ui
     whole_html <-
       splitLayout(
         tagList(div(id = paste0("splitlayout", input$ins_sscore)),
-        textInput(paste0("ssname", input$ins_sscore), "Name of sum score"),
-        selectInput(inputId = paste0("sscore", input$ins_sscore),
-                    label = 'Variables that compose the sum score',
-                    choices = input$vars_ch,
-                    multiple = TRUE,
-                    selectize = FALSE,
-                    width = '500px',
-                    size = length(input$vars_ch))
+                textInput(paste0("ssname", input$ins_sscore), "Name of sum score"),
+                checkboxGroupInput(inputId = paste0("sscore", input$ins_sscore),
+                            label = 'Variables that compose the sum score',
+                            choices = input$vars_ch,
+                            width = '500px')
         )
       )
     # Interactively add a sumscore to the UI
     insertUI(selector = '#placeholder', ui = whole_html)
   })
   
+  # Grab the names of the sscore reactively, that is, whenever they are being written
+  possible_ssnames <- reactive({
+    unname(unlist(lapply(grep("^ssname", names(input), value = TRUE),
+           function(x) if (!is_empty(x)) input[[x]] else "")))
+  })
+
+  # And create a list of those names to delete
+  output$list_sscore <- renderUI({selectInput('list_sscore',
+                                              label = "Which sum scores to delete?",
+                                              choices = possible_ssnames())
+  })
   
+  
+  ## Deleting sum scores
   observeEvent(input$del_sscore, {
-    if (input$del_sscore == 0) return(character())
+    if (input$del_sscore == 0 | is_empty(input$list_sscore)) return(character())
     
-    # removeUI(
-    #   selector = paste0("div:has(> #ssname", input$ins_sscore, ")")
-    # )
+    ssnames <-
+      unlist(lapply(grep("^ssname", names(input), value = TRUE),
+             function(x) if (!is_empty(x)) input[[x]] else ""))
+    
+    print(possible_ssnames())
+
+    # list_sscore stores the name of the sscore whenever it was picked
+    # so when I compare which variable was picked agaisnt all available
+    # inputs, I exclude list_sscore from the list because, for example,
+    # var1 will both ssname1 and list_sscore. By removing it, it will
+    # only match sscore1 and be able to delete only that score
+    semi_index <-
+      which(input$list_sscore == pick_list("list_sscore", reactiveValuesToList(input)))
+    
+    index_names <- gsub("ssname", "", names(pick_list("list_sscore", reactiveValuesToList(input)))[semi_index])
+
+    explore_index <-
+          as.data.frame(
+            lapply(input$list_sscore, function(x) x == pick_list("list_sscore", reactiveValuesToList(input)))
+          ) %>% mutate(inside = substr(pick_list("list_sscore", reactiveValuesToList(input)), 1, 10),
+                       name = names(pick_list("list_sscore", reactiveValuesToList(input))))
+
+    
+    print(index_names)
+    
+    splits_del <- paste0("#splitlayout", index_names)
+
     removeUI(
-      selector = paste0("div:has(> #splitlayout", input$ins_sscore, ")"),
-      multiple = TRUE
+      selector = paste0("div:has(> ", splits_del, ")"),
+      multiple = TRUE,
+      immediate = TRUE
     )
+
+    for (i in names(pick_list("list_sscore", reactiveValuesToList(input)))[semi_index]) {
+      session$sendCustomMessage(type = "resetValue", message = i)
+      session$sendCustomMessage(type = "resetValue", message = i)
+    }
   })
   
   # When the sumscores are ready, the user clicks
   # define model and we switch to the define model
   # tab to select dependent and independent variables
   observeEvent(input$def_model, {
-      updateTabsetPanel(session,
-                        inputId = "menu",
-                        selected = "def_model")
+    updateTabsetPanel(session,
+                      inputId = "menu",
+                      selected = "def_model")
   })
-
+  
   clean_ssnames <-
     eventReactive(input$def_model, {
       if (input$ins_sscore == 0) return(character())
       
-      # Create sscore names
-      all_names <- 
-        vapply(1:input$ins_sscore,
-               function(x) input[[paste0("ssname", x)]],
-               FUN.VALUE = character(1))
-      
-      all_names[all_names != ""]
+      non_null_name <- grepl("^ssname", names(!is.null(reactiveValues(input))), value = TRUE)
+
+      non_null_name[non_null_name != ""]
     })
   
   # Get a list where each slot contains
@@ -330,14 +380,17 @@ server <- function(input, output, session) {
   # which contains the variable names of each sscore
   sscore_list <-
     eventReactive(input$def_model, {
-      list_df <- lapply(1:input$ins_sscore, function(x) {
-        all_sscore <- paste0("sscore", x)
-        gsub(":.*$", "", input[[all_sscore]])
+      
+      non_null_name <- grepl("^ssname", names(!is.null(reactiveValues(input))), value = TRUE)
+      non_null_scores <- grepl("^sscore", names(!is.null(reactiveValues(input))), value = TRUE)
+      
+      list_df <- lapply(non_null_scores, function(x) {
+        gsub(":.*$", "", input[[x]])
       })
       
-      list_df[vapply(1:input$ins_sscore,
-             function(x) input[[paste0("ssname", x)]] != "",
-             FUN.VALUE = logical(1))]
+      list_df[vapply(non_null_name,
+                     function(x) input[[non_null_name]] != "",
+                     FUN.VALUE = logical(1))]
     })
   
   # When clean_ssnames() and sscore_list()
@@ -415,7 +468,7 @@ server <- function(input, output, session) {
                    # function to preserver order if some were chosen before
       )
     )
-
+  
   
   # Pick the independent variables
   output$iv <-

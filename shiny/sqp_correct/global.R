@@ -27,11 +27,11 @@ read.csv2("svydesign_info_ESS6.csv") %>%
   split(., .$country) ->
   svyinfo
 
-ess_df <-
-  setNames(
-    lapply(all_countries,
-           function(x) recode_missings(import_country(x, rounds = 6))),
-    all_countries)
+# ess_df <-
+#   setNames(
+#     lapply(all_countries,
+#            function(x) recode_missings(import_country(x, rounds = 6))),
+#     all_countries)
 
 
 # Same as sqp_cmv but good for programming with. cmv_vars accepts a vector rather than ...
