@@ -282,7 +282,7 @@ server <- function(input, output, session) {
                     multiple = TRUE,
                     selectize = FALSE,
                     width = '500px',
-                    size = length(input$vars_ch)),
+                    size = length(input$vars_ch))
         )
       )
     # Interactively add a sumscore to the UI
