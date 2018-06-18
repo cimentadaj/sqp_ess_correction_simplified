@@ -215,7 +215,7 @@ iterative_sscore <- function(x, y, sqp_df, data_df) {
 
 # for excluding a named slot from a list
 pick_list <- function(exclude, the_list) {
-  the_list[!names(the_list) == exclude]
+  the_list[!names(the_list) %in% exclude]
 }
 
 
@@ -392,7 +392,11 @@ server <- function(input, output, session) {
     # inputs, I exclude list_sscore from the list because, for example,
     # var1 will match both ssname1 and list_sscore. By removing it, it will
     # only match sscore1 and be able to delete only that score
-    semi_index <- which(input$list_sscore == temp_input)
+    
+    # Why `[1]`? Because once you use the sum score as a dependent variable
+    # the line below matches both `ssanme*` and `dv_ch` so in any case
+    # we only keep the index of the variable in `ssname*`
+    semi_index <- which(input$list_sscore == temp_input)[1]
     
     # Because I interactively add/delete sscores, only keeping the index is unreliable
     # because it will change as soon as I add a new sscore. So I grab the name of the index
@@ -418,16 +422,17 @@ server <- function(input, output, session) {
     
     # Regardless of whether I deleted the splitlayout or not, the
     # input names ssname* and sscore* where created. Even if I delete
-    # the splitlayout, there's still there. This is a loop that
+    # the splitlayout, they're still there. This is a loop that
     # sets both ssname* and sscore* for the chosen sscore to
     # NULL using a custom javascript message. The counterparty
-    # of this is in the UI where I define the function.
-    session$sendCustomMessage(type = "resetValue", message = names(temp_input)[semi_index])
+    # of this is in the UI where I define the function to set the
+    # names to NULL.
+    
+    session$sendCustomMessage(type = "resetValue", message = paste0("ssname", index_names))
     
     # Everything above was to delete the ssname. To delete sscore we have the index_names
     # of ssname which is, for example, 1. We just have to delete sscore1
     session$sendCustomMessage(type = "resetValue", message = paste0("sscore", index_names))
-    
   })
   
   # When the sumscores are ready, the user clicks
@@ -469,8 +474,9 @@ server <- function(input, output, session) {
       list_sscore <- lapply(final_sscore, function(x) {
         gsub(":.*$", "", x)
       })
-
-      list_sscore
+    
+      # Return only the sscores which are not empty
+      list_sscore[vapply(list_sscore, function(x) !is_empty(x), FUN.VALUE = logical(1))]
     })
   
   # When clean_ssnames() and sscore_list()
@@ -585,9 +591,7 @@ server <- function(input, output, session) {
   var_df <-
     eventReactive(input$calc_model, {
       # Choose country when user calculates model
-      # This is for when the ess data is available
       upd_ess <- ess_df[[input$slid_cnt]]
-      # upd_ess <- ess_df[chosen_vars()]
       
       # If no sscore was defined, return the same df the above
       if (input$ins_sscore == 0) return(upd_ess)
@@ -609,7 +613,7 @@ server <- function(input, output, session) {
   
   observe({
     print(exists_cleanssnames())
-    print(exists_sscorelist())
+    print(sscore_list())
   })
 
   
@@ -622,7 +626,10 @@ server <- function(input, output, session) {
         iterative_sscore(unname(exists_cleanssnames()[index]), sscore_list()[[index]], sqp_df, var_df())
       })
       
-      bind_rows(sqp_df, q_sscore)
+      # Because q_sscore only returns the new quality of each sum score,
+      # we need to remove the variables that compose the sumscore manually
+      # from the sqp data.
+      bind_rows(filter(sqp_df, !question %in% exists_sscorelist()), q_sscore)
     })
   
   observe({
@@ -764,7 +771,7 @@ server <- function(input, output, session) {
         ggplot(aes(rhs, est, colour = model)) +
         geom_linerange(aes(ymin = ci.lower, ymax = ci.upper),
                        position = position_dodge(width = 0.5)) +
-        geom_point(position = position_dodge(width = 0.5)) +
+        geom_point(position = position_dodge(width = 0.5), size = 2) +
         labs(x = "Predictors", y = "Estimated coefficients") +
         theme_bw(base_size = 16)
     })
