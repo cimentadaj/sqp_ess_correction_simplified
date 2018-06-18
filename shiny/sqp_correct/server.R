@@ -181,7 +181,6 @@ ui2 <- tabsetPanel(id = "menu",
                              ess_button("calc_model", "Create model")
                     ),
                     tabPanel("Create model", value = "cre_model",
-                             br(),
                              tabsetPanel(
                                tabPanel("Plot of results",
                                         withSpinner(tagList(plotOutput("model_plot")),
@@ -603,7 +602,7 @@ server <- function(input, output, session) {
           rowSums(upd_ess[x], na.rm = TRUE)
         })
       
-      cbind(upd_ess, as.data.frame(sscore, col.names = exists_cleanssnames()))
+      bind_cols(upd_ess, as.data.frame(sscore, col.names = exists_cleanssnames()))
     })
   
   # observe({
@@ -715,16 +714,23 @@ server <- function(input, output, session) {
     sample_size <- nrow(var_df())
     
     # Model based on original correlation matrix
-    fit <-
-      sem(model,
-          sample.cov = original,
-          sample.nobs = sample_size)
+    
+    fit <- tryCatch(sem(model, sample.cov = original, sample.nobs = sample_size),
+                    error = function(e) rlang::abort("Your model could not be estimated by Lavaan because it might be misspecified. Try another model"))
+    # fit <-
+    #   sem(model,
+    #       sample.cov = original,
+    #       sample.nobs = sample_size)
     
     # Model based on corrected covariance matrix 
     fit.corrected <-
-      sem(model,
-          sample.cov=corrected,
-          sample.nobs= sample_size)
+      tryCatch(sem(model, sample.cov=corrected, sample.nobs= sample_size),
+               error = function(e) rlang::abort("Your model could not be estimated by Lavaan because it might be misspecified. Try another model"))
+    
+    # fit.corrected <-
+    #   sem(model,
+    #       sample.cov=corrected,
+    #       sample.nobs= sample_size)
     
     
     # Why do I leave it incomplete and not bind everything into a data frame ready to plot?
