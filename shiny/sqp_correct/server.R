@@ -168,7 +168,8 @@ ui2 <- tabsetPanel(id = "menu",
                                     Shiny.onInputChange(variableName, null);
                                 });
                                 ")
-                               )
+                               ),
+                               position = 'right'
                     )),
                     tabPanel("Define the model", value = "def_model",
                              br(),
@@ -489,7 +490,7 @@ server <- function(input, output, session) {
   # will crash it.
   exists_cleanssnames <- reactive({
     if (!is_error(clean_ssnames())) {
-      clean_ssnames()
+      vapply(clean_ssnames(), make.names, FUN.VALUE = character(1))
     } else {
       character()
     }
@@ -622,7 +623,10 @@ server <- function(input, output, session) {
       # and then bind them together with the sqp_df. The final output
       # is the sqp_df with the quality of the N sum scores created.
       q_sscore <- lapply(seq_along(exists_cleanssnames()), function(index) {
-        iterative_sscore(unname(exists_cleanssnames()[index]), sscore_list()[[index]], sqp_df, var_df())
+        iterative_sscore(unname(exists_cleanssnames()[index]),
+                         sscore_list()[[index]],
+                         sqp_df,
+                         var_df())
       })
       
       # Because q_sscore only returns the new quality of each sum score,
@@ -646,6 +650,10 @@ server <- function(input, output, session) {
     
   })
   
+  observe({
+    print(head(var_df()))
+  })
+  
   ### Calculations begin ####
   models_coef <- eventReactive(input$calc_model, {
     
@@ -658,7 +666,7 @@ server <- function(input, output, session) {
     
     selected_vars_formula <- 
       eval(
-        parse(text = paste0("~", paste0(ch_vars,collapse = "+"))
+        parse(text = paste0("~", paste0(ch_vars, collapse = "+"))
         )
       )
     
@@ -680,6 +688,9 @@ server <- function(input, output, session) {
     
     # Replace all NA's so that there's no error.
     filtered_sqp <- map_dfc(filtered_sqp, ~ {.x[is.na(.x)] <- 0; .x})
+    
+    print(corrected)
+    print(filtered_sqp)
     
     # Replace diagonal by multiplying it with the quality of each variable
     diag(corrected) <- diag(corrected) * filtered_sqp$quality

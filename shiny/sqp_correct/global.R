@@ -11,7 +11,6 @@ select <- dplyr::select
 all_countries <- c("Spain",
                    "Germany",
                    "Netherlands",
-                   "Portugal",
                    "France",
                    "United Kingdom",
                    "Ireland")
