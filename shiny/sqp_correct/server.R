@@ -131,68 +131,79 @@ ess_button <- function(id, label, color = color_website) {
 
 # Second tab for defining model and selecting vars/countries
 ui2 <- tabsetPanel(id = "menu",
-                    tabPanel("Select country and model", value = "country_n_vars",
-                             br(),
-                             fluidRow(
-                               column(3, selectInput("slid_cnt", "Pick a country", choices = all_countries)),
-                               column(7, style = "margin-top: 25px;", actionButton("select_all", "Select all variables"))
-                               ),
-                             uiOutput('chosen_vars'),
-                             uiOutput('length_vars'),
-                             ess_button("def_sscore", "I'm done, let me define my sum scores")
-                    ),
-                    tabPanel("Create sum scores", value = "def_sscore",
-                             br(),
-                             p("Would you like to create additional sum score variables?
+                   tabPanel("Select country and model", value = "country_n_vars",
+                            br(),
+                            fluidRow(
+                              column(3, selectInput("slid_cnt", "Pick a country", choices = all_countries)),
+                              column(7, style = "margin-top: 25px;", actionButton("select_all", "Select all variables"))
+                            ),
+                            uiOutput('chosen_vars'),
+                            uiOutput('length_vars'),
+                            ess_button("def_sscore", "I'm done, let me define my sum scores")
+                   ),
+                   tabPanel("Create sum scores", value = "def_sscore",
+                            br(),
+                            p("Would you like to create additional sum score variables?
                               Sum scores are the addition of several variables into one single
                               variable. click on 'Create sum score' to create your sum score."),
-                             br(),
-                             br(),
-                             sidebarLayout(
-                               sidebarPanel(
-                                 actionButton('ins_sscore', 'Create sum score'),
-                                 h6("Create more than one sum score by clicking again."),
-                                 br(),
-                                 br(),
-                                 uiOutput("list_sscore", style = "margin-top: -25px;"),
-                                 uiOutput("del_sscore"),
-                                 br(),
-                                 ess_button('def_model', "I'm done, I want to define my model"),
-                                 width = 3
-                                 ),
-                               mainPanel(
-                                 br(),
-                                 div(id = 'placeholder'),
-                                 tags$script("
-                                 Shiny.addCustomMessageHandler('resetValue', function(variableName) {
-                                    Shiny.onInputChange(variableName, null);
-                                });
-                                ")
-                               ),
-                               position = 'right'
-                    )),
-                    tabPanel("Define the model", value = "def_model",
-                             br(),
-                             fluidRow(column(3, uiOutput("dv")),
-                                      column(3, uiOutput("iv")),
-                                      column(5, uiOutput("cmv"))),
-                             fluidRow(column(3, ""),
-                                      column(3, uiOutput('length_iv')), # three rows just to raise an error
-                                      column(3, "")),
-                             ess_button("calc_model", "Create model")
-                    ),
-                    tabPanel("Create model", value = "cre_model",
-                             tabsetPanel(
-                               tabPanel("Plot of results",
-                                        withSpinner(tagList(plotOutput("model_plot")),
-                                                    color = color_website)
-                               ),
-                               tabPanel("Table of results",
-                                        withSpinner(tagList(tableOutput("model_table")),
-                                                    color = color_website)
-                               )
-                             )
-                    )
+                            br(),
+                            br(),
+                            fluidRow(
+                              column(3,
+                                     sidebarPanel(
+                                       actionButton('ins_sscore', 'Create sum score'),
+                                       h6("Create more than one sum score by clicking again."),
+                                       br(),
+                                       br(),
+                                       width = 10
+                                     )
+                              ),
+                              column(6,
+                                     mainPanel(
+                                       div(id = 'placeholder'),
+                                       tags$script("
+                                     Shiny.addCustomMessageHandler('resetValue', function(variableName) {
+                                        Shiny.onInputChange(variableName, null);
+                                     });"
+                                       ),
+                                       width = 12
+                                     )
+                              ),
+                              column(3,
+                                     sidebarPanel(
+                                       br(),
+                                       uiOutput("new_sscore"),
+                                       uiOutput("list_sscore", style = "margin-top: -25px;"),
+                                       uiOutput("del_sscore"),
+                                       br(),
+                                       ess_button('def_model', "I'm done, I want to define my model"),
+                                       width = 10
+                                     )
+                              )
+                            )
+                   ),
+                   tabPanel("Define the model", value = "def_model",
+                            br(),
+                            fluidRow(column(3, uiOutput("dv")),
+                                     column(3, uiOutput("iv")),
+                                     column(5, uiOutput("cmv"))),
+                            fluidRow(column(3, ""),
+                                     column(3, uiOutput('length_iv')), # three rows just to raise an error
+                                     column(3, "")),
+                            ess_button("calc_model", "Create model")
+                   ),
+                   tabPanel("Create model", value = "cre_model",
+                            tabsetPanel(
+                              tabPanel("Plot of results",
+                                       withSpinner(tagList(plotOutput("model_plot")),
+                                                   color = color_website)
+                              ),
+                              tabPanel("Table of results",
+                                       withSpinner(tagList(tableOutput("model_table")),
+                                                   color = color_website)
+                              )
+                            )
+                   )
 )
 
 # For checking when the ess email is valid or not
@@ -263,7 +274,8 @@ server <- function(input, output, session) {
       })
     }
   })
-  
+  # output$page <- renderUI({div(main_page(ui2))})
+    
   output$chosen_vars <-
     renderUI({
       checkboxGroupInput(
@@ -275,12 +287,12 @@ server <- function(input, output, session) {
     })
   
   observeEvent(input$select_all, {
-        updateCheckboxGroupInput(
-          session,
-          'vars_ch',
-          'Choose variables to use in the modeling',
-          var_n_labels,
-          choices = var_n_labels)
+    updateCheckboxGroupInput(
+      session,
+      'vars_ch',
+      'Choose variables to use in the modeling',
+      var_n_labels,
+      choices = var_n_labels)
   })
   
   # Checks whether you are in `tab`
@@ -328,6 +340,13 @@ server <- function(input, output, session) {
   # through out sessions. All countries are downloaded when
   # the app is launched.
   
+  output$del_sscore <- renderUI({actionButton('del_sscore', 'Delete sum score')})
+  
+  # And create a list of those names to delete
+  output$list_sscore <- renderUI({selectInput('list_sscore',
+                                              label = "If you'd like to delete a sum score you've created, which one?",
+                                              choices = possible_ssnames())})
+  
   observeEvent(input$ins_sscore, {
     if (input$ins_sscore == 0) return(character())
     
@@ -336,32 +355,22 @@ server <- function(input, output, session) {
       updateActionButton(session, 'ins_sscore', 'Create another sum score') 
     }
     
-    
-    output$del_sscore <- renderUI({actionButton('del_sscore', 'Delete sum score')})
-    
-    # And create a list of those names to delete
-    output$list_sscore <- renderUI({selectInput('list_sscore',
-                                                label = "If you'd like to delete a sum score you've created, which one?",
-                                                choices = possible_ssnames())
-    })
-    
-    
     # When user clicks insert, add
     # the sscore name and variables to the ui
     whole_html <-
       splitLayout(
         tags$div(id = paste0("splitlayout", input$ins_sscore),
-                fluidRow(
-                  column(6, textInput(paste0("ssname", input$ins_sscore), "Name of sum score")),
-                  column(6, checkboxGroupInput(inputId = paste0("sscore", input$ins_sscore),
-                                               label = 'Variables that compose the sum score',
-                                               choices = input$vars_ch))
-                ),
-                # To remove the horizontall scroll bar
-                tags$style(type = "text/css",
-                           paste0(paste0("#splitlayout", input$ins_sscore),
-                                  " {overflow-x: hidden}"))
-                
+                 fluidRow(
+                   column(6, textInput(paste0("ssname", input$ins_sscore), "Name of sum score")),
+                   column(6, checkboxGroupInput(inputId = paste0("sscore", input$ins_sscore),
+                                                label = 'Variables that compose the sum score',
+                                                choices = input$vars_ch))
+                 ),
+                 # To remove the horizontall scroll bar
+                 tags$style(type = "text/css",
+                            paste0(paste0("#splitlayout", input$ins_sscore),
+                                   " {overflow-x: hidden}"))
+                 
         ),
         cellWidths = c("100%")
       )
@@ -372,13 +381,13 @@ server <- function(input, output, session) {
   # Grab the names of the sscore reactively, that is, whenever they are being written
   possible_ssnames <- reactive({
     unname(unlist(lapply(grep("^ssname", names(input), value = TRUE),
-           function(x) if (!is_empty(x)) input[[x]] else "")))
+                         function(x) if (!is_empty(x)) input[[x]] else "")))
   })
   
   ## Deleting sum scores
   observeEvent(input$del_sscore, {
     if (input$del_sscore == 0 | is_empty(input$list_sscore)) return(character())
-
+    
     # print(possible_ssnames())
     
     # These are all the inputs from the app temporarily stored without the input
@@ -386,7 +395,7 @@ server <- function(input, output, session) {
     # Why do I save this into a temp list? Because I acess this same data below
     # a few times.
     temp_input <- pick_list("list_sscore", reactiveValuesToList(input))
-
+    
     # list_sscore stores the name of the sscore whenever it was picked
     # so when I compare which variable was picked agaisnt all available
     # inputs, I exclude list_sscore from the list because, for example,
@@ -401,7 +410,7 @@ server <- function(input, output, session) {
     # Because I interactively add/delete sscores, only keeping the index is unreliable
     # because it will change as soon as I add a new sscore. So I grab the name of the index
     index_names <- gsub("ssname", "", names(temp_input)[semi_index])
-
+    
     # explore_index <-
     #       as.data.frame(
     #         lapply(input$list_sscore, function(x) x == pick_list("list_sscore", reactiveValuesToList(input)))
@@ -457,7 +466,7 @@ server <- function(input, output, session) {
       all_ssnames <- non_null_name[non_null_name != ""]
       unlist(temp_input[all_ssnames])
     })
-
+  
   # Get a list where each slot contains
   # the variables names as strings that
   # compose each sscore.
@@ -465,7 +474,7 @@ server <- function(input, output, session) {
   # which contains the variable names of each sscore
   sscore_list <-
     eventReactive(input$def_model, {
-
+      
       temp_input <- reactiveValuesToList(input)
       
       non_null_sscore <- grepl("^sscore", names(temp_input[!is.null(temp_input) & !is_empty(temp_input)]))
@@ -474,7 +483,7 @@ server <- function(input, output, session) {
       list_sscore <- lapply(final_sscore, function(x) {
         gsub(":.*$", "", x)
       })
-    
+      
       # Return only the sscores which are not empty
       list_sscore[vapply(list_sscore, function(x) !is_empty(x), FUN.VALUE = logical(1))]
     })
@@ -615,7 +624,7 @@ server <- function(input, output, session) {
     print(exists_cleanssnames())
     print(sscore_list())
   })
-
+  
   
   upd_sqpdf <-
     eventReactive(input$calc_model, {
@@ -776,7 +785,7 @@ server <- function(input, output, session) {
         set_names(c("Covariates", rep(c("Estimate", "P-val", "Lower CI", "Upper CI"), times = 2))) %>% 
         kable() %>% 
         kable_styling("striped", full_width = F) %>% 
-        add_header_above(c(" ", "Original" = 4, "Corrected" = 4))
+        add_header_above(c(" ", "Uncorrected" = 4, "Corrected" = 4))
     })
   
   # Final plot
@@ -784,7 +793,7 @@ server <- function(input, output, session) {
     renderPlot({
       models_coef() %>% 
         bind_rows() %>%
-        mutate(model = rep(c("original", "corrected"), each = length(unique(.$rhs)))) %>% 
+        mutate(model = rep(c("Uncorrected", "Corrected"), each = length(unique(.$rhs)))) %>% 
         ggplot(aes(rhs, est, colour = model)) +
         geom_linerange(aes(ymin = ci.lower, ymax = ci.upper),
                        position = position_dodge(width = 0.5)) +
