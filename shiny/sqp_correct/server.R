@@ -37,6 +37,10 @@ var_n_labels <- paste0(all_variables, ": ", all_variables_label)
 ess_website <- "http://www.europeansocialsurvey.org"
 path_login <- "/user/login"
 
+# SQP credentials
+sqp_login("asqme", "asqme")
+all_questions <- find_questions(find_studies("ESS round 6")$id, all_variables)
+
 #option to deal with lonegly PSUs
 options(survey.lonely.psu = "adjust")
 
@@ -247,7 +251,31 @@ server <- function(input, output, session) {
     }
   })
   # output$page <- renderUI({div(main_page(ui2))})
+  
+  observe({print(input$slid_cnt)})
+  # Define SQP data
+  
+  sqp_df <- eventReactive(input$def_sscore, {
+    if (is.null(input$slid_cnt)) return(character())
     
+    print(all_questions)
+    print(countries_abbrv[which(isolate(input$slid_cnt) == all_countries)])
+    question_ids <-
+      all_questions %>% 
+      filter(country_iso == countries_abbrv[which(input$slid_cnt == all_countries)],
+             short_name %in% all_variables) %>% # in case some other questions come up
+      slice(seq_along(all_variables)) %>% # In case new languages by country come up in the future
+      pull(id)
+    print(get_estimates(question_ids))
+    get_estimates(question_ids)
+    })
+  
+  observe({
+    print("This is sqp_df")
+    print(sqp_df())
+  })
+  
+  
   output$chosen_vars <-
     renderUI({
       checkboxGroupInput(
@@ -276,22 +304,6 @@ server <- function(input, output, session) {
     is_specific_tab()
   }
   
-  sqp_df <- eventReactive(input$def_sscore, {
-    sqp_login("asqme", "asqme")
-    all_questions <- find_questions(find_studies("ESS round 6")$id, all_variables)
-    
-    print(all_questions)
-    print(countries_abbrv[which(input$slid_cnt == all_countries)])
-    question_ids <-
-      all_questions %>% 
-      filter(country_iso == countries_abbrv[which(input$slid_cnt == all_countries)],
-             short_name %in% all_variables) %>% # in case some other questions come up
-      slice(seq_along(all_variables)) %>% # In case new languages by country come up in the future
-      pull(id)
-    
-    get_estimates(question_ids)
-  })
-  
   # This is a turning point. We want to ensure that there
   # are at least two variables chosen for the modeling.
   # If they are, we jumpt to sscore tabs.
@@ -317,7 +329,7 @@ server <- function(input, output, session) {
       output$length_vars <- renderUI(p(" "))
     }
   })
-  
+
   # Remove labels from the chosen variables
   chosen_vars <- reactive({
     gsub(":.*$", "", input$vars_ch)
@@ -583,7 +595,6 @@ server <- function(input, output, session) {
     }
   })
   
-  
   # This is the ess data w/ only the selected variables
   var_df <-
     eventReactive(input$calc_model, {
@@ -679,7 +690,7 @@ server <- function(input, output, session) {
     
     attr(corrected, "statistic") <- "covariance"
     
-    # Subset chosen variables in sqp_df() and
+    # Subset chosen variables in sqp_df and
     # create quality estimate for the
     filtered_sqp <- upd_sqpdf()[upd_sqpdf()[[1]] %in% ch_vars, ]
     
