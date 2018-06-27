@@ -4,6 +4,7 @@ library(kableExtra)
 library(survey)
 library(ggplot2)
 library(lavaan)
+library(sqpr)
 library(jtools)
 library(dplyr)
 
@@ -36,37 +37,8 @@ var_n_labels <- paste0(all_variables, ": ", all_variables_label)
 ess_website <- "http://www.europeansocialsurvey.org"
 path_login <- "/user/login"
 
-#### NOTE #######
-# Only thing left is to replace the sqp data w/ the actual SQP
-# and delete the the toy dataset blow
-######
-
-sqp_df <-
-  read_table(
-  "polintr        0.624    0.964   0.601
-  ppltrst        0.737    0.954   0.703
-  stfeco         0.797    0.912   0.727
-  stfedu         0.757    0.838   0.635
-  stfhlth        0.760    0.798   0.607
-  stflife        0.721    0.911   0.657
-  trstplt        0.852    0.965   0.822
-  trstprl        0.812    0.959   0.779
-  trstprt        0.858    0.956   0.821",
-  col_names = FALSE
-) %>% setNames(c("question", "reliability", "validity", "quality"))
-
-# sqp_df <-
-#   data.frame(question = all_variables,
-#              quality = c(0.2, 0.3, 0.5, 0.6, 0.9, 0.5, 0.6, 0.8, 0.1),
-#              reliability = c(0.1, 0.4, 0.5, 0.5, 0.7, 0.2, 0.5, 0.6, 0.9),
-#              validity = c(0.3, 0.2, 0.6, 0.7, 0.8, 0.4, 0.3, 0.7, 0.8))
-
-sqp_df <- structure(sqp_df, class = c(class(sqp_df), "sqp"))
-
-
 #option to deal with lonegly PSUs
 options(survey.lonely.psu = "adjust")
-
 
 # Text for errors when email is wrong or when 1 variable is selected as model
 valid_email_error <- tags$span(style="color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
@@ -294,7 +266,7 @@ server <- function(input, output, session) {
       var_n_labels,
       choices = var_n_labels)
   })
-  
+
   # Checks whether you are in `tab`
   is_tab <- function(tab) {
     is_specific_tab <- reactive({
@@ -303,6 +275,22 @@ server <- function(input, output, session) {
     
     is_specific_tab()
   }
+  
+  sqp_df <- eventReactive(input$def_sscore, {
+    sqp_login("asqme", "asqme")
+    all_questions <- find_questions(find_studies("ESS round 6")$id, all_variables)
+    
+    print(all_questions)
+    print(countries_abbrv[which(input$slid_cnt == all_countries)])
+    question_ids <-
+      all_questions %>% 
+      filter(country_iso == countries_abbrv[which(input$slid_cnt == all_countries)],
+             short_name %in% all_variables) %>% # in case some other questions come up
+      slice(seq_along(all_variables)) %>% # In case new languages by country come up in the future
+      pull(id)
+    
+    get_estimates(question_ids)
+  })
   
   # This is a turning point. We want to ensure that there
   # are at least two variables chosen for the modeling.
@@ -634,14 +622,14 @@ server <- function(input, output, session) {
       q_sscore <- lapply(seq_along(exists_cleanssnames()), function(index) {
         iterative_sscore(unname(exists_cleanssnames()[index]),
                          sscore_list()[[index]],
-                         sqp_df,
+                         sqp_df(),
                          var_df())
       })
       
       # Because q_sscore only returns the new quality of each sum score,
       # we need to remove the variables that compose the sumscore manually
       # from the sqp data.
-      bind_rows(filter(sqp_df, !question %in% exists_sscorelist()), q_sscore)
+      bind_rows(filter(sqp_df(), !question %in% exists_sscorelist()), q_sscore)
     })
   
   observe({
@@ -691,7 +679,7 @@ server <- function(input, output, session) {
     
     attr(corrected, "statistic") <- "covariance"
     
-    # Subset chosen variables in sqp_df and
+    # Subset chosen variables in sqp_df() and
     # create quality estimate for the
     filtered_sqp <- upd_sqpdf()[upd_sqpdf()[[1]] %in% ch_vars, ]
     
@@ -736,7 +724,12 @@ server <- function(input, output, session) {
     # Model based on original correlation matrix
     
     fit <- tryCatch(sem(model, sample.cov = original, sample.nobs = sample_size),
-                    error = function(e) rlang::abort("Your model could not be estimated by Lavaan because it might be misspecified. Try another model"))
+                    error = function(e) stop(
+                      safeError(
+                      rlang::abort("Your model could not be estimated by Lavaan because it might be misspecified. Try another model")
+                      )
+                     )
+                    )
     # fit <-
     #   sem(model,
     #       sample.cov = original,
@@ -745,7 +738,12 @@ server <- function(input, output, session) {
     # Model based on corrected covariance matrix 
     fit.corrected <-
       tryCatch(sem(model, sample.cov=corrected, sample.nobs= sample_size),
-               error = function(e) rlang::abort("Your model could not be estimated by Lavaan because it might be misspecified. Try another model"))
+               error = function(e) stop(
+                 safeError(
+                 rlang::abort("Your model could not be estimated by Lavaan because it might be misspecified. Try another model")
+                 )
+                )
+               )
     
     # fit.corrected <-
     #   sem(model,

@@ -15,6 +15,13 @@ all_countries <- c("Spain",
                    "United Kingdom",
                    "Ireland")
 
+countries_abbrv <- c("ES",
+                     "DE",
+                     "NL",
+                     "FR",
+                     "GB",
+                     "IR")
+
 all_ids <- c("cntry", "idno")
 
 # To bring the function to extract sddf data.

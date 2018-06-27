@@ -5,8 +5,8 @@ account: survey-quality-prediction
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 366691
-bundleId: 1447101
+bundleId: 1451704
 url: https://survey-quality-prediction.shinyapps.io/sqp_correct/
-when: 1529921681.99645
+when: 1530089225.1756
 asMultiple: FALSE
 asStatic: FALSE
