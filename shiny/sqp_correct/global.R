@@ -20,7 +20,7 @@ countries_abbrv <- c("ES",
                      "NL",
                      "FR",
                      "GB",
-                     "IR")
+                     "IE")
 
 all_ids <- c("cntry", "idno")
 

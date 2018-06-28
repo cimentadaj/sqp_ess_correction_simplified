@@ -42,7 +42,8 @@ sqp_login("asqme", "asqme")
 all_questions <- find_questions(find_studies("ESS round 6")$id, all_variables)
 
 #option to deal with lonegly PSUs
-options(survey.lonely.psu = "adjust")
+options(shiny.sanitize.errors = TRUE,
+        survey.lonely.psu = "adjust")
 
 # Text for errors when email is wrong or when 1 variable is selected as model
 valid_email_error <- tags$span(style="color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
@@ -251,30 +252,6 @@ server <- function(input, output, session) {
     }
   })
   # output$page <- renderUI({div(main_page(ui2))})
-  
-  observe({print(input$slid_cnt)})
-  # Define SQP data
-  
-  sqp_df <- eventReactive(input$def_sscore, {
-    if (is.null(input$slid_cnt)) return(character())
-    
-    print(all_questions)
-    print(countries_abbrv[which(isolate(input$slid_cnt) == all_countries)])
-    question_ids <-
-      all_questions %>% 
-      filter(country_iso == countries_abbrv[which(input$slid_cnt == all_countries)],
-             short_name %in% all_variables) %>% # in case some other questions come up
-      slice(seq_along(all_variables)) %>% # In case new languages by country come up in the future
-      pull(id)
-    print(get_estimates(question_ids))
-    get_estimates(question_ids)
-    })
-  
-  observe({
-    print("This is sqp_df")
-    print(sqp_df())
-  })
-  
   
   output$chosen_vars <-
     renderUI({
@@ -624,7 +601,21 @@ server <- function(input, output, session) {
     print(sscore_list())
   })
   
+  # Define SQP data
   
+  sqp_df <- eventReactive(input$calc_model, {
+    if (is.null(input$slid_cnt)) return(character())
+    
+    question_ids <-
+      all_questions %>% 
+      filter(country_iso == countries_abbrv[which(input$slid_cnt == all_countries)],
+             short_name %in% all_variables) %>% # in case some other questions come up
+      slice(seq_along(all_variables)) %>% # In case new languages by country come up in the future
+      pull(id)
+    
+    get_estimates(question_ids)
+  })
+
   upd_sqpdf <-
     eventReactive(input$calc_model, {
       # Calculate the quality of sumscore of each name-variables pairs
@@ -737,10 +728,10 @@ server <- function(input, output, session) {
     fit <- tryCatch(sem(model, sample.cov = original, sample.nobs = sample_size),
                     error = function(e) stop(
                       safeError(
-                      rlang::abort("Your model could not be estimated by Lavaan because it might be misspecified. Try another model")
-                      )
+                        "Your model could not be estimated by Lavaan because it might be misspecified. Try another model"
                      )
                     )
+                   )
     # fit <-
     #   sem(model,
     #       sample.cov = original,
@@ -751,10 +742,10 @@ server <- function(input, output, session) {
       tryCatch(sem(model, sample.cov=corrected, sample.nobs= sample_size),
                error = function(e) stop(
                  safeError(
-                 rlang::abort("Your model could not be estimated by Lavaan because it might be misspecified. Try another model")
+                   "Your model could not be estimated by Lavaan because it might be misspecified. Try another model"
+                   )
                  )
                 )
-               )
     
     # fit.corrected <-
     #   sem(model,
