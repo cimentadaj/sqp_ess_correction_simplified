@@ -8,6 +8,7 @@ library(sqpr)
 library(jtools)
 library(dplyr)
 
+options(survey.lonely.psu = "adjust")
 
 all_variables <-
   c("polintr",

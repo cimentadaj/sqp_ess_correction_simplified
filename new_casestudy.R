@@ -4,6 +4,10 @@ library(jtools)
 library(tidyverse)
 library(essurvey)
 library(plotly)
+library(lavaan.survey)
+#load hacked lavaan.survey function 'lavaan.survey_sqp'
+source("svy_sqp_lavaan.R") 
+source("sqp_cmv_str.R") 
 
 #devtools::install_github("asqm/sqpr")
 library(sqpr)
@@ -15,8 +19,8 @@ library(sqpr)
 # Once you run the three lines below you can erase your credentials to 
 # how it was before and during this session you will be logged in.
 Sys.setenv(ess_email = '')
-Sys.setenv(SQP_USER = 'sqpr_tests')
-Sys.setenv(SQP_PW = 'sqpr2018')
+Sys.setenv(SQP_USER = 'asqme')
+Sys.setenv(SQP_PW = 'asqme')
 
 # Chosen country. Select here.
 country <- "Spain"
@@ -240,14 +244,27 @@ sample_size <- nrow(ess6escorr)
 # Model based on original correlation matrix
 fit <-
   sem(model,
-      sample.cov = original,
+      sample.cov = original_cov,
       sample.nobs = sample_size)
 
 # Model based on corrected covariance matrix 
 fit.corrected <-
   sem(model,
-      sample.cov=corrected,
+      sample.cov=corrected_cov,
       sample.nobs= sample_size)
+
+
+fit.corrected.survey <- 
+  lavaan.survey_sqp(lavaan.fit = fit,
+                    survey.design = ess_svy,
+                    estimator = "MLM",
+                    estimator.gamma = "Yuan-Bentler",
+                    sqp = FALSE,
+                    cmv_vars = c("imbgeco", "imueclt"),
+                    sqp_data = Quality
+  )
+
+
 
 ## ---- fig.width = 7, fig.with = 9----------------------------------------
 # Difference in coefficients between models
