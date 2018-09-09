@@ -1,5 +1,6 @@
 library(shiny)
 library(shinycssloaders)
+library(knitr)
 library(kableExtra)
 library(survey)
 library(ggplot2)
@@ -784,9 +785,9 @@ server <- function(input, output, session) {
         reduce(left_join, by = "rhs") %>% 
         mutate_if(is.numeric, function(x) as.character(round(x, 3))) %>% 
         set_names(c("Covariates", rep(c("Estimate", "P-val", "Lower CI", "Upper CI"), times = 2))) %>% 
-        kable() %>% 
-        kable_styling("striped", full_width = F) %>% 
-        add_header_above(c(" ", "Uncorrected" = 4, "Corrected" = 4))
+        knitr::kable(format = "html") %>% 
+        kableExtra::kable_styling("striped", full_width = F) %>% 
+        kableExtra::add_header_above(c(" ", "Uncorrected" = 4, "Corrected" = 4))
     })
   
   # Final plot
