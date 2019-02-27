@@ -18,7 +18,7 @@ library(sqpr)
 # Register for SQP here: http://sqp.upf.edu/accounts/login/?next=/loadui/
 # Once you run the three lines below you can erase your credentials to 
 # how it was before and during this session you will be logged in.
-Sys.setenv(ess_email = '')
+Sys.setenv(ess_email = 'stefan.zins@gesis.org')
 Sys.setenv(SQP_USER = 'asqme')
 Sys.setenv(SQP_PW = 'asqme')
 
@@ -37,7 +37,7 @@ all_countries <- c("Spain",
 country_abbrv <- c("ES", "DE", "NL", "PT", "FR", "GB", "GB", "IE")
 
 chosen_cabbrv <- country_abbrv[which(country == all_countries)]
-round <- 6
+round <- 5
 
 ### Download ESS
 ess6es <-
@@ -99,6 +99,11 @@ Quality <- Quality[match(selected_vars, Quality$question), ]
 ## ------------------------------------------------------------------------
 # Select the variables | complete.case analysis
 # admin vars: "cntry", "idno", "dweight", "pweight", "pspwght"
+
+grab_sddf(rounds = 5,
+          country = "Spain",
+          email = Sys.getenv("ess_email"))
+
 
 ess6escorr <- 
   ess6es %>%
