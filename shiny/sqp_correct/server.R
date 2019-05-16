@@ -6,32 +6,29 @@ library(survey)
 library(ggplot2)
 library(lavaan)
 library(sqpr)
+library(countrycode)
 library(jtools)
 library(dplyr)
-
-options(survey.lonely.psu = "adjust")
 
 all_variables <-
   c("polintr",
     "ppltrst",
     "stfeco",
-    "stfedu",
-    "stfhlth",
-    "stflife", 
-    "trstplt",
-    "trstprl",
-    "trstprt")
+    "stfedu")
+    # "stfhlth",
+    # "stflife", 
+    # "trstplt",
+    # "trstprl")
 
 all_variables_label <- 
   c("How interested in politics",
     "Most people can be trusted or you can't be too careful",
     "How satisfied with present state of economy in country",
-    "State of education in country nowadays",
-    "State of health services in country nowadays",
-    "How satisfied with life as a whole", 
-    "Trust in politicians",
-    "Trust in country's parliament",
-    "Trust in political parties")
+    "State of education in country nowadays")
+    # "State of health services in country nowadays",
+    # "How satisfied with life as a whole", 
+    # "Trust in politicians",
+    # "Trust in country's parliament")
 
 # Variables pasted together with labels
 var_n_labels <- paste0(all_variables, ": ", all_variables_label)
@@ -41,7 +38,6 @@ path_login <- "/user/login"
 
 # SQP credentials
 sqp_login("asqme", "asqme")
-all_questions <- find_questions(find_studies("ESS round 6")$id, all_variables)
 
 #option to deal with lonegly PSUs
 options(shiny.sanitize.errors = TRUE,
@@ -114,6 +110,7 @@ ui2 <- tabsetPanel(id = "menu",
                             br(),
                             fluidRow(
                               column(3, selectInput("slid_cnt", "Pick a country", choices = all_countries)),
+                              column(3, uiOutput("chosen_rounds")),
                               column(7, style = "margin-top: 25px;", actionButton("select_all", "Select all variables"))
                             ),
                             uiOutput('chosen_vars'),
@@ -263,6 +260,13 @@ server <- function(input, output, session) {
         var_n_labels,
         width = '500px')
       
+    })
+  
+  output$chosen_rounds <-
+    renderUI({
+      selectInput("slid_rounds",
+                  "Pick a round",
+                  choices = show_country_rounds(input$slid_cnt))
     })
   
   observeEvent(input$select_all, {
@@ -575,10 +579,16 @@ server <- function(input, output, session) {
   })
   
   # This is the ess data w/ only the selected variables
+  
+  observe({print(input$slid_cnt); print(input$slid_rounds)})
+  
   var_df <-
     eventReactive(input$calc_model, {
       # Choose country when user calculates model
-      upd_ess <- ess_df[[input$slid_cnt]]
+      # upd_ess <- ess_df[[input$slid_cnt]]
+      downloaded_rnd <- import_country(input$slid_cnt, as.numeric(input$slid_rounds))
+      tmp_vars_weights <- c(all_variables, "pspwght")
+      upd_ess <- recode_missings(downloaded_rnd[tmp_vars_weights]) %>% filter(complete.cases(.))
       
       # If no sscore was defined, return the same df the above
       if (input$ins_sscore == 0) return(upd_ess)
@@ -604,18 +614,29 @@ server <- function(input, output, session) {
   })
   
   # Define SQP data
+  all_questions <- reactive({
+    paste0("ESS Round ", input$slid_rounds) %>% 
+      find_studies() %>% 
+      .[['id']] %>% 
+      find_questions(all_variables)
+  })
   
   sqp_df <- eventReactive(input$calc_model, {
     if (is.null(input$slid_cnt)) return(character())
     
     question_ids <-
-      all_questions %>% 
-      filter(country_iso == countries_abbrv[which(input$slid_cnt == all_countries)],
-             short_name %in% all_variables) %>% # in case some other questions come up
+      all_questions() %>% 
+      filter(country_iso == countrycode(input$slid_cnt, origin = "country.name", destination = "iso2c"),
+             tolower(short_name) %in% all_variables) %>% # in case some other questions come up
       slice(seq_along(all_variables)) %>% # In case new languages by country come up in the future
       pull(id)
     
     get_estimates(question_ids)
+  })
+  
+  observe({
+    print("This is sqp_df")
+    # print(sqp_df())
   })
 
   upd_sqpdf <-
@@ -637,21 +658,6 @@ server <- function(input, output, session) {
     })
   
   observe({
-    print(upd_sqpdf())
-  })
-  
-  weighted_data <- eventReactive(input$calc_model, {
-    # Define svydesign object thas has ALL columns of ess_data + sscore columns
-    mk_ess_svy(svyinfo = svyinfo[[input$slid_cnt]], # svyinfo comes from globals.R
-               ess_data = var_df(),
-               round = 6,
-               email = Sys.getenv("ess_email"),
-               id_vars = all_ids,
-               ess_website = ess_website)
-    
-  })
-  
-  observe({
     print(head(var_df()))
   })
   
@@ -660,29 +666,17 @@ server <- function(input, output, session) {
     
     ch_vars <- c(input$dv_ch, input$iv_ch)
     
-    # Correlation matrix without weights:
-    original <- cor(var_df()[ch_vars],
-                    use = "complete.obs",
-                    method = "pearson")
+    # Unweighted correlation and covariance
+    original_cor <- cor(var_df()[ch_vars])
+    original_cov <- cov(var_df()[ch_vars])
     
-    selected_vars_formula <- 
-      eval(
-        parse(text = paste0("~", paste0(ch_vars, collapse = "+"))
-        )
-      )
+    cor_cov <- cov.wt(var_df()[ch_vars], wt = var_df()$pspwght, cor = TRUE)
     
-    
-    # We get the covariance of the variables instead of the
-    # correlation
-    corrected <- 
-      cov2cor(
-        as.matrix(
-          svyvar(selected_vars_formula, design = weighted_data(), na.rm = TRUE)
-        )
-      )
-    
-    attr(corrected, "statistic") <- "covariance"
-    
+    # Weighted correlation and covariance
+    corrected_cor <- cor_cov$cor
+    corrected_cov <- cor_cov$cov
+
+
     # Subset chosen variables in sqp_df and
     # create quality estimate for the
     filtered_sqp <- upd_sqpdf()[upd_sqpdf()[[1]] %in% ch_vars, ]
@@ -690,13 +684,13 @@ server <- function(input, output, session) {
     # Replace all NA's so that there's no error.
     filtered_sqp <- map_dfc(filtered_sqp, ~ {.x[is.na(.x)] <- 0; .x})
     
-    print(corrected)
+    print(corrected_cor)
     print(filtered_sqp)
     
     # Replace diagonal by multiplying it with the quality of each variable
-    diag(corrected) <- diag(corrected) * filtered_sqp$quality
+    diag(corrected_cov) <- diag(corrected_cov) * filtered_sqp$quality
     
-    #subtract the cmv from the observed correlation
+    # subtract the cmv from the observed correlation
     # Calculate the common method variance of some variables
     # and subtract that common method variance from the correlation
     # coefficients of the variables.
@@ -708,63 +702,20 @@ server <- function(input, output, session) {
     # in sqpr::sqp_cmv
     
     if (length(input$cmv_ch) > 1) {
-      corrected <-
+      corrected_cor <-
         cov2cor(
           as.matrix(
-            sqp_cmv_str(x = corrected,
+            sqp_cmv_str(x = corrected_cov,
                         sqp_data = filtered_sqp,
                         cmv_vars = input$cmv_ch)[-1]
           )
         )
     }
     
-    # Create model formula
-    model <- paste0(ch_vars[1], 
-                    " ~ ", 
-                    paste0(ch_vars[-1], collapse = " + "))
-    
-    sample_size <- nrow(var_df())
-    
-    # Model based on original correlation matrix
-    
-    fit <- tryCatch(sem(model, sample.cov = original, sample.nobs = sample_size),
-                    error = function(e) stop(
-                      safeError(
-                        "Your model could not be estimated by Lavaan because it might be misspecified. Try another model"
-                     )
-                    )
-                   )
-    # fit <-
-    #   sem(model,
-    #       sample.cov = original,
-    #       sample.nobs = sample_size)
-    
-    # Model based on corrected covariance matrix 
-    fit.corrected <-
-      tryCatch(sem(model, sample.cov=corrected, sample.nobs= sample_size),
-               error = function(e) stop(
-                 safeError(
-                   "Your model could not be estimated by Lavaan because it might be misspecified. Try another model"
-                   )
-                 )
-                )
-    
-    # fit.corrected <-
-    #   sem(model,
-    #       sample.cov=corrected,
-    #       sample.nobs= sample_size)
-    
-    
-    # Why do I leave it incomplete and not bind everything into a data frame ready to plot?
-    # Because the table and the plot do different computations so I leave it up to the
-    # point that both operations have common ground.
-    coef_table <-
-      list(fit, fit.corrected) %>%
-      map(parameterestimates) %>%
-      map(~ filter(.x, lhs == ch_vars[1])) %>%
-      map(~ select(.x, rhs, est, pvalue, ci.lower, ci.upper))
-    
-    coef_table
+    list(original_cov = original_cov,
+         original_cor = original_cor,
+         # corrected_cov = corrected_cov,
+         corrected_cor = corrected_cor)
   })
   
   observeEvent(input$calc_model, {
@@ -781,26 +732,20 @@ server <- function(input, output, session) {
   # Final table
   output$model_table <-
     reactive({
-      models_coef() %>% 
-        reduce(left_join, by = "rhs") %>% 
+      models_coef()$original_cov %>%
+        as.data.frame() %>% 
+        tibble::rownames_to_column() %>% 
+        as_tibble() %>% 
         mutate_if(is.numeric, function(x) as.character(round(x, 3))) %>% 
-        set_names(c("Covariates", rep(c("Estimate", "P-val", "Lower CI", "Upper CI"), times = 2))) %>% 
         knitr::kable(format = "html") %>% 
-        kableExtra::kable_styling("striped", full_width = F) %>% 
-        kableExtra::add_header_above(c(" ", "Uncorrected" = 4, "Corrected" = 4))
+        kableExtra::kable_styling("striped", full_width = FALSE)
     })
   
   # Final plot
   output$model_plot <-
     renderPlot({
-      models_coef() %>% 
-        bind_rows() %>%
-        mutate(model = rep(c("Uncorrected", "Corrected"), each = length(unique(.$rhs)))) %>% 
-        ggplot(aes(rhs, est, colour = model)) +
-        geom_linerange(aes(ymin = ci.lower, ymax = ci.upper),
-                       position = position_dodge(width = 0.5)) +
-        geom_point(position = position_dodge(width = 0.5), size = 2) +
-        labs(x = "Predictors", y = "Estimated coefficients") +
-        theme_bw(base_size = 16)
+        models_coef()$original_cov %>%
+        corrr::as_cordf() %>% 
+        corrr::network_plot()
     })
 }

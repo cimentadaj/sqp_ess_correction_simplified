@@ -7,12 +7,31 @@ filter <- dplyr::filter
 select <- dplyr::select
 
 # Replace w/ available countries
-all_countries <- c("Spain",
-                   "Germany",
-                   "Netherlands",
+all_countries <- c("Austria",
+                   "Belgium",
+                   "Bulgaria",
+                   "Cyprus",
+                   "Denmark",
+                   "Estonia",
+                   "Finland",
                    "France",
-                   "United Kingdom",
-                   "Ireland")
+                   "Germany",
+                   "Hungary",
+                   "Ireland",
+                   "Latvia",
+                   "Netherlands",
+                   "Norway",
+                   "Poland",
+                   "Portugal",
+                   "Romania",
+                   "Russian Federation",
+                   "Slovakia",
+                   "Slovenia",
+                   "Spain",
+                   "Sweden",
+                   "Switzerland",
+                   "Ukraine",
+                   "United Kingdom")
 
 countries_abbrv <- c("ES",
                      "DE",
@@ -33,11 +52,11 @@ read_csv2("svydesign_info_ESS6.csv") %>%
   split(., .$country) ->
   svyinfo
 
-ess_df <-
-  setNames(
-    map(all_countries, ~ recode_missings(import_country(.x, rounds = 6))),
-    all_countries
-  )
+# ess_df <-
+#   setNames(
+#     map(all_countries, ~ recode_missings(import_country(.x, rounds = 6))),
+#     all_countries
+#   )
 
 
 # Same as sqp_cmv but good for programming with. cmv_vars accepts a vector rather than ...

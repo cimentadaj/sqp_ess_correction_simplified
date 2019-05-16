@@ -200,8 +200,7 @@ cmv_vars <- c("imbgeco", "imueclt")
   
   if (!standardized && missing(original_data)) {
     stop("Argument `standardized` was set to `FALSE` but the `original_data` argument was not supplied")
-  }
-  else if (!standardized && !missing(original_data)) {
+  } else if (!standardized && !missing(original_data)) {
     #if standardized==FALSE
     #cmv zur korretur der covarianz?
     stopifnot(is.data.frame(original_data))
@@ -232,17 +231,3 @@ p[upper.tri(p)] <- p[upper.tri(p)] - cmv # adjust the upper.tri
 x[x_row_low, x_col_low] <- p # replace in the original data.frame
 
 x
-
-
-
-
-
-
-
-
-
-
-
-
-
-
