@@ -688,7 +688,7 @@ server <- function(input, output, session) {
     print(filtered_sqp)
     
     # Replace diagonal by multiplying it with the quality of each variable
-    diag(corrected_cov) <- diag(corrected_cov) * filtered_sqp$quality
+    diag(corrected_cor) <- diag(corrected_cor) * filtered_sqp$quality
     
     # subtract the cmv from the observed correlation
     # Calculate the common method variance of some variables
@@ -705,7 +705,7 @@ server <- function(input, output, session) {
       corrected_cor <-
         cov2cor(
           as.matrix(
-            sqp_cmv_str(x = corrected_cov,
+            sqp_cmv_str(x = corrected_cor,
                         sqp_data = filtered_sqp,
                         cmv_vars = input$cmv_ch)[-1]
           )
@@ -732,7 +732,7 @@ server <- function(input, output, session) {
   # Final table
   output$model_table <-
     reactive({
-      models_coef()$original_cov %>%
+      models_coef()$original_cor %>%
         as.data.frame() %>% 
         tibble::rownames_to_column() %>% 
         as_tibble() %>% 
@@ -744,7 +744,7 @@ server <- function(input, output, session) {
   # Final plot
   output$model_plot <-
     renderPlot({
-        models_coef()$original_cov %>%
+        models_coef()$original_cor %>%
         corrr::as_cordf() %>% 
         corrr::network_plot()
     })
