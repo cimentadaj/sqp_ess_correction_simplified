@@ -49,6 +49,7 @@ options(shiny.sanitize.errors = TRUE,
 valid_email_error <- tags$span(style="color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
 minimum_var_error <- tags$span(style="color:red; font-size: 15px;", "Please select at least two variables for modeling.")
 minimum_iv_error <- tags$span(style="color:red; font-size: 15px;", "Please select at least one independent variable.")
+missing_est_error <- tags$span(style="color:red; font-size: 15px;", "Please fill all measurement cells")
 
 color_website <- "#AD1400"
 #####
@@ -171,6 +172,7 @@ ui2 <- tabsetPanel(id = "menu",
                                      column(5, uiOutput("cmv"))),
                             fluidRow(column(3, ""),
                                      column(3, uiOutput('length_vars3')), # three rows just to raise an error
+                                     column(3, uiOutput('missing_est_error')),
                                      column(3, "")),
                             mainPanel(rHandsontableOutput("hot")),
                             ess_button("calc_model", "Create model")
@@ -227,6 +229,10 @@ server <- function(input, output, session) {
     })
     
     is_specific_tab()
+  }
+  
+  is_error <- function(x) {
+    class(x) == "try-error"
   }
   #####
   
@@ -607,9 +613,6 @@ server <- function(input, output, session) {
       output$length_vars3 <- renderUI(p(minimum_iv_error))
     } else {
       output$length_vars3 <- renderUI(p(""))
-      updateTabsetPanel(session,
-                        inputId = "menu",
-                        selected = "cre_model")
     }
   })
   
@@ -666,47 +669,77 @@ server <- function(input, output, session) {
              tolower(short_name) %in% all_variables) %>% # in case some other questions come up
       slice(seq_along(all_variables)) # In case new languages by country come up in the future
   })
-
+  
+  observeEvent(input$calc_model, {
+    
+    if (is.null(input$hot)) {
+      
+      sqp_id <- sqp_df() %>% pull(id)
+      res <- try(get_estimates(sqp_id))
+      
+      if (length(sqp_id) != length(all_variables)) {
+        sqp_cols <- c("reliability", "validity", "quality")
+        
+        vars_missing <- setdiff(all_variables, tolower(sqp_df()$short_name))
+        
+        df_to_complete <- 
+          runif(length(vars_missing) * length(sqp_cols)) %>% 
+          matrix(length(vars_missing), ncol = length(sqp_cols)) %>%
+          as.data.frame() %>%
+          set_names(sqp_cols) %>% 
+          mutate(question = vars_missing) %>% 
+          select(question, sqp_cols)
+        
+        # Keep an empty df with same column names to bind later
+        semi_complete_df <<- df_to_complete[0, ]
+        output$hot <- renderRHandsontable(rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE))
+      } else if (!is_error(res) && anyNA(res)) {
+        
+        na_rows <- apply(res, 1, anyNA)
+        semi_complete_df <<- res[!na_rows, ]
+        df_to_complete <- res[na_rows, ]
+        
+        output$hot <- renderRHandsontable(rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE))
+      }
+    } else if (anyNA(hot_to_r(input$hot))) {
+      output$missing_est_error <- renderUI(p(missing_est_error))
+    } else {
+      output$missing_est_error <- renderUI(p(""))
+      updateTabsetPanel(session,
+                        inputId = "menu",
+                        selected = "cre_model")
+    }
+  })
+  
+  observe({
+    print(bind_rows(hot_to_r(req(input$hot)), semi_complete_df))
+  })
+  
   upd_sqpdf <-
     eventReactive(input$calc_model, {
-    
-    sqp_id <- sqp_df() %>% pull(id)
-    
-    if (length(sqp_id) != length(all_variables)) {
-      sqp_cols <- c("reliability", "validity", "quality")
       
-      vars_missing <- setdiff(all_variables, tolower(sqp_df()$short_name))
+      if (!anyNA(hot_to_r(req(input$hot)))) {
       
-      df_to_complete <- 
-        runif(length(vars_missing) * length(sqp_cols)) %>% 
-        matrix(length(vars_missing), ncol = length(sqp_cols)) %>%
-        as.data.frame() %>%
-        set_names(sqp_cols) %>% 
-        mutate(question = vars_missing) %>% 
-        select(question, sqp_cols)
+      sqp_id <- sqp_df() %>% pull(id)
+      sqp_df <- if (is.null(input$hot)) get_estimates(sqp_id) else bind_rows(hot_to_r(input$hot), semi_complete_df)
+
+      # Calculate the quality of sumscore of each name-variables pairs
+      # and then bind them together with the sqp_df. The final output
+      # is the sqp_df with the quality of the N sum scores created.
+      q_sscore <- lapply(seq_along(exists_cleanssnames()), function(index) {
+        iterative_sscore(unname(exists_cleanssnames()[index]),
+                         sscore_list()[[index]],
+                         sqp_df,
+                         var_df())
+      })
       
-      # output$hot <- renderRHandsontable(rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE))
-      # sqp_df <- input$hot_select
-      sqp_df <- df_to_complete
-    } else {
-      sqp_df <- sqp_id() %>% get_estimates()
-    }
-    
-    # Calculate the quality of sumscore of each name-variables pairs
-    # and then bind them together with the sqp_df. The final output
-    # is the sqp_df with the quality of the N sum scores created.
-    q_sscore <- lapply(seq_along(exists_cleanssnames()), function(index) {
-      iterative_sscore(unname(exists_cleanssnames()[index]),
-                       sscore_list()[[index]],
-                       sqp_df,
-                       var_df())
+      # Because q_sscore only returns the new quality of each sum score,
+      # we need to remove the variables that compose the sumscore manually
+      # from the sqp data.
+      bind_rows(filter(sqp_df, !question %in% exists_sscorelist()), q_sscore)
+      }
     })
-    
-    # Because q_sscore only returns the new quality of each sum score,
-    # we need to remove the variables that compose the sumscore manually
-    # from the sqp data.
-    bind_rows(filter(sqp_df, !question %in% exists_sscorelist()), q_sscore)
-  })
+  
   #####
   
   observe({
