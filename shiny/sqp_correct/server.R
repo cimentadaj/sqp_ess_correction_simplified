@@ -1,3 +1,4 @@
+##### PKGS AND SETTING OPTIONS #####
 library(shiny)
 library(shinycssloaders)
 library(knitr)
@@ -50,8 +51,9 @@ minimum_var_error <- tags$span(style="color:red; font-size: 15px;", "Please sele
 minimum_iv_error <- tags$span(style="color:red; font-size: 15px;", "Please select at least one independent variable.")
 
 color_website <- "#AD1400"
+#####
 
-# Main wrapper of the page that contains the red banner on top
+##### MAIN WRAPPER FOR THE PAGE WITH RED BANNER #####
 main_page <- function(...) {
   div(id = "fluidp",
       fluidPage(
@@ -74,8 +76,9 @@ main_page <- function(...) {
                  ))
   )
 }
+#####
 
-# First tab for logging in
+##### UI TAB TO LOG IN #####
 ui1 <- tagList(
   div(id = "login",
       textInput("essemail", "Registered ESS email"),
@@ -104,8 +107,9 @@ ess_button <- function(id, label, color = color_website) {
                               border-color:", color))
 }
 
+#####
 
-# Second tab for defining model and selecting vars/countries
+##### UI for all tabs #####
 ui2 <- tabsetPanel(id = "menu",
                    tabPanel("Select country and model", value = "country_n_vars",
                             br(),
@@ -167,17 +171,7 @@ ui2 <- tabsetPanel(id = "menu",
                             fluidRow(column(3, ""),
                                      column(3, uiOutput('length_iv')), # three rows just to raise an error
                                      column(3, "")),
-                            fluidRow(
-                              mainPanel(
-                                div(id = 'placeholder2'),
-                                tags$script("
-                                          Shiny.addCustomMessageHandler('resetValue', function(variableName) {
-                                          Shiny.onInputChange(variableName, null);
-                                          });"
-                                ),
-                                width = 12
-                              )
-                            ),
+                            mainPanel(rHandsontableOutput("hot")),
                             ess_button("calc_model", "Create model")
                    ),
                    tabPanel("Create model", value = "cre_model",
@@ -193,7 +187,9 @@ ui2 <- tabsetPanel(id = "menu",
                             )
                    )
 )
+#####
 
+##### HELPER FUNS #####
 # For checking when the ess email is valid or not
 is_error <- function(x) {
   if (is(try(x, silent = TRUE), "try-error")) {
@@ -216,6 +212,8 @@ iterative_sscore <- function(x, y, sqp_df, data_df) {
 pick_list <- function(exclude, the_list) {
   the_list[!names(the_list) %in% exclude]
 }
+
+#####
 
 
 server <- function(input, output, session) {
@@ -627,42 +625,39 @@ server <- function(input, output, session) {
       find_questions(all_variables)
   })
 
-  sqp_id <- eventReactive(input$calc_model, {
+  sqp_df <- eventReactive(input$calc_model, {
     if (is.null(input$slid_cnt)) return(character())
     
     question_ids <-
       all_questions() %>% 
       filter(country_iso == countrycode(input$slid_cnt, origin = "country.name", destination = "iso2c"),
              tolower(short_name) %in% all_variables) %>% # in case some other questions come up
-      slice(seq_along(all_variables)) %>% # In case new languages by country come up in the future
-      pull(id)
+      slice(seq_along(all_variables)) # In case new languages by country come up in the future
   })
   
-  upd_sqpdf <- 
-    eventReactive(input$calc_model, {
-
-    if (length(sqp_id()) == 0) {
+  observeEvent(input$calc_model, {
+    
+    sqp_id <- sqp_df() %>% pull(id)
+    
+    if (length(sqp_id) != length(all_variables)) {
       sqp_cols <- c("reliability", "validity", "quality")
       
+      vars_missing <- setdiff(all_variables, tolower(sqp_df()$short_name))
       
-      empty_df <- 
-        runif(length(all_variables) * length(sqp_cols)) %>% 
-        matrix(length(all_variables), ncol = length(sqp_cols)) %>%
+      df_to_complete <- 
+        NA_real_ %>% 
+        matrix(length(vars_missing), ncol = length(sqp_cols)) %>%
         as.data.frame() %>%
         set_names(sqp_cols) %>% 
-        mutate(question = all_variables) %>% 
+        mutate(question = vars_missing) %>% 
         select(question, sqp_cols)
       
-      sqp_df <- empty_df
-      # output$hot <- renderRHandsontable(empty_df)
-      # sqp_estimates_html <- rHandsontableOutput("hot")
-
-      # Interactively add a sumscore to the UI
-      # insertUI(selector = '#placeholder2', ui = sqp_estimates_html)
+      output$hot <- renderRHandsontable(rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE))
+      sqp_df <- input$hot_select
     } else {
       sqp_df <- sqp_id() %>% get_estimates()
     }
-      
+    
     # Calculate the quality of sumscore of each name-variables pairs
     # and then bind them together with the sqp_df. The final output
     # is the sqp_df with the quality of the N sum scores created.
@@ -676,7 +671,7 @@ server <- function(input, output, session) {
     # Because q_sscore only returns the new quality of each sum score,
     # we need to remove the variables that compose the sumscore manually
     # from the sqp data.
-    bind_rows(filter(sqp_df, !question %in% exists_sscorelist()), q_sscore)
+    upd_sqpdf <- bind_rows(filter(sqp_df, !question %in% exists_sscorelist()), q_sscore)
   })
   
   observe({
