@@ -148,7 +148,8 @@ ui2 <- tabsetPanel(id = "menu",
                                      });"
                                        ),
                                        width = 12
-                                     )
+                                     ),
+                                     uiOutput('length_vars2')
                               ),
                               column(3,
                                      sidebarPanel(
@@ -169,7 +170,7 @@ ui2 <- tabsetPanel(id = "menu",
                                      column(3, uiOutput("iv")),
                                      column(5, uiOutput("cmv"))),
                             fluidRow(column(3, ""),
-                                     column(3, uiOutput('length_iv')), # three rows just to raise an error
+                                     column(3, uiOutput('length_vars3')), # three rows just to raise an error
                                      column(3, "")),
                             mainPanel(rHandsontableOutput("hot")),
                             ess_button("calc_model", "Create model")
@@ -311,22 +312,10 @@ server <- function(input, output, session) {
     if (length(input$vars_ch) < 2) {
       output$length_vars <- renderUI(p(minimum_var_error))
     } else {
+      output$length_vars <- renderUI(p(""))
       updateTabsetPanel(session,
                         inputId = "menu",
                         selected = "def_sscore")
-    }
-  })
-  
-  
-  # However, if the user changes the tab manually to def_sscore,
-  # then check that we have the number of variables
-  observeEvent(is_tab("def_sscore"), {
-    # input$df_sscore at the beginning is null, that's why I check that the length
-    # is different from zero.
-    if (length(input$vars_ch) < 2 && (length(input$def_sscore) != 0 && input$def_sscore != 0)) {
-      output$length_vars <- renderUI(p(minimum_var_error))
-    } else {
-      output$length_vars <- renderUI(p(" "))
     }
   })
   
@@ -335,6 +324,21 @@ server <- function(input, output, session) {
   chosen_vars <- reactive({
     gsub(":.*$", "", input$vars_ch)
   })
+  
+  # However, if the user changes the tab manually to def_sscore,
+  # then check that we have the number of variables
+  observeEvent(is_tab("def_sscore"), {
+    # input$df_sscore at the beginning is null, that's why I check that the length
+    # is different from zero.
+    if (length(input$vars_ch) < 2 && (length(input$def_sscore) != 0 && input$def_sscore != 0)) {
+      output$length_vars <- renderUI(p(minimum_var_error))
+      output$length_vars2 <- renderUI(p(minimum_var_error))
+    } else {
+      output$length_vars <- renderUI(p(" "))
+      output$length_vars2 <- renderUI(p(" "))
+    }
+  })
+  
   
   ##### Second tab - define sscore #####
   output$del_sscore <- renderUI({actionButton('del_sscore', 'Delete sum score')})
@@ -444,16 +448,21 @@ server <- function(input, output, session) {
     session$sendCustomMessage(type = "resetValue", message = paste0("sscore", index_names))
   })
   #####
-
-  # When the sumscores are ready, the user clicks
-  # define model and we switch to the define model
-  # tab to select dependent and independent variables
-  observeEvent(input$def_model, {
-    updateTabsetPanel(session,
-                      inputId = "menu",
-                      selected = "def_model")
-  })
   
+  observeEvent(input$def_model, {
+    if (length(input$vars_ch) < 1) {
+      output$length_vars2 <- renderUI(p(minimum_var_error))
+    } else {
+      output$length_vars2 <- renderUI(p(""))
+      # When the sumscores are ready, the user clicks
+      # define model and we switch to the define model
+      # tab to select dependent and independent variables
+        updateTabsetPanel(session,
+                          inputId = "menu",
+                          selected = "def_model")
+    }
+  })
+
   ##### Extract all scores manually after defined #####
   clean_ssnames <-
     eventReactive(input$def_model, {
@@ -555,7 +564,6 @@ server <- function(input, output, session) {
   available_vars <- reactive(setdiff(c(chosen_vars(), exists_cleanssnames()), exists_sscorelist()))
   #####
   
-  
   ##### Third tab - Pick your dv/iv and cmv #####
   # Define the three model parts
   # Pick the dependent variable
@@ -592,44 +600,51 @@ server <- function(input, output, session) {
   
   #####
   
+  # If you still haven't added a independent variable, it doesn't
+  # allow you to pass to the create model tab.
   observeEvent(input$calc_model, {
     if (length(input$iv_ch) < 1) {
-      output$length_iv <- renderUI(p(minimum_iv_error))
+      output$length_vars3 <- renderUI(p(minimum_iv_error))
     } else {
+      output$length_vars3 <- renderUI(p(""))
       updateTabsetPanel(session,
                         inputId = "menu",
                         selected = "cre_model")
     }
   })
   
+  
   ##### Download ESS data #####
   # Download data and create sumscores.
   # This is possible because we already have them
   # form the previous steps.
-  var_df <-
+  upd_ess <-
     eventReactive(input$def_model, {
       # Choose country when user calculates model
       downloaded_rnd <- import_country(input$slid_cnt, as.numeric(input$slid_rounds))
       tmp_vars_weights <- c(all_variables, "pspwght")
       upd_ess <- recode_missings(downloaded_rnd[tmp_vars_weights]) %>% filter(complete.cases(.))
-      
-      # If no sscore was defined, return the same df the above
-      if (input$ins_sscore == 0) return(upd_ess)
-      
-      # We need to add new sscores to the origin df.
-      # Calculate them here
-      sscore <-
-        lapply(sscore_list(), function(x) {
-          rowSums(upd_ess[x], na.rm = TRUE)
-        })
-      
-      bind_cols(upd_ess, as.data.frame(sscore, col.names = exists_cleanssnames()))
+      upd_ess
     })
+  
+  var_df <- reactive({
+    # If no sscore was defined, return the same df the above
+    if (input$ins_sscore == 0) return(upd_ess())
+    
+    # We need to add new sscores to the origin df.
+    # Calculate them here
+    sscore <-
+      lapply(sscore_list(), function(x) {
+        rowSums(upd_ess()[x], na.rm = TRUE)
+      })
+    
+    bind_cols(upd_ess(), as.data.frame(sscore, col.names = exists_cleanssnames()))
+  })
   
   #####
   
   observe({
-    print(head(var_df()))
+    # print(head(var_df()))
   })
   
   observe({
@@ -638,25 +653,22 @@ server <- function(input, output, session) {
   })
   
   ##### Download SQP data #####
-  # Define SQP data
-  all_questions <- reactive({
+  
+  # Download the question ids from the SQP API.
+  sqp_df <- reactive({
+    if (is.null(input$slid_cnt)) return(character())
+    
     paste0("ESS Round ", input$slid_rounds) %>% 
       find_studies() %>% 
       .[['id']] %>% 
-      find_questions(all_variables)
-  })
-
-  sqp_df <- eventReactive(input$calc_model, {
-    if (is.null(input$slid_cnt)) return(character())
-    
-    question_ids <-
-      all_questions() %>% 
+      find_questions(all_variables) %>% 
       filter(country_iso == countrycode(input$slid_cnt, origin = "country.name", destination = "iso2c"),
              tolower(short_name) %in% all_variables) %>% # in case some other questions come up
       slice(seq_along(all_variables)) # In case new languages by country come up in the future
   })
-  
-  observeEvent(input$calc_model, {
+
+  upd_sqpdf <-
+    eventReactive(input$calc_model, {
     
     sqp_id <- sqp_df() %>% pull(id)
     
@@ -666,15 +678,16 @@ server <- function(input, output, session) {
       vars_missing <- setdiff(all_variables, tolower(sqp_df()$short_name))
       
       df_to_complete <- 
-        NA_real_ %>% 
+        runif(length(vars_missing) * length(sqp_cols)) %>% 
         matrix(length(vars_missing), ncol = length(sqp_cols)) %>%
         as.data.frame() %>%
         set_names(sqp_cols) %>% 
         mutate(question = vars_missing) %>% 
         select(question, sqp_cols)
       
-      output$hot <- renderRHandsontable(rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE))
-      sqp_df <- input$hot_select
+      # output$hot <- renderRHandsontable(rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE))
+      # sqp_df <- input$hot_select
+      sqp_df <- df_to_complete
     } else {
       sqp_df <- sqp_id() %>% get_estimates()
     }
@@ -692,7 +705,7 @@ server <- function(input, output, session) {
     # Because q_sscore only returns the new quality of each sum score,
     # we need to remove the variables that compose the sumscore manually
     # from the sqp data.
-    upd_sqpdf <- bind_rows(filter(sqp_df, !question %in% exists_sscorelist()), q_sscore)
+    bind_rows(filter(sqp_df, !question %in% exists_sscorelist()), q_sscore)
   })
   #####
   
@@ -759,19 +772,6 @@ server <- function(input, output, session) {
          corrected_cor = corrected_cor)
   })
   #####
-  
-  # If you still haven't added a independent variable, it doesn't
-  # allow you to pass to the create model tab.
-  observeEvent(input$calc_model, {
-    if (length(input$iv_ch) < 1) {
-      output$length_iv <- renderUI(p(minimum_iv_error))
-    } else {
-      output$length_iv <- renderUI(p(""))
-      updateTabsetPanel(session,
-                        inputId = "menu",
-                        selected = "cre_model")
-    }
-  })
   
   ##### Prepare final table/plots #####
   # Final table
