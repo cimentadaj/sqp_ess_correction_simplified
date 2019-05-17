@@ -50,6 +50,7 @@ valid_email_error <- tags$span(style="color:red; font-size: 15px;", "Invalid ema
 minimum_var_error <- tags$span(style="color:red; font-size: 15px;", "Please select at least two variables for modeling.")
 minimum_iv_error <- tags$span(style="color:red; font-size: 15px;", "Please select at least one independent variable.")
 missing_est_error <- tags$span(style="color:red; font-size: 15px;", "Please fill all measurement cells")
+vals_probs_error <- tags$span(style="color:red; font-size: 15px;", "All manually imputed cells should be between 0 and 1")
 
 color_website <- "#AD1400"
 #####
@@ -199,6 +200,10 @@ is_error <- function(x) {
     return(TRUE)
   }
   FALSE
+}
+
+between_0_1 <- function(df) {
+  keep(df, is.numeric) %>% reduce(`c`) %>% between(0, 1) %>% all()
 }
 
 # For calculating sscore of quality scores and only returnig the row of
@@ -683,7 +688,7 @@ server <- function(input, output, session) {
         vars_missing <- setdiff(all_variables, tolower(sqp_df()$short_name))
         
         df_to_complete <- 
-          runif(length(vars_missing) * length(sqp_cols)) %>% 
+          rnorm(length(vars_missing) * length(sqp_cols)) %>% 
           matrix(length(vars_missing), ncol = length(sqp_cols)) %>%
           as.data.frame() %>%
           set_names(sqp_cols) %>% 
@@ -701,8 +706,16 @@ server <- function(input, output, session) {
         
         output$hot <- renderRHandsontable(rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE))
       }
+      
+      
     } else if (anyNA(hot_to_r(input$hot))) {
+      
       output$missing_est_error <- renderUI(p(missing_est_error))
+      
+    } else if (!between_0_1(hot_to_r(input$hot))) {
+      
+      output$missing_est_error <- renderUI(p(vals_probs_error))
+      
     } else {
       output$missing_est_error <- renderUI(p(""))
       updateTabsetPanel(session,
