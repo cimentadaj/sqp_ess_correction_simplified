@@ -178,17 +178,8 @@ ui2 <- tabsetPanel(id = "menu",
                             mainPanel(rHandsontableOutput("hot")),
                             ess_button("calc_model", "Create model")
                    ),
-                   tabPanel("Create model", value = "cre_model",
-                            tabsetPanel(
-                              tabPanel("Plot of results",
-                                       withSpinner(tagList(plotOutput("model_plot")),
-                                                   color = color_website)
-                              ),
-                              tabPanel("Table of results",
-                                       withSpinner(tagList(tableOutput("model_table")),
-                                                   color = color_website)
-                              )
-                            )
+                   tabPanel("Create the model", value = "cre_model",
+                            uiOutput("cre_model")
                    )
 )
 #####
@@ -203,7 +194,8 @@ is_error <- function(x) {
 }
 
 between_0_1 <- function(df) {
-  keep(df, is.numeric) %>% reduce(`c`) %>% between(0, 1) %>% all()
+  res <- keep(df, is.numeric) %>% reduce(`c`)
+  all(between(res, 0, 1) & !is.na(res))
 }
 
 # For calculating sscore of quality scores and only returnig the row of
@@ -465,6 +457,14 @@ server <- function(input, output, session) {
       output$length_vars2 <- renderUI(p(minimum_var_error))
     } else {
       output$length_vars2 <- renderUI(p(""))
+      
+      # Because each user can go back to choose a new country/round
+      # whenever the user clicks to define the model, the
+      # hot table is thus resetted so that new values
+      # can be added for these new country/rounds/variables
+      session$sendCustomMessage(type = "resetValue", message = "hot")
+      
+
       # When the sumscores are ready, the user clicks
       # define model and we switch to the define model
       # tab to select dependent and independent variables
@@ -611,17 +611,6 @@ server <- function(input, output, session) {
   
   #####
   
-  # If you still haven't added a independent variable, it doesn't
-  # allow you to pass to the create model tab.
-  observeEvent(input$calc_model, {
-    if (length(input$iv_ch) < 1) {
-      output$length_vars3 <- renderUI(p(minimum_iv_error))
-    } else {
-      output$length_vars3 <- renderUI(p(""))
-    }
-  })
-  
-  
   ##### Download ESS data #####
   # Download data and create sumscores.
   # This is possible because we already have them
@@ -658,6 +647,8 @@ server <- function(input, output, session) {
   observe({
     print(exists_cleanssnames())
     print(sscore_list())
+    print("Value of input$hot is")
+    print(req(input$hot))
   })
   
   ##### Download SQP data #####
@@ -675,52 +666,76 @@ server <- function(input, output, session) {
       slice(seq_along(all_variables)) # In case new languages by country come up in the future
   })
   
+  # If you still haven't added a independent variable, it doesn't
+  # allow you to pass to the create model tab.
   observeEvent(input$calc_model, {
-    
-    if (is.null(input$hot)) {
+    if (length(input$iv_ch) < 1) {
       
-      sqp_id <- sqp_df() %>% pull(id)
-      res <- try(get_estimates(sqp_id))
-      
-      if (length(sqp_id) != length(all_variables)) {
-        sqp_cols <- c("reliability", "validity", "quality")
-        
-        vars_missing <- setdiff(all_variables, tolower(sqp_df()$short_name))
-        
-        df_to_complete <- 
-          rnorm(length(vars_missing) * length(sqp_cols)) %>% 
-          matrix(length(vars_missing), ncol = length(sqp_cols)) %>%
-          as.data.frame() %>%
-          set_names(sqp_cols) %>% 
-          mutate(question = vars_missing) %>% 
-          select(question, sqp_cols)
-        
-        # Keep an empty df with same column names to bind later
-        semi_complete_df <<- df_to_complete[0, ]
-        output$hot <- renderRHandsontable(rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE))
-      } else if (!is_error(res) && anyNA(res)) {
-        
-        na_rows <- apply(res, 1, anyNA)
-        semi_complete_df <<- res[!na_rows, ]
-        df_to_complete <- res[na_rows, ]
-        
-        output$hot <- renderRHandsontable(rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE))
-      }
-      
-      
-    } else if (anyNA(hot_to_r(input$hot))) {
-      
-      output$missing_est_error <- renderUI(p(missing_est_error))
-      
-    } else if (!between_0_1(hot_to_r(input$hot))) {
-      
-      output$missing_est_error <- renderUI(p(vals_probs_error))
+      output$length_vars3 <- renderUI(p(minimum_iv_error))
       
     } else {
-      output$missing_est_error <- renderUI(p(""))
-      updateTabsetPanel(session,
-                        inputId = "menu",
-                        selected = "cre_model")
+      
+      output$length_vars3 <- renderUI(p(""))
+      
+      if (is.null(input$hot)) {
+        
+        sqp_id <- sqp_df() %>% pull(id)
+        res <- try(get_estimates(sqp_id))
+        
+        if (length(sqp_id) != length(all_variables)) {
+          sqp_cols <- c("reliability", "validity", "quality")
+          
+          vars_missing <- setdiff(all_variables, tolower(sqp_df()$short_name))
+          
+          df_to_complete <- 
+            NA_real_ %>% 
+            matrix(length(vars_missing), ncol = length(sqp_cols)) %>%
+            as.data.frame() %>%
+            set_names(sqp_cols) %>% 
+            mutate(question = vars_missing) %>% 
+            select(question, sqp_cols)
+          
+          # Keep an empty df with same column names to bind later
+          semi_complete_df <<- df_to_complete[0, ]
+          output$hot <- renderRHandsontable(rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE))
+        } else if (!is_error(res) && anyNA(res)) {
+          
+          na_rows <- apply(res, 1, anyNA)
+          semi_complete_df <<- res[!na_rows, ]
+          df_to_complete <- res[na_rows, ]
+          
+          output$hot <- renderRHandsontable(rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE))
+        }
+        
+        
+      } else if (anyNA(hot_to_r(input$hot))) {
+        
+        output$missing_est_error <- renderUI(p(missing_est_error))
+        
+      } else if (!between_0_1(hot_to_r(input$hot))) {
+        
+        output$missing_est_error <- renderUI(p(vals_probs_error))
+        
+      } else {
+        output$missing_est_error <- renderUI(p(""))
+        
+        output$cre_model <- 
+          renderUI(tabsetPanel(
+            tabPanel("Plot of results",
+                     withSpinner(tagList(plotOutput("model_plot")),
+                                 color = color_website)
+            ),
+            tabPanel("Table of results",
+                     withSpinner(tagList(tableOutput("model_table")),
+                                 color = color_website)
+            )
+          )
+          )
+        
+        updateTabsetPanel(session,
+                          inputId = "menu",
+                          selected = "cre_model")
+      }
     }
   })
   
