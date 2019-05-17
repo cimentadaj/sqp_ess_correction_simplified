@@ -218,7 +218,18 @@ pick_list <- function(exclude, the_list) {
 
 server <- function(input, output, session) {
   
-  ### Loging in ####
+  ##### Helper functions #####
+  # Checks whether you are in `tab`
+  is_tab <- function(tab) {
+    is_specific_tab <- reactive({
+      if (is.null(input$menu) || input$menu != tab) FALSE else TRUE
+    })
+    
+    is_specific_tab()
+  }
+  #####
+  
+  ##### Logging in #####
   # Record whether user logged in
   USER <- reactiveValues(Logged = FALSE)
   
@@ -260,8 +271,9 @@ server <- function(input, output, session) {
       })
     }
   })
-  # output$page <- renderUI({div(main_page(ui2))})
-  
+  #####
+
+  ##### First tab - choosing vars, rounds, cnts #####
   output$chosen_vars <-
     renderUI({
       checkboxGroupInput(
@@ -288,18 +300,13 @@ server <- function(input, output, session) {
       choices = var_n_labels)
   })
   
-  # Checks whether you are in `tab`
-  is_tab <- function(tab) {
-    is_specific_tab <- reactive({
-      if (is.null(input$menu) || input$menu != tab) FALSE else TRUE
-    })
-    
-    is_specific_tab()
-  }
+  #####
   
-  # This is a turning point. We want to ensure that there
+  # This is a turning point. If the user clicks to define
+  # sumscores, we want to be sure that there
   # are at least two variables chosen for the modeling.
-  # If they are, we jumpt to sscore tabs.
+  # If they are, we jumpt to sscore tabs. Otherwise,
+  # raise a error in the UI.
   observeEvent(input$def_sscore, {
     if (length(input$vars_ch) < 2) {
       output$length_vars <- renderUI(p(minimum_var_error))
@@ -311,8 +318,8 @@ server <- function(input, output, session) {
   })
   
   
-  # But if the user changes the tab manually, then check that we have the number
-  # of variables
+  # However, if the user changes the tab manually to def_sscore,
+  # then check that we have the number of variables
   observeEvent(is_tab("def_sscore"), {
     # input$df_sscore at the beginning is null, that's why I check that the length
     # is different from zero.
@@ -323,11 +330,13 @@ server <- function(input, output, session) {
     }
   })
   
-  # Remove labels from the chosen variables
+  # At this point, the user must've chosen some variabes so 
+  # we remove the labels labels from the chosen variables
   chosen_vars <- reactive({
     gsub(":.*$", "", input$vars_ch)
   })
   
+  ##### Second tab - define sscore #####
   output$del_sscore <- renderUI({actionButton('del_sscore', 'Delete sum score')})
   
   # And create a list of those names to delete
@@ -335,10 +344,13 @@ server <- function(input, output, session) {
                                               label = "If you'd like to delete a sum score you've created, which one?",
                                               choices = possible_ssnames())})
   
+  # If the user clicks on insert sscore, then the chunk below manually
+  # adds as many sscores as clicks.
   observeEvent(input$ins_sscore, {
     if (input$ins_sscore == 0) return(character())
     
-    # so that the user knows he/she can click there to add more sum scores after the first one
+    # If clicked once, update the button label so that the user knows he/she can
+    # click there to add more sum scores after the first one
     if (input$ins_sscore == 1)  {
       updateActionButton(session, 'ins_sscore', 'Create another sum score') 
     }
@@ -431,7 +443,8 @@ server <- function(input, output, session) {
     # of ssname which is, for example, 1. We just have to delete sscore1
     session$sendCustomMessage(type = "resetValue", message = paste0("sscore", index_names))
   })
-  
+  #####
+
   # When the sumscores are ready, the user clicks
   # define model and we switch to the define model
   # tab to select dependent and independent variables
@@ -441,6 +454,7 @@ server <- function(input, output, session) {
                       selected = "def_model")
   })
   
+  ##### Extract all scores manually after defined #####
   clean_ssnames <-
     eventReactive(input$def_model, {
       if (input$ins_sscore == 0) return(character())
@@ -539,7 +553,10 @@ server <- function(input, output, session) {
   # Define the reactive number of variables available. This will change a lot when
   # choosing/unchoosing sumscore variables and dv and iv's, so we save it on it's own.
   available_vars <- reactive(setdiff(c(chosen_vars(), exists_cleanssnames()), exists_sscorelist()))
+  #####
   
+  
+  ##### Third tab - Pick your dv/iv and cmv #####
   # Define the three model parts
   # Pick the dependent variable
   output$dv <-
@@ -573,6 +590,8 @@ server <- function(input, output, session) {
                          selected = preserve_order("cmv_ch")) # function to preserver order if some were chosen before
     )
   
+  #####
+  
   observeEvent(input$calc_model, {
     if (length(input$iv_ch) < 1) {
       output$length_iv <- renderUI(p(minimum_iv_error))
@@ -583,10 +602,10 @@ server <- function(input, output, session) {
     }
   })
   
-  # This is the ess data w/ only the selected variables
-  
-  observe({print(input$slid_cnt); print(input$slid_rounds)})
-  
+  ##### Download ESS data #####
+  # Download data and create sumscores.
+  # This is possible because we already have them
+  # form the previous steps.
   var_df <-
     eventReactive(input$def_model, {
       # Choose country when user calculates model
@@ -607,16 +626,18 @@ server <- function(input, output, session) {
       bind_cols(upd_ess, as.data.frame(sscore, col.names = exists_cleanssnames()))
     })
   
-  # observe({
-  #   print(head(var_df()))
-  #   print(dim(var_df()))
-  # })
+  #####
+  
+  observe({
+    print(head(var_df()))
+  })
   
   observe({
     print(exists_cleanssnames())
     print(sscore_list())
   })
   
+  ##### Download SQP data #####
   # Define SQP data
   all_questions <- reactive({
     paste0("ESS Round ", input$slid_rounds) %>% 
@@ -673,17 +694,15 @@ server <- function(input, output, session) {
     # from the sqp data.
     upd_sqpdf <- bind_rows(filter(sqp_df, !question %in% exists_sscorelist()), q_sscore)
   })
+  #####
   
   observe({
     print("This is sqp_df")
     # print(sqp_df())
   })
   
-  observe({
-    print(head(var_df()))
-  })
-  
-  ### Calculations begin ####
+
+  ##### Define cor and cov with weights/adjustments measurement erro #####
   models_coef <- eventReactive(input$calc_model, {
     
     ch_vars <- c(input$dv_ch, input$iv_ch)
@@ -739,7 +758,10 @@ server <- function(input, output, session) {
          # corrected_cov = corrected_cov,
          corrected_cor = corrected_cor)
   })
+  #####
   
+  # If you still haven't added a independent variable, it doesn't
+  # allow you to pass to the create model tab.
   observeEvent(input$calc_model, {
     if (length(input$iv_ch) < 1) {
       output$length_iv <- renderUI(p(minimum_iv_error))
@@ -751,6 +773,7 @@ server <- function(input, output, session) {
     }
   })
   
+  ##### Prepare final table/plots #####
   # Final table
   output$model_table <-
     reactive({
@@ -770,4 +793,5 @@ server <- function(input, output, session) {
         corrr::as_cordf() %>% 
         corrr::network_plot()
     })
+  #####
 }
