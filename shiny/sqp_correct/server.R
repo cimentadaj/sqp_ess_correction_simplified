@@ -7,6 +7,7 @@ library(ggplot2)
 library(lavaan)
 library(sqpr)
 library(countrycode)
+library(rhandsontable)
 library(jtools)
 library(dplyr)
 
@@ -15,20 +16,20 @@ all_variables <-
     "ppltrst",
     "stfeco",
     "stfedu")
-    # "stfhlth",
-    # "stflife", 
-    # "trstplt",
-    # "trstprl")
+# "stfhlth",
+# "stflife", 
+# "trstplt",
+# "trstprl")
 
 all_variables_label <- 
   c("How interested in politics",
     "Most people can be trusted or you can't be too careful",
     "How satisfied with present state of economy in country",
     "State of education in country nowadays")
-    # "State of health services in country nowadays",
-    # "How satisfied with life as a whole", 
-    # "Trust in politicians",
-    # "Trust in country's parliament")
+# "State of health services in country nowadays",
+# "How satisfied with life as a whole", 
+# "Trust in politicians",
+# "Trust in country's parliament")
 
 # Variables pasted together with labels
 var_n_labels <- paste0(all_variables, ": ", all_variables_label)
@@ -166,6 +167,17 @@ ui2 <- tabsetPanel(id = "menu",
                             fluidRow(column(3, ""),
                                      column(3, uiOutput('length_iv')), # three rows just to raise an error
                                      column(3, "")),
+                            fluidRow(
+                              mainPanel(
+                                div(id = 'placeholder2'),
+                                tags$script("
+                                          Shiny.addCustomMessageHandler('resetValue', function(variableName) {
+                                          Shiny.onInputChange(variableName, null);
+                                          });"
+                                ),
+                                width = 12
+                              )
+                            ),
                             ess_button("calc_model", "Create model")
                    ),
                    tabPanel("Create model", value = "cre_model",
@@ -211,7 +223,7 @@ server <- function(input, output, session) {
   ### Loging in ####
   # Record whether user logged in
   USER <- reactiveValues(Logged = FALSE)
-
+  
   # Update the login state if email is valid
   observe({
     if (USER$Logged == FALSE) {
@@ -221,7 +233,7 @@ server <- function(input, output, session) {
           # Password <- isolate(input$passwd)
           # Id.username <- which(my_username == Username)
           # Id.password <- which(my_password == Password)
-
+          
           # I was using essurvey:::authenticate here but because the .global_vars
           # are not in the .Globalenv, the handle of the website was not shared
           # across requests. I have input the website variables manually
@@ -235,7 +247,7 @@ server <- function(input, output, session) {
       }
     }
   })
-
+  
   # Change UI based on whether the user is logged in or not.
   observe({
     if (USER$Logged == FALSE) {
@@ -243,7 +255,7 @@ server <- function(input, output, session) {
         main_page(ui1)
       })
     }
-
+    
     if (USER$Logged == TRUE) {
       output$page <- renderUI({
         div(main_page(ui2))
@@ -277,7 +289,7 @@ server <- function(input, output, session) {
       var_n_labels,
       choices = var_n_labels)
   })
-
+  
   # Checks whether you are in `tab`
   is_tab <- function(tab) {
     is_specific_tab <- reactive({
@@ -312,16 +324,11 @@ server <- function(input, output, session) {
       output$length_vars <- renderUI(p(" "))
     }
   })
-
+  
   # Remove labels from the chosen variables
   chosen_vars <- reactive({
     gsub(":.*$", "", input$vars_ch)
   })
-  
-  # Because the ess_df (ESS data) must be fresh to all users
-  # we call it from `globals.R` in order for it to be available
-  # through out sessions. All countries are downloaded when
-  # the app is launched.
   
   output$del_sscore <- renderUI({actionButton('del_sscore', 'Delete sum score')})
   
@@ -583,9 +590,8 @@ server <- function(input, output, session) {
   observe({print(input$slid_cnt); print(input$slid_rounds)})
   
   var_df <-
-    eventReactive(input$calc_model, {
+    eventReactive(input$def_model, {
       # Choose country when user calculates model
-      # upd_ess <- ess_df[[input$slid_cnt]]
       downloaded_rnd <- import_country(input$slid_cnt, as.numeric(input$slid_rounds))
       tmp_vars_weights <- c(all_variables, "pspwght")
       upd_ess <- recode_missings(downloaded_rnd[tmp_vars_weights]) %>% filter(complete.cases(.))
@@ -620,8 +626,8 @@ server <- function(input, output, session) {
       .[['id']] %>% 
       find_questions(all_variables)
   })
-  
-  sqp_df <- eventReactive(input$calc_model, {
+
+  sqp_id <- eventReactive(input$calc_model, {
     if (is.null(input$slid_cnt)) return(character())
     
     question_ids <-
@@ -630,32 +636,53 @@ server <- function(input, output, session) {
              tolower(short_name) %in% all_variables) %>% # in case some other questions come up
       slice(seq_along(all_variables)) %>% # In case new languages by country come up in the future
       pull(id)
+  })
+  
+  upd_sqpdf <- 
+    eventReactive(input$calc_model, {
+
+    if (length(sqp_id()) == 0) {
+      sqp_cols <- c("reliability", "validity", "quality")
+      
+      
+      empty_df <- 
+        runif(length(all_variables) * length(sqp_cols)) %>% 
+        matrix(length(all_variables), ncol = length(sqp_cols)) %>%
+        as.data.frame() %>%
+        set_names(sqp_cols) %>% 
+        mutate(question = all_variables) %>% 
+        select(question, sqp_cols)
+      
+      sqp_df <- empty_df
+      # output$hot <- renderRHandsontable(empty_df)
+      # sqp_estimates_html <- rHandsontableOutput("hot")
+
+      # Interactively add a sumscore to the UI
+      # insertUI(selector = '#placeholder2', ui = sqp_estimates_html)
+    } else {
+      sqp_df <- sqp_id() %>% get_estimates()
+    }
+      
+    # Calculate the quality of sumscore of each name-variables pairs
+    # and then bind them together with the sqp_df. The final output
+    # is the sqp_df with the quality of the N sum scores created.
+    q_sscore <- lapply(seq_along(exists_cleanssnames()), function(index) {
+      iterative_sscore(unname(exists_cleanssnames()[index]),
+                       sscore_list()[[index]],
+                       sqp_df,
+                       var_df())
+    })
     
-    get_estimates(question_ids)
+    # Because q_sscore only returns the new quality of each sum score,
+    # we need to remove the variables that compose the sumscore manually
+    # from the sqp data.
+    bind_rows(filter(sqp_df, !question %in% exists_sscorelist()), q_sscore)
   })
   
   observe({
     print("This is sqp_df")
     # print(sqp_df())
   })
-
-  upd_sqpdf <-
-    eventReactive(input$calc_model, {
-      # Calculate the quality of sumscore of each name-variables pairs
-      # and then bind them together with the sqp_df. The final output
-      # is the sqp_df with the quality of the N sum scores created.
-      q_sscore <- lapply(seq_along(exists_cleanssnames()), function(index) {
-        iterative_sscore(unname(exists_cleanssnames()[index]),
-                         sscore_list()[[index]],
-                         sqp_df(),
-                         var_df())
-      })
-      
-      # Because q_sscore only returns the new quality of each sum score,
-      # we need to remove the variables that compose the sumscore manually
-      # from the sqp data.
-      bind_rows(filter(sqp_df(), !question %in% exists_sscorelist()), q_sscore)
-    })
   
   observe({
     print(head(var_df()))
@@ -675,8 +702,8 @@ server <- function(input, output, session) {
     # Weighted correlation and covariance
     corrected_cor <- cor_cov$cor
     corrected_cov <- cor_cov$cov
-
-
+    
+    
     # Subset chosen variables in sqp_df and
     # create quality estimate for the
     filtered_sqp <- upd_sqpdf()[upd_sqpdf()[[1]] %in% ch_vars, ]
@@ -744,7 +771,7 @@ server <- function(input, output, session) {
   # Final plot
   output$model_plot <-
     renderPlot({
-        models_coef()$original_cor %>%
+      models_coef()$original_cor %>%
         corrr::as_cordf() %>% 
         corrr::network_plot()
     })
