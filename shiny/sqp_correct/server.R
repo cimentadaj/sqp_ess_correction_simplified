@@ -310,7 +310,7 @@ server <- function(input, output, session) {
     renderUI({
       selectInput("slid_rounds",
                   "Pick a round",
-                  choices = reduce(map(input$slid_cnt, show_country_rounds), intersect))
+                  choices = reduce(map(input$slid_cnt, show_country_rounds), intersect, .init = 1))
     })
   #####
   
@@ -673,6 +673,8 @@ server <- function(input, output, session) {
       find_studies() %>% 
       .[['id']] %>% 
       find_questions(chosen_vars()) %>% 
+      mutate(country_q = countrycode(country_iso, origin = "iso2c", destination = "country.name"),
+             country_q = paste0(country_q, "_", tolower(short_name))) %>% 
       filter(paste0(country_iso, "_", language_iso) %in% country_lang,
              tolower(short_name) %in% chosen_vars()) # in case some other questions come up
   })
@@ -680,6 +682,7 @@ server <- function(input, output, session) {
   # If you still haven't added a independent variable, it doesn't
   # allow you to pass to the create model tab.
   observeEvent(input$calc_model, {
+    
     cnt_df <- sqp_df() %>% transmute(country = countrycode(country_iso, origin = "iso2c", destination = "country.name"))
     sqp_id <- sqp_df() %>% pull(id)
     res <- bind_cols(cnt_df, tryCatch(get_estimates(sqp_id), error = function(e) empty_sqp))
@@ -694,11 +697,13 @@ server <- function(input, output, session) {
       difference_in_vars <- length(sqp_id) != (length(chosen_vars()) * length(input$slid_cnt))
       
       if (is.null(input$hot) && (anyNA(res) || difference_in_vars)) {
+        
         output$hot <- renderRHandsontable({
-
+          
           if (difference_in_vars) {
             sqp_cols <- c("reliability", "validity", "quality")
-            vars_missing <- setdiff(chosen_vars(), tolower(sqp_df()$short_name))
+            country_q <- unlist(map(input$slid_cnt, paste0, "_", chosen_vars()))
+            vars_missing <- setdiff(country_q, sqp_df()$country_q)
             
             df_to_complete <- 
               NA_real_ %>% 
@@ -706,10 +711,11 @@ server <- function(input, output, session) {
               as.data.frame() %>%
               set_names(sqp_cols) %>% 
               mutate(question = vars_missing) %>% 
-              select(question, sqp_cols)
+              separate(question, c('country', 'question')) %>% 
+              select(country, question, sqp_cols)
             
-            # Keep an empty df with same column names to bind later
-            semi_complete_df <<- df_to_complete[0, ]
+            # Keep the rest of the df (could be empty) to merge later
+            semi_complete_df <<- res
           } else if (!is_error(res) && anyNA(res)) {
             
             na_rows <- apply(res, 1, anyNA)
@@ -718,9 +724,9 @@ server <- function(input, output, session) {
           }
           
           print(df_to_complete)
-          rhandsontable(df_to_complete, selectCallback = TRUE) %>% 
-            hot_col("question", readOnly = TRUE) %>% 
-            hot_col("country", readOnly = TRUE)
+          rhandsontable(df_to_complete, selectCallback = TRUE)
+            # hot_col("question", readOnly = TRUE) %>% 
+            # hot_col("country", readOnly = TRUE)
         })
         
         output$sqp_table_output <- renderUI(withSpinner(tagList(rHandsontableOutput("hot")), color = color_website))
