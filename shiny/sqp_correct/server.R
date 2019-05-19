@@ -660,19 +660,23 @@ server <- function(input, output, session) {
     if (is.null(input$slid_cnt)) return(character())
     
     main_cnt_lang <- filter(language_iso3, country %in% input$slid_cnt) %>% pull(iso3)
+    country_abbrv <- countrycode(input$slid_cnt, origin = "country.name", destination = "iso2c")
+    country_lang <- paste0(country_abbrv, "_", main_cnt_lang)
     
     paste0("ESS Round ", input$slid_rounds) %>% 
       find_studies() %>% 
       .[['id']] %>% 
       find_questions(chosen_vars()) %>% 
-      filter(country_iso %in% countrycode(input$slid_cnt, origin = "country.name", destination = "iso2c"),
-             tolower(short_name) %in% chosen_vars(),
-             language_iso %in% main_cnt_lang) # in case some other questions come up
+      filter(paste0(country_iso, "_", language_iso) %in% country_lang,
+             tolower(short_name) %in% chosen_vars()) # in case some other questions come up
   })
   
   # If you still haven't added a independent variable, it doesn't
   # allow you to pass to the create model tab.
   observeEvent(input$calc_model, {
+    cnt_df <- sqp_df() %>% transmute(country = countrycode(country_iso, origin = "iso2c", destination = "country.name"))
+    sqp_id <- sqp_df() %>% pull(id)
+    
     if (length(input$iv_ch) < 1) {
       
       output$length_vars3 <- renderUI(p(minimum_iv_error))
@@ -685,12 +689,10 @@ server <- function(input, output, session) {
         
         output$hot <- renderRHandsontable({
           
-          sqp_id <- sqp_df() %>% pull(id)
-          res <- try(get_estimates(sqp_id))
+          res <- bind_cols(cnt_df, try(get_estimates(sqp_id)))
           
-          if (length(sqp_id) != length(chosen_vars())) {
+          if (length(sqp_id) != (length(chosen_vars()) * length(input$slid_cnt))) {
             sqp_cols <- c("reliability", "validity", "quality")
-            
             vars_missing <- setdiff(chosen_vars(), tolower(sqp_df()$short_name))
             
             df_to_complete <- 
@@ -712,7 +714,8 @@ server <- function(input, output, session) {
 
           rhandsontable(df_to_complete,
                         selectCallback = TRUE) %>% 
-            hot_col("question", readOnly = TRUE)
+            hot_col("question", readOnly = TRUE) %>% 
+            hot_col("country", readOnly = TRUE)
         })
         
         output$sqp_table_output <- renderUI(withSpinner(tagList(rHandsontableOutput("hot")), color = color_website))
@@ -757,23 +760,28 @@ server <- function(input, output, session) {
       
       if (!anyNA(hot_to_r(req(input$hot)))) {
         
-        map(var_df(), {
-          sqp_df <- if (is.null(input$hot)) get_estimates(sqp_id) else bind_rows(hot_to_r(input$hot), semi_complete_df)
-          
+        if (is.null(input$hot)) {
+          sqp_df <- bind_cols(cnt_df, get_estimates(sqp_id)) %>% split(.$country) %>% map(~ .[,-1])
+        } else {
+          sqp_df <- bind_rows(hot_to_r(input$hot), semi_complete_df) %>% split(.$country) %>% map(~ .[,-1])
+        }
+        
+        map2(var_df(), sqp_df, {
+
           # Calculate the quality of sumscore of each name-variables pairs
           # and then bind them together with the sqp_df. The final output
           # is the sqp_df with the quality of the N sum scores created.
           q_sscore <- lapply(seq_along(exists_cleanssnames()), function(index) {
             iterative_sscore(unname(exists_cleanssnames()[index]),
                              sscore_list()[[index]],
-                             sqp_df,
+                             .y,
                              .x)
           })
           
           # Because q_sscore only returns the new quality of each sum score,
           # we need to remove the variables that compose the sumscore manually
           # from the sqp data.
-          bind_rows(filter(sqp_df, !question %in% exists_sscorelist()), q_sscore)
+          bind_rows(filter(.y, !question %in% exists_sscorelist()), q_sscore)
         })
       }
     })
@@ -792,14 +800,14 @@ server <- function(input, output, session) {
     ch_vars <- c(input$dv_ch, input$iv_ch)
     
     # Unweighted correlation and covariance
-    original_cor <- cor(var_df()[ch_vars])
-    original_cov <- cov(var_df()[ch_vars])
+    original_cor <- map(var_df(), ~ cor(.x[ch_vars]))
+    original_cov <- map(var_df(), ~ cor(.y[ch_vars]))
     
-    cor_cov <- cov.wt(var_df()[ch_vars], wt = var_df()$pspwght, cor = TRUE)
+    cor_cov <- map(var_df(), ~ cov.wt(.x[ch_vars], wt = .x$pspwght, cor = TRUE))
     
     # Weighted correlation and covariance
-    corrected_cor <- cor_cov$cor
-    corrected_cov <- cor_cov$cov
+    corrected_cor <- map(cor_cv, "cor")
+    corrected_cov <- map(cor_cv, "cov")
     
     
     # Subset chosen variables in sqp_df and
