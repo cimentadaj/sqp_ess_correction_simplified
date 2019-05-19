@@ -175,7 +175,7 @@ ui2 <- tabsetPanel(id = "menu",
                                      column(3, uiOutput('length_vars3')), # three rows just to raise an error
                                      column(3, uiOutput('missing_est_error')),
                                      column(3, "")),
-                            mainPanel(rHandsontableOutput("hot")),
+                            mainPanel(uiOutput("sqp_table_output")),
                             ess_button("calc_model", "Create model")
                    ),
                    tabPanel("Create the model", value = "cre_model",
@@ -218,7 +218,7 @@ pick_list <- function(exclude, the_list) {
 
 server <- function(input, output, session) {
   
-  ##### Helper functions #####
+  ##### Helper functions in Shiny #####
   # Checks whether you are in `tab`
   is_tab <- function(tab) {
     is_specific_tab <- reactive({
@@ -641,10 +641,6 @@ server <- function(input, output, session) {
   #####
   
   observe({
-    # print(head(var_df()))
-  })
-  
-  observe({
     print(exists_cleanssnames())
     print(sscore_list())
     print("Value of input$hot is")
@@ -655,15 +651,17 @@ server <- function(input, output, session) {
   
   # Download the question ids from the SQP API.
   sqp_df <- reactive({
+    print("Downloading sqp")
+    on.exit(print("Downloaded"))
     if (is.null(input$slid_cnt)) return(character())
     
     paste0("ESS Round ", input$slid_rounds) %>% 
       find_studies() %>% 
       .[['id']] %>% 
-      find_questions(all_variables) %>% 
+      find_questions(chosen_vars()) %>% 
       filter(country_iso == countrycode(input$slid_cnt, origin = "country.name", destination = "iso2c"),
-             tolower(short_name) %in% all_variables) %>% # in case some other questions come up
-      slice(seq_along(all_variables)) # In case new languages by country come up in the future
+             tolower(short_name) %in% chosen_vars()) %>% # in case some other questions come up
+      slice(seq_along(chosen_vars())) # In case new languages by country come up in the future
   })
   
   # If you still haven't added a independent variable, it doesn't
@@ -679,35 +677,38 @@ server <- function(input, output, session) {
       
       if (is.null(input$hot)) {
         
-        sqp_id <- sqp_df() %>% pull(id)
-        res <- try(get_estimates(sqp_id))
+        output$hot <- renderRHandsontable({
+          
+          sqp_id <- sqp_df() %>% pull(id)
+          res <- try(get_estimates(sqp_id))
+          
+          if (length(sqp_id) != length(chosen_vars())) {
+            sqp_cols <- c("reliability", "validity", "quality")
+            
+            vars_missing <- setdiff(chosen_vars(), tolower(sqp_df()$short_name))
+            
+            df_to_complete <- 
+              NA_real_ %>% 
+              matrix(length(vars_missing), ncol = length(sqp_cols)) %>%
+              as.data.frame() %>%
+              set_names(sqp_cols) %>% 
+              mutate(question = vars_missing) %>% 
+              select(question, sqp_cols)
+            
+            # Keep an empty df with same column names to bind later
+            semi_complete_df <<- df_to_complete[0, ]
+          } else if (!is_error(res) && anyNA(res)) {
+            
+            na_rows <- apply(res, 1, anyNA)
+            semi_complete_df <<- res[!na_rows, ]
+            df_to_complete <- res[na_rows, ]
+          }
+
+          rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE)
+        })
         
-        if (length(sqp_id) != length(all_variables)) {
-          sqp_cols <- c("reliability", "validity", "quality")
-          
-          vars_missing <- setdiff(all_variables, tolower(sqp_df()$short_name))
-          
-          df_to_complete <- 
-            NA_real_ %>% 
-            matrix(length(vars_missing), ncol = length(sqp_cols)) %>%
-            as.data.frame() %>%
-            set_names(sqp_cols) %>% 
-            mutate(question = vars_missing) %>% 
-            select(question, sqp_cols)
-          
-          # Keep an empty df with same column names to bind later
-          semi_complete_df <<- df_to_complete[0, ]
-          output$hot <- renderRHandsontable(rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE))
-        } else if (!is_error(res) && anyNA(res)) {
-          
-          na_rows <- apply(res, 1, anyNA)
-          semi_complete_df <<- res[!na_rows, ]
-          df_to_complete <- res[na_rows, ]
-          
-          output$hot <- renderRHandsontable(rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE))
-        }
-        
-        
+        output$sqp_table_output <- renderUI(withSpinner(tagList(rHandsontableOutput("hot")), color = color_website))
+
       } else if (anyNA(hot_to_r(input$hot))) {
         
         output$missing_est_error <- renderUI(p(missing_est_error))
@@ -748,7 +749,6 @@ server <- function(input, output, session) {
       
       if (!anyNA(hot_to_r(req(input$hot)))) {
       
-      sqp_id <- sqp_df() %>% pull(id)
       sqp_df <- if (is.null(input$hot)) get_estimates(sqp_id) else bind_rows(hot_to_r(input$hot), semi_complete_df)
 
       # Calculate the quality of sumscore of each name-variables pairs
