@@ -704,7 +704,9 @@ server <- function(input, output, session) {
             df_to_complete <- res[na_rows, ]
           }
 
-          rhandsontable(df_to_complete, readOnly = FALSE, selectCallback = TRUE)
+          rhandsontable(df_to_complete,
+                        selectCallback = TRUE) %>% 
+            hot_col("question", readOnly = TRUE)
         })
         
         output$sqp_table_output <- renderUI(withSpinner(tagList(rHandsontableOutput("hot")), color = color_website))
