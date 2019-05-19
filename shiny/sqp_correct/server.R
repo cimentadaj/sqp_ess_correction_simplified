@@ -116,9 +116,11 @@ ui2 <- tabsetPanel(id = "menu",
                    tabPanel("Select country and model", value = "country_n_vars",
                             br(),
                             fluidRow(
-                              column(3, selectInput("slid_cnt", "Pick a country", choices = all_countries)),
-                              column(3, uiOutput("chosen_rounds")),
-                              column(7, style = "margin-top: 25px;", actionButton("select_all", "Select all variables"))
+                              column(3, selectInput("slid_cnt", "Pick a country",
+                                                    choices = all_countries,
+                                                    multiple = FALSE,
+                                                    selected = "Austria")),
+                              column(3, uiOutput("chosen_rounds"))
                             ),
                             uiOutput('chosen_vars'),
                             uiOutput('length_vars'),
@@ -276,35 +278,40 @@ server <- function(input, output, session) {
     }
   })
   #####
+  
+  tmp_ess <-
+    eventReactive(input$slid_rounds, {
+      # Choose country when user calculates model
+      downloaded_rnd <- import_country(input$slid_cnt, as.numeric(input$slid_rounds))
+      downloaded_rnd
+    })
+  
 
   ##### First tab - choosing vars, rounds, cnts #####
   output$chosen_vars <-
     renderUI({
-      checkboxGroupInput(
+      selectInput(
         'vars_ch',
         'Choose variables to use in the modeling',
-        var_n_labels,
+        choices = setdiff(upd_ess() %>% select_if(is.numeric) %>% names(), c("essround", "idno")),
+        multiple = TRUE,
         width = '500px')
-      
     })
   
   output$chosen_rounds <-
     renderUI({
       selectInput("slid_rounds",
                   "Pick a round",
-                  choices = show_country_rounds(input$slid_cnt))
+                  choices = reduce(map(input$slid_cnt, show_country_rounds), intersect))
     })
-  
-  observeEvent(input$select_all, {
-    updateCheckboxGroupInput(
-      session,
-      'vars_ch',
-      'Choose variables to use in the modeling',
-      var_n_labels,
-      choices = var_n_labels)
-  })
-  
   #####
+  
+  upd_ess <- reactive({
+    downloaded_rnd <- tmp_ess()
+    tmp_vars_weights <- c(input$vars_ch, "pspwght")
+    upd_ess <- recode_missings(downloaded_rnd[tmp_vars_weights]) %>% filter(complete.cases(.))
+    upd_ess
+  })
   
   # This is a turning point. If the user clicks to define
   # sumscores, we want to be sure that there
@@ -615,15 +622,7 @@ server <- function(input, output, session) {
   # Download data and create sumscores.
   # This is possible because we already have them
   # form the previous steps.
-  upd_ess <-
-    eventReactive(input$def_model, {
-      # Choose country when user calculates model
-      downloaded_rnd <- import_country(input$slid_cnt, as.numeric(input$slid_rounds))
-      tmp_vars_weights <- c(all_variables, "pspwght")
-      upd_ess <- recode_missings(downloaded_rnd[tmp_vars_weights]) %>% filter(complete.cases(.))
-      upd_ess
-    })
-  
+
   var_df <- reactive({
     # If no sscore was defined, return the same df the above
     if (input$ins_sscore == 0) return(upd_ess())
