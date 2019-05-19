@@ -10,6 +10,7 @@ library(sqpr)
 library(countrycode)
 library(rhandsontable)
 library(jtools)
+library(tidyr)
 library(dplyr)
 
 all_variables <-
@@ -631,12 +632,12 @@ server <- function(input, output, session) {
     
     # We need to add new sscores to the origin df.
     # Calculate them here
-    
-    map(upd_ess(), {
+
+    map(upd_ess(), ~ {
+      print(.x)
+      
       sscore <-
-        lapply(sscore_list(), function(sscore_cols) {
-          rowSums(.x[sscore_cols], na.rm = TRUE)
-        })
+        map(sscore_list(), function(sscore_cols) rowSums(.x[sscore_cols], na.rm = TRUE))
       
       bind_cols(.x, as.data.frame(sscore, col.names = exists_cleanssnames()))
     })
@@ -676,6 +677,7 @@ server <- function(input, output, session) {
   observeEvent(input$calc_model, {
     cnt_df <- sqp_df() %>% transmute(country = countrycode(country_iso, origin = "iso2c", destination = "country.name"))
     sqp_id <- sqp_df() %>% pull(id)
+    res <- bind_cols(cnt_df, try(get_estimates(sqp_id)))
     
     if (length(input$iv_ch) < 1) {
       
@@ -688,9 +690,7 @@ server <- function(input, output, session) {
       if (is.null(input$hot)) {
         
         output$hot <- renderRHandsontable({
-          
-          res <- bind_cols(cnt_df, try(get_estimates(sqp_id)))
-          
+
           if (length(sqp_id) != (length(chosen_vars()) * length(input$slid_cnt))) {
             sqp_cols <- c("reliability", "validity", "quality")
             vars_missing <- setdiff(chosen_vars(), tolower(sqp_df()$short_name))
@@ -710,10 +710,10 @@ server <- function(input, output, session) {
             na_rows <- apply(res, 1, anyNA)
             semi_complete_df <<- res[!na_rows, ]
             df_to_complete <- res[na_rows, ]
+            
           }
 
-          rhandsontable(df_to_complete,
-                        selectCallback = TRUE) %>% 
+          rhandsontable(df_to_complete, selectCallback = TRUE) %>% 
             hot_col("question", readOnly = TRUE) %>% 
             hot_col("country", readOnly = TRUE)
         })
@@ -766,7 +766,7 @@ server <- function(input, output, session) {
           sqp_df <- bind_rows(hot_to_r(input$hot), semi_complete_df) %>% split(.$country) %>% map(~ .[,-1])
         }
         
-        map2(var_df(), sqp_df, {
+        map2(var_df(), sqp_df, ~ {
 
           # Calculate the quality of sumscore of each name-variables pairs
           # and then bind them together with the sqp_df. The final output
@@ -801,28 +801,31 @@ server <- function(input, output, session) {
     
     # Unweighted correlation and covariance
     original_cor <- map(var_df(), ~ cor(.x[ch_vars]))
-    original_cov <- map(var_df(), ~ cor(.y[ch_vars]))
+    original_cov <- map(var_df(), ~ cov(.x[ch_vars]))
     
     cor_cov <- map(var_df(), ~ cov.wt(.x[ch_vars], wt = .x$pspwght, cor = TRUE))
     
     # Weighted correlation and covariance
-    corrected_cor <- map(cor_cv, "cor")
-    corrected_cov <- map(cor_cv, "cov")
-    
+    corrected_cor <- map(cor_cov, "cor")
+    corrected_cov <- map(cor_cov, "cov")
     
     # Subset chosen variables in sqp_df and
     # create quality estimate for the
-    filtered_sqp <- upd_sqpdf()[upd_sqpdf()[[1]] %in% ch_vars, ]
+    filtered_sqp <- map(upd_sqpdf(), ~ .x[.x[[1]] %in% ch_vars, ])
     
     # Replace all NA's so that there's no error.
-    filtered_sqp <- map_dfc(filtered_sqp, ~ {.x[is.na(.x)] <- 0; .x})
+    filtered_sqp <- map(filtered_sqp, ~ map_dfc(., ~ {.x[is.na(.x)] <- 0; .x}))
     
     print(corrected_cor)
     print(filtered_sqp)
     
     # Replace diagonal by multiplying it with the quality of each variable
-    diag(corrected_cor) <- diag(corrected_cor) * filtered_sqp$quality
-    
+    corrected_cor <-
+      map2(corrected_cor, filtered_sqp, ~ {
+        diag(.x) <- diag(.x) * .y$quality
+        .x
+      })
+
     # subtract the cmv from the observed correlation
     # Calculate the common method variance of some variables
     # and subtract that common method variance from the correlation
@@ -834,21 +837,27 @@ server <- function(input, output, session) {
     # but it accepts a string in cmv_vars instead of `...`
     # in sqpr::sqp_cmv
     
+    print(corrected_cor)
+    print(filtered_sqp)
+    
     if (length(input$cmv_ch) > 1) {
+      
       corrected_cor <-
-        cov2cor(
-          as.matrix(
-            sqp_cmv_str(x = corrected_cor,
-                        sqp_data = filtered_sqp,
-                        cmv_vars = input$cmv_ch)[-1]
-          )
-        )
+        map2(corrected_cor, filtered_sqp, ~ {
+          .x %>% 
+            sqp_cmv_str(.y, cmv_vars = input$cmv_ch) %>% 
+            .[-1] %>% 
+            as.matrix() %>% 
+            cov2cor()
+        })
+      
     }
     
-    list(original_cov = original_cov,
-         original_cor = original_cor,
+    
+    list(original_cov = reduce(original_cov, `+`) / length(original_cov),
+         original_cor = reduce(original_cor, `+`) / length(original_cor),
          # corrected_cov = corrected_cov,
-         corrected_cor = corrected_cor)
+         corrected_cor = reduce(corrected_cor, `+`) / length(corrected_cor))
   })
   #####
   
