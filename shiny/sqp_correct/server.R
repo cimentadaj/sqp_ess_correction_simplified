@@ -54,6 +54,11 @@ missing_est_error <- tags$span(style="color:red; font-size: 15px;", "Please fill
 vals_probs_error <- tags$span(style="color:red; font-size: 15px;", "All manually imputed cells should be between 0 and 1")
 
 color_website <- "#AD1400"
+
+empty_sqp <- tibble(question = character(),
+                    reliability = numeric(),
+                    validity = numeric(),
+                    quality = numeric())
 #####
 
 ##### MAIN WRAPPER FOR THE PAGE WITH RED BANNER #####
@@ -677,7 +682,7 @@ server <- function(input, output, session) {
   observeEvent(input$calc_model, {
     cnt_df <- sqp_df() %>% transmute(country = countrycode(country_iso, origin = "iso2c", destination = "country.name"))
     sqp_id <- sqp_df() %>% pull(id)
-    res <- bind_cols(cnt_df, try(get_estimates(sqp_id)))
+    res <- bind_cols(cnt_df, tryCatch(get_estimates(sqp_id), error = function(e) empty_sqp))
     
     if (length(input$iv_ch) < 1) {
       
@@ -686,12 +691,12 @@ server <- function(input, output, session) {
     } else {
       
       output$length_vars3 <- renderUI(p(""))
+      difference_in_vars <- length(sqp_id) != (length(chosen_vars()) * length(input$slid_cnt))
       
-      if (is.null(input$hot)) {
-        
+      if (is.null(input$hot) && (anyNA(res) || difference_in_vars)) {
         output$hot <- renderRHandsontable({
 
-          if (length(sqp_id) != (length(chosen_vars()) * length(input$slid_cnt))) {
+          if (difference_in_vars) {
             sqp_cols <- c("reliability", "validity", "quality")
             vars_missing <- setdiff(chosen_vars(), tolower(sqp_df()$short_name))
             
@@ -710,9 +715,9 @@ server <- function(input, output, session) {
             na_rows <- apply(res, 1, anyNA)
             semi_complete_df <<- res[!na_rows, ]
             df_to_complete <- res[na_rows, ]
-            
           }
-
+          
+          print(df_to_complete)
           rhandsontable(df_to_complete, selectCallback = TRUE) %>% 
             hot_col("question", readOnly = TRUE) %>% 
             hot_col("country", readOnly = TRUE)
@@ -720,11 +725,11 @@ server <- function(input, output, session) {
         
         output$sqp_table_output <- renderUI(withSpinner(tagList(rHandsontableOutput("hot")), color = color_website))
 
-      } else if (anyNA(hot_to_r(input$hot))) {
+      } else if (!is.null(input$hot) && anyNA(hot_to_r(input$hot))) {
         
         output$missing_est_error <- renderUI(p(missing_est_error))
         
-      } else if (!between_0_1(hot_to_r(input$hot))) {
+      } else if (!is.null(input$hot) && !between_0_1(hot_to_r(input$hot))) {
         
         output$missing_est_error <- renderUI(p(vals_probs_error))
         
