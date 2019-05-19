@@ -42,6 +42,9 @@ countries_abbrv <- c("ES",
 
 all_ids <- c("cntry", "idno")
 
+language_iso3 <- 
+  read_csv("language_country_table.csv")
+
 # To bring the function to extract sddf data.
 source("mk_svyConfig.R")
 

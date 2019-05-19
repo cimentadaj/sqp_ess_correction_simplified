@@ -118,7 +118,7 @@ ui2 <- tabsetPanel(id = "menu",
                             fluidRow(
                               column(3, selectInput("slid_cnt", "Pick a country",
                                                     choices = all_countries,
-                                                    multiple = FALSE,
+                                                    multiple = TRUE,
                                                     selected = "Austria")),
                               column(3, uiOutput("chosen_rounds"))
                             ),
@@ -282,20 +282,22 @@ server <- function(input, output, session) {
   tmp_ess <-
     eventReactive(input$slid_rounds, {
       # Choose country when user calculates model
-      downloaded_rnd <- import_country(input$slid_cnt, as.numeric(input$slid_rounds))
+      downloaded_rnd <- map(input$slid_cnt, ~ import_country(.x, as.numeric(input$slid_rounds)))
       downloaded_rnd
     })
   
-
+  keep_common_columns <- function(x) map(x, ~ select_if(.x, is.numeric) %>% names()) %>% reduce(intersect)
+  
   ##### First tab - choosing vars, rounds, cnts #####
   output$chosen_vars <-
     renderUI({
       selectInput(
         'vars_ch',
         'Choose variables to use in the modeling',
-        choices = setdiff(upd_ess() %>% select_if(is.numeric) %>% names(), c("essround", "idno")),
+        choices = setdiff(keep_common_columns(tmp_ess()), c("essround", "idno")),
         multiple = TRUE,
-        width = '500px')
+        width = '500px'
+        )
     })
   
   output$chosen_rounds <-
@@ -309,7 +311,7 @@ server <- function(input, output, session) {
   upd_ess <- reactive({
     downloaded_rnd <- tmp_ess()
     tmp_vars_weights <- c(input$vars_ch, "pspwght")
-    upd_ess <- recode_missings(downloaded_rnd[tmp_vars_weights]) %>% filter(complete.cases(.))
+    upd_ess <- map(downloaded_rnd, ~ recode_missings(.x[tmp_vars_weights]) %>% drop_na())
     upd_ess
   })
   
@@ -629,12 +631,15 @@ server <- function(input, output, session) {
     
     # We need to add new sscores to the origin df.
     # Calculate them here
-    sscore <-
-      lapply(sscore_list(), function(x) {
-        rowSums(upd_ess()[x], na.rm = TRUE)
-      })
     
-    bind_cols(upd_ess(), as.data.frame(sscore, col.names = exists_cleanssnames()))
+    map(upd_ess(), {
+      sscore <-
+        lapply(sscore_list(), function(sscore_cols) {
+          rowSums(.x[sscore_cols], na.rm = TRUE)
+        })
+      
+      bind_cols(.x, as.data.frame(sscore, col.names = exists_cleanssnames()))
+    })
   })
   
   #####
@@ -654,13 +659,15 @@ server <- function(input, output, session) {
     on.exit(print("Downloaded"))
     if (is.null(input$slid_cnt)) return(character())
     
+    main_cnt_lang <- filter(language_iso3, country %in% input$slid_cnt) %>% pull(iso3)
+    
     paste0("ESS Round ", input$slid_rounds) %>% 
       find_studies() %>% 
       .[['id']] %>% 
       find_questions(chosen_vars()) %>% 
-      filter(country_iso == countrycode(input$slid_cnt, origin = "country.name", destination = "iso2c"),
-             tolower(short_name) %in% chosen_vars()) %>% # in case some other questions come up
-      slice(seq_along(chosen_vars())) # In case new languages by country come up in the future
+      filter(country_iso %in% countrycode(input$slid_cnt, origin = "country.name", destination = "iso2c"),
+             tolower(short_name) %in% chosen_vars(),
+             language_iso %in% main_cnt_lang) # in case some other questions come up
   })
   
   # If you still haven't added a independent variable, it doesn't
@@ -749,23 +756,25 @@ server <- function(input, output, session) {
     eventReactive(input$calc_model, {
       
       if (!anyNA(hot_to_r(req(input$hot)))) {
-      
-      sqp_df <- if (is.null(input$hot)) get_estimates(sqp_id) else bind_rows(hot_to_r(input$hot), semi_complete_df)
-
-      # Calculate the quality of sumscore of each name-variables pairs
-      # and then bind them together with the sqp_df. The final output
-      # is the sqp_df with the quality of the N sum scores created.
-      q_sscore <- lapply(seq_along(exists_cleanssnames()), function(index) {
-        iterative_sscore(unname(exists_cleanssnames()[index]),
-                         sscore_list()[[index]],
-                         sqp_df,
-                         var_df())
-      })
-      
-      # Because q_sscore only returns the new quality of each sum score,
-      # we need to remove the variables that compose the sumscore manually
-      # from the sqp data.
-      bind_rows(filter(sqp_df, !question %in% exists_sscorelist()), q_sscore)
+        
+        map(var_df(), {
+          sqp_df <- if (is.null(input$hot)) get_estimates(sqp_id) else bind_rows(hot_to_r(input$hot), semi_complete_df)
+          
+          # Calculate the quality of sumscore of each name-variables pairs
+          # and then bind them together with the sqp_df. The final output
+          # is the sqp_df with the quality of the N sum scores created.
+          q_sscore <- lapply(seq_along(exists_cleanssnames()), function(index) {
+            iterative_sscore(unname(exists_cleanssnames()[index]),
+                             sscore_list()[[index]],
+                             sqp_df,
+                             .x)
+          })
+          
+          # Because q_sscore only returns the new quality of each sum score,
+          # we need to remove the variables that compose the sumscore manually
+          # from the sqp data.
+          bind_rows(filter(sqp_df, !question %in% exists_sscorelist()), q_sscore)
+        })
       }
     })
   
