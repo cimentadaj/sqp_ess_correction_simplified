@@ -102,7 +102,7 @@ ui1 <- tagList(
                top: 50%;
                left: 50%;
                margin-top: -100px;
-               margin-left: -150px; 
+               margin-left: -150px;
                width: 25%;
                }")
 )
@@ -268,27 +268,32 @@ server <- function(input, output, session) {
       }
     }
   })
+  authenticate_ess("cimentadaj@gmail.com", ess_website, path_login)
+  USER$Logged <- TRUE
   
-  # Change UI based on whether the user is logged in or not.
+  # # Change UI based on whether the user is logged in or not.
   observe({
-    if (USER$Logged == FALSE) {
-      output$page <- renderUI({
-        main_page(ui1)
-      })
-    }
-    
+    # if (USER$Logged == FALSE) {
+    #   output$page <- renderUI({
+    #     main_page(ui1)
+    #   })
+    # }
+
     if (USER$Logged == TRUE) {
       output$page <- renderUI({
         div(main_page(ui2))
       })
     }
   })
+  
   #####
   
+  non_na_columns <- function(x) select_if(x, ~ !all(is.na(.x)))
+  
   tmp_ess <-
-    eventReactive(input$slid_rounds, {
+    eventReactive(input$slid_cnt, {
       # Choose country when user calculates model
-      downloaded_rnd <- map(input$slid_cnt, ~ import_country(.x, as.numeric(input$slid_rounds)))
+      downloaded_rnd <- map(input$slid_cnt, ~ non_na_columns(import_country(.x, as.numeric(req(input$slid_rounds)))))
       downloaded_rnd
     })
   
@@ -301,6 +306,7 @@ server <- function(input, output, session) {
         'vars_ch',
         'Choose variables to use in the modeling',
         choices = setdiff(keep_common_columns(tmp_ess()), c("essround", "idno")),
+        selected = c("rlgdgr", "pplfair", "uempli"),
         multiple = TRUE,
         width = '500px'
         )
@@ -310,13 +316,13 @@ server <- function(input, output, session) {
     renderUI({
       selectInput("slid_rounds",
                   "Pick a round",
-                  choices = reduce(map(input$slid_cnt, show_country_rounds), intersect, .init = 1))
+                  choices = reduce(map(input$slid_cnt, show_country_rounds), intersect))
     })
   #####
   
   upd_ess <- reactive({
     downloaded_rnd <- tmp_ess()
-    tmp_vars_weights <- c(input$vars_ch, "pspwght")
+    tmp_vars_weights <- c(input$vars_ch, "pspwght", "pweight")
     upd_ess <- map(downloaded_rnd, ~ recode_missings(.x[tmp_vars_weights]) %>% drop_na())
     upd_ess
   })
@@ -632,12 +638,16 @@ server <- function(input, output, session) {
   # form the previous steps.
 
   var_df <- reactive({
+    print("Temporary ess")
+    print(tmp_ess())
+    
+    print("Updated ESS")
+    print(upd_ess())
     # If no sscore was defined, return the same df the above
     if (input$ins_sscore == 0) return(upd_ess())
     
     # We need to add new sscores to the origin df.
     # Calculate them here
-
     map(upd_ess(), ~ {
       print(.x)
       
@@ -669,23 +679,32 @@ server <- function(input, output, session) {
     country_abbrv <- countrycode(input$slid_cnt, origin = "country.name", destination = "iso2c")
     country_lang <- paste0(country_abbrv, "_", main_cnt_lang)
     
-    paste0("ESS Round ", input$slid_rounds) %>% 
+    intm <- 
+      paste0("ESS Round ", input$slid_rounds) %>% 
       find_studies() %>% 
       .[['id']] %>% 
-      find_questions(chosen_vars()) %>% 
+      find_questions(paste0("^", chosen_vars(), "$")) %>% 
       mutate(country_q = countrycode(country_iso, origin = "iso2c", destination = "country.name"),
-             country_q = paste0(country_q, "_", tolower(short_name))) %>% 
-      filter(paste0(country_iso, "_", language_iso) %in% country_lang,
-             tolower(short_name) %in% chosen_vars()) # in case some other questions come up
+             country_q = paste0(country_q, "_", tolower(short_name)))
+    res <-
+      intm %>% 
+      filter(paste0(country_iso, "_", language_iso) %in% country_lang)
+    
+    print(res)
+
   })
   
   # If you still haven't added a independent variable, it doesn't
   # allow you to pass to the create model tab.
   observeEvent(input$calc_model, {
     
-    cnt_df <- sqp_df() %>% transmute(country = countrycode(country_iso, origin = "iso2c", destination = "country.name"))
-    sqp_id <- sqp_df() %>% pull(id)
+    print(paste0("^", chosen_vars(), "$"))
+    print(sqp_df())
+    
+    cnt_df <<- sqp_df() %>% transmute(country = countrycode(country_iso, origin = "iso2c", destination = "country.name"))
+    sqp_id <<- sqp_df() %>% pull(id)
     res <- bind_cols(cnt_df, tryCatch(get_estimates(sqp_id), error = function(e) empty_sqp))
+    print(res)
     
     if (length(input$iv_ch) < 1) {
       
@@ -700,7 +719,6 @@ server <- function(input, output, session) {
         
         output$hot <- renderRHandsontable({
           
-          if (difference_in_vars) {
             sqp_cols <- c("reliability", "validity", "quality")
             country_q <- unlist(map(input$slid_cnt, paste0, "_", chosen_vars()))
             vars_missing <- setdiff(country_q, sqp_df()$country_q)
@@ -714,19 +732,14 @@ server <- function(input, output, session) {
               separate(question, c('country', 'question')) %>% 
               select(country, question, sqp_cols)
             
-            # Keep the rest of the df (could be empty) to merge later
-            semi_complete_df <<- res
-          } else if (!is_error(res) && anyNA(res)) {
-            
             na_rows <- apply(res, 1, anyNA)
             semi_complete_df <<- res[!na_rows, ]
-            df_to_complete <- res[na_rows, ]
-          }
-          
+            df_to_complete <- bind_rows(res[na_rows, ], df_to_complete)
+            
           print(df_to_complete)
-          rhandsontable(df_to_complete, selectCallback = TRUE)
-            # hot_col("question", readOnly = TRUE) %>% 
-            # hot_col("country", readOnly = TRUE)
+          rhandsontable(df_to_complete, selectCallback = TRUE) %>% 
+            hot_col("question", readOnly = TRUE) %>%
+            hot_col("country", readOnly = TRUE)
         })
         
         output$sqp_table_output <- renderUI(withSpinner(tagList(rHandsontableOutput("hot")), color = color_website))
@@ -741,13 +754,15 @@ server <- function(input, output, session) {
         
       } else {
         output$missing_est_error <- renderUI(p(""))
+        output$sqp_table_output <- NULL
+        output$hot <- NULL
         
         output$cre_model <- 
           renderUI(tabsetPanel(
-            tabPanel("Plot of results",
-                     withSpinner(tagList(plotOutput("model_plot")),
-                                 color = color_website)
-            ),
+            # tabPanel("Plot of results",
+            #          withSpinner(tagList(plotOutput("model_plot")),
+            #                      color = color_website)
+            # ),
             tabPanel("Table of results",
                      withSpinner(tagList(tableOutput("model_table")),
                                  color = color_website)
@@ -769,11 +784,21 @@ server <- function(input, output, session) {
   upd_sqpdf <-
     eventReactive(input$calc_model, {
       
-      if (!anyNA(hot_to_r(req(input$hot)))) {
-        
-        if (is.null(input$hot)) {
+      if (is.null(input$hot)) {
+          print("is null the table")
+          print("cnt_df")
+          print(cnt_df)
+          print("get_estimates")
+          print(get_estimates(sqp_id))
+          
           sqp_df <- bind_cols(cnt_df, get_estimates(sqp_id)) %>% split(.$country) %>% map(~ .[,-1])
         } else {
+          print("is not null the table")
+          print("input$hot")
+          print(hot_to_r(input$hot))
+          print("semi_df")
+          print(semi_complete_df)
+          
           sqp_df <- bind_rows(hot_to_r(input$hot), semi_complete_df) %>% split(.$country) %>% map(~ .[,-1])
         }
         
@@ -794,16 +819,9 @@ server <- function(input, output, session) {
           # from the sqp data.
           bind_rows(filter(.y, !question %in% exists_sscorelist()), q_sscore)
         })
-      }
     })
   
   #####
-  
-  observe({
-    print("This is sqp_df")
-    # print(sqp_df())
-  })
-  
 
   ##### Define cor and cov with weights/adjustments measurement erro #####
   models_coef <- eventReactive(input$calc_model, {
@@ -814,20 +832,41 @@ server <- function(input, output, session) {
     original_cor <- map(var_df(), ~ cor(.x[ch_vars]))
     original_cov <- map(var_df(), ~ cov(.x[ch_vars]))
     
-    cor_cov <- map(var_df(), ~ cov.wt(.x[ch_vars], wt = .x$pspwght, cor = TRUE))
+    print("original cor")
+    print(original_cor)
+    print("original cov")
+    print(original_cov)
+    
+        
+    correct_wt <- function(x) if(all(x == 0) | any(x < 0)) rep(1, length(x)) else x
+    
+    cor_cov <- map(var_df(), ~ {
+      print("var_df data frames")
+      print(.x)
+      print(all(.x$pspwght == 0) | any(.x$pspwght < 0))
+      cov.wt(.x[ch_vars], wt = correct_wt(.x$pspwght), cor = TRUE)
+    })
     
     # Weighted correlation and covariance
     corrected_cor <- map(cor_cov, "cor")
     corrected_cov <- map(cor_cov, "cov")
     
+    print("corrected cor")
+    print(corrected_cor)
+    print("corrected cov")
+    print(corrected_cov)
+    
+    print("filtered sqp")
+    print(upd_sqpdf())
     # Subset chosen variables in sqp_df and
     # create quality estimate for the
     filtered_sqp <- map(upd_sqpdf(), ~ .x[.x[[1]] %in% ch_vars, ])
     
+    print(filtered_sqp)
+    
     # Replace all NA's so that there's no error.
     filtered_sqp <- map(filtered_sqp, ~ map_dfc(., ~ {.x[is.na(.x)] <- 0; .x}))
     
-    print(corrected_cor)
     print(filtered_sqp)
     
     # Replace diagonal by multiplying it with the quality of each variable
@@ -861,8 +900,9 @@ server <- function(input, output, session) {
             as.matrix() %>% 
             cov2cor()
         })
-      
     }
+    
+    print(reduce(original_cor, `+`) / length(original_cor))
     
     
     list(original_cov = reduce(original_cov, `+`) / length(original_cov),
@@ -885,12 +925,12 @@ server <- function(input, output, session) {
         kableExtra::kable_styling("striped", full_width = FALSE)
     })
   
-  # Final plot
-  output$model_plot <-
-    renderPlot({
-      models_coef()$original_cor %>%
-        corrr::as_cordf() %>% 
-        corrr::network_plot()
-    })
+  # # Final plot
+  # output$model_plot <-
+  #   renderPlot({
+  #     models_coef()$original_cor %>%
+  #       corrr::as_cordf() %>% 
+  #       corrr::network_plot()
+  #   })
   #####
 }
