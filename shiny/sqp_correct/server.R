@@ -875,6 +875,13 @@ server <- function(input, output, session) {
         diag(.x) <- diag(.x) * .y$quality
         .x
       })
+    
+    # Replace diagonal by multiplying it with the quality of each variable
+    corrected_cov <-
+      map2(corrected_cov, filtered_sqp, ~ {
+        diag(.x) <- diag(.x) * .y$quality
+        .x
+      })
 
     # subtract the cmv from the observed correlation
     # Calculate the common method variance of some variables
@@ -895,20 +902,32 @@ server <- function(input, output, session) {
       corrected_cor <-
         map2(corrected_cor, filtered_sqp, ~ {
           .x %>% 
-            sqp_cmv_str(.y, cmv_vars = input$cmv_ch) %>% 
+            sqp_cmv_cor_str(.y, cmv_vars = input$cmv_ch) %>% 
             .[-1] %>% 
             as.matrix() %>% 
             cov2cor()
         })
+      
+      corrected_cov <-
+        pmap(list(corrected_cov, filtered_sqp, var_df()), ~ {
+          ..1 %>% 
+            sqp_cmv_cov_str(..2, cmv_vars = input$cmv_ch, original_data = ..3) %>% 
+            .[-1] %>% 
+            as.matrix()
+        })
     }
     
-    print(reduce(original_cor, `+`) / length(original_cor))
-    
+    if (length(original_cov) > 1) {
+      country_pweights <- map(var_df(), ~ .x[["pweight"]] %>% unique())
+      corrected_cor <- map2(corrected_cor, country_pweights, `*`)
+      corrected_cov <- map2(corrected_cov, country_pweights, `*`)
+    }
     
     list(original_cov = reduce(original_cov, `+`) / length(original_cov),
          original_cor = reduce(original_cor, `+`) / length(original_cor),
-         # corrected_cov = corrected_cov,
-         corrected_cor = reduce(corrected_cor, `+`) / length(corrected_cor))
+         corrected_cov = reduce(corrected_cov, `+`) / length(corrected_cov),
+         corrected_cor = reduce(corrected_cor, `+`) / length(corrected_cor)
+         )
   })
   #####
   
@@ -925,12 +944,4 @@ server <- function(input, output, session) {
         kableExtra::kable_styling("striped", full_width = FALSE)
     })
   
-  # # Final plot
-  # output$model_plot <-
-  #   renderPlot({
-  #     models_coef()$original_cor %>%
-  #       corrr::as_cordf() %>% 
-  #       corrr::network_plot()
-  #   })
-  #####
 }
