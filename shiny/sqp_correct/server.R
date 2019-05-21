@@ -757,17 +757,26 @@ server <- function(input, output, session) {
         output$sqp_table_output <- NULL
         output$hot <- NULL
         
+        spinner_wrapper <- function(plot_title) {
+          withSpinner(tagList(tableOutput(plot_title)), color = color_website)
+        }
+        
         output$cre_model <- 
-          renderUI(tabsetPanel(
-            # tabPanel("Plot of results",
-            #          withSpinner(tagList(plotOutput("model_plot")),
-            #                      color = color_website)
-            # ),
-            tabPanel("Table of results",
-                     withSpinner(tagList(tableOutput("model_table")),
-                                 color = color_website)
+          renderUI(
+            tabsetPanel(
+              tabPanel("Table of results",
+                       # fluidRow(htmlOutput("tmod1")), # Header, I presume ?
+                       fluidRow(
+                         column(width = 7, spinner_wrapper("original_cor")),
+                         column(width = 5, spinner_wrapper("corrected_cor"))
+                       ),
+                       # fluidRow(htmlOutput("tmod2")), # Header #2, I presume ?
+                       fluidRow(
+                         column(width = 7, spinner_wrapper("original_cov")),
+                         column(width = 5, spinner_wrapper("corrected_cov"))
+                       )
+              )
             )
-          )
           )
         
         updateTabsetPanel(session,
@@ -917,23 +926,30 @@ server <- function(input, output, session) {
         })
     }
     
-    if (length(original_cov) > 1) {
-      country_pweights <- map(var_df(), ~ .x[["pweight"]] %>% unique())
+    denom_adj <- length(original_cov)
+    if (denom_adj > 1) {
+      country_pweights <- map_dbl(var_df(), ~ .x[["pweight"]] %>% unique())
       corrected_cor <- map2(corrected_cor, country_pweights, `*`)
       corrected_cov <- map2(corrected_cov, country_pweights, `*`)
+      denom_adj <- sum(country_pweights)
+      
+      corrected_cov <- reduce(corrected_cov, `+`) / denom_adj
+      corrected_cor <- reduce(corrected_cor, `+`) / denom_adj
+      
+      diag(corrected_cor) <- 1
     }
     
     list(original_cov = reduce(original_cov, `+`) / length(original_cov),
          original_cor = reduce(original_cor, `+`) / length(original_cor),
-         corrected_cov = reduce(corrected_cov, `+`) / length(corrected_cov),
-         corrected_cor = reduce(corrected_cor, `+`) / length(corrected_cor)
+         corrected_cov = corrected_cov,
+         corrected_cor = corrected_cor
          )
   })
   #####
   
   ##### Prepare final table/plots #####
   # Final table
-  output$model_table <-
+  output$original_cor <-
     reactive({
       models_coef()$original_cor %>%
         as.data.frame() %>% 
@@ -943,5 +959,39 @@ server <- function(input, output, session) {
         knitr::kable(format = "html") %>% 
         kableExtra::kable_styling("striped", full_width = FALSE)
     })
+  
+  output$corrected_cor <-
+    reactive({
+      models_coef()$corrected_cor %>%
+        as.data.frame() %>% 
+        tibble::rownames_to_column() %>% 
+        as_tibble() %>% 
+        mutate_if(is.numeric, function(x) as.character(round(x, 3))) %>% 
+        knitr::kable(format = "html") %>% 
+        kableExtra::kable_styling("striped", full_width = FALSE)
+    })
+  
+  output$original_cov <-
+    reactive({
+      models_coef()$original_cov %>%
+        as.data.frame() %>% 
+        tibble::rownames_to_column() %>% 
+        as_tibble() %>% 
+        mutate_if(is.numeric, function(x) as.character(round(x, 3))) %>% 
+        knitr::kable(format = "html") %>% 
+        kableExtra::kable_styling("striped", full_width = FALSE)
+    })
+  
+  output$corrected_cov <-
+    reactive({
+      models_coef()$corrected_cov %>%
+        as.data.frame() %>% 
+        tibble::rownames_to_column() %>% 
+        as_tibble() %>% 
+        mutate_if(is.numeric, function(x) as.character(round(x, 3))) %>% 
+        knitr::kable(format = "html") %>% 
+        kableExtra::kable_styling("striped", full_width = FALSE)
+    })
+  
   
 }
