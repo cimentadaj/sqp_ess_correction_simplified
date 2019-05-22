@@ -742,7 +742,6 @@ server <- function(input, output, session) {
             hot_col("question", readOnly = TRUE) %>%
             hot_col("country", readOnly = TRUE)
         })
-        
         output$sqp_table_output <- renderUI(withSpinner(tagList(rHandsontableOutput("hot")), color = color_website))
 
       } else if (!is.null(input$hot) && anyNA(hot_to_r(input$hot))) {
@@ -775,10 +774,30 @@ server <- function(input, output, session) {
                        fluidRow(
                          column(width = 5, tableOutput("original_cov")),
                          column(width = 5, tableOutput("corrected_cov"))
-                       )
+                       ),
+                       downloadButton("downloadData", "Download as csv")
               )
             )
           )
+        
+            output$downloadData <-
+              downloadHandler(
+                filename = function() "corrected_matrices.zip",
+                content = function(file) {
+
+                  write_csv_zip <- function(.x, .y) {
+                    .x <- as_tibble(.x, rownames = "rowname")
+                    path <- file.path(tempdir(), paste0(.y, ".csv"))
+                    write_csv(.x, path)
+                    path
+                  }
+                  
+                  where <- imap_chr(models_coef(), write_csv_zip)
+                  utils::zip(file, where, flags = "-j")
+                },
+                contentType = "application/zip"
+              )
+
 
         updateTabsetPanel(session,
                           inputId = "menu",
@@ -920,7 +939,8 @@ server <- function(input, output, session) {
           ..1 %>% 
             sqp_cmv_cov_str(..2, cmv_vars = input$cmv_ch, original_data = ..3) %>% 
             .[-1] %>% 
-            as.matrix()
+            as.matrix() %>% 
+            cov2cor()
         })
     }
     
