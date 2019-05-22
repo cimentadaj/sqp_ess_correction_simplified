@@ -71,6 +71,29 @@ sqp_cmv_cor_str <- function (x, sqp_data, cmv_vars, cmv = NULL) {
   corrected_corr
 }
 
+# This function authenticates in the ess website to be able
+# to download all other functions.
+authenticate_ess <- function (ess_email, ess_website, path_login) {
+  if (missing(ess_email)) {
+    stop("`ess_email` parameter must be specified. Create an account at https://www.europeansocialsurvey.org/user/new")
+  }
+  values <- list(u = ess_email)
+  url_login <- paste0(ess_website, path_login)
+  authen <- httr::POST(url_login, body = values)
+  check_authen <- safe_GET(url_login, query = values)
+  authen_xml <- xml2::read_html(check_authen)
+  error_node <- xml2::xml_find_all(authen_xml, "//p [@class=\"error\"]")
+  if (length(error_node) != 0) {
+    stop(xml2::xml_text(error_node), " Create an account at https://www.europeansocialsurvey.org/user/new")
+  }
+}
+
+
+
+# Safe getter
+safe_GET <- function(url, config = list(), ...) {
+  httr::stop_for_status(httr::GET(url = url, config = config, ...))
+}
 
 sqp_cmv_cov_str <- function (x, sqp_data, cmv_vars, original_data, cmv = NULL) {
   

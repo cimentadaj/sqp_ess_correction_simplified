@@ -124,56 +124,55 @@ ui2 <- tabsetPanel(id = "menu",
                             fluidRow(
                               column(3, selectInput("slid_cnt", "Pick a country",
                                                     choices = all_countries,
-                                                    multiple = TRUE,
-                                                    selected = "Austria")),
+                                                    multiple = TRUE)),
                               column(3, uiOutput("chosen_rounds"))
                             ),
                             uiOutput('chosen_vars'),
                             uiOutput('length_vars'),
-                            ess_button("def_sscore", "I'm done, let me define my sum scores")
+                            ess_button("def_model", "Define the model")
                    ),
-                   tabPanel("Create sum scores", value = "def_sscore",
-                            br(),
-                            p("Would you like to create additional sum score variables?
-                              Sum scores are the addition of several variables into one single
-                              variable. click on 'Create sum score' to create your sum score."),
-                            br(),
-                            br(),
-                            fluidRow(
-                              column(3,
-                                     sidebarPanel(
-                                       actionButton('ins_sscore', 'Create sum score'),
-                                       h6("Create more than one sum score by clicking again."),
-                                       br(),
-                                       br(),
-                                       width = 10
-                                     )
-                              ),
-                              column(6,
-                                     mainPanel(
-                                       div(id = 'placeholder'),
-                                       tags$script("
-                                     Shiny.addCustomMessageHandler('resetValue', function(variableName) {
-                                        Shiny.onInputChange(variableName, null);
-                                     });"
-                                       ),
-                                       width = 12
-                                     ),
-                                     uiOutput('length_vars2')
-                              ),
-                              column(3,
-                                     sidebarPanel(
-                                       br(),
-                                       uiOutput("new_sscore"),
-                                       uiOutput("list_sscore", style = "margin-top: -25px;"),
-                                       uiOutput("del_sscore"),
-                                       br(),
-                                       ess_button('def_model', "I'm done, I want to define my model"),
-                                       width = 10
-                                     )
-                              )
-                            )
-                   ),
+                   # tabPanel("Create sum scores", value = "def_sscore",
+                   #          br(),
+                   #          p("Would you like to create additional sum score variables?
+                   #            Sum scores are the addition of several variables into one single
+                   #            variable. click on 'Create sum score' to create your sum score."),
+                   #          br(),
+                   #          br(),
+                   #          fluidRow(
+                   #            column(3,
+                   #                   sidebarPanel(
+                   #                     actionButton('ins_sscore', 'Create sum score'),
+                   #                     h6("Create more than one sum score by clicking again."),
+                   #                     br(),
+                   #                     br(),
+                   #                     width = 10
+                   #                   )
+                   #            ),
+                   #            column(6,
+                   #                   mainPanel(
+                   #                     div(id = 'placeholder'),
+                   #                     tags$script("
+                   #                   Shiny.addCustomMessageHandler('resetValue', function(variableName) {
+                   #                      Shiny.onInputChange(variableName, null);
+                   #                   });"
+                   #                     ),
+                   #                     width = 12
+                   #                   ),
+                   #                   uiOutput('length_vars2')
+                   #            ),
+                   #            column(3,
+                   #                   sidebarPanel(
+                   #                     br(),
+                   #                     uiOutput("new_sscore"),
+                   #                     uiOutput("list_sscore", style = "margin-top: -25px;"),
+                   #                     uiOutput("del_sscore"),
+                   #                     br(),
+                   #                     ess_button('def_model', "I'm done, I want to define my model"),
+                   #                     width = 10
+                   #                   )
+                   #            )
+                   #          )
+                   # ),
                    tabPanel("Define the model", value = "def_model",
                             br(),
                             fluidRow(column(3, uiOutput("dv")),
@@ -186,9 +185,7 @@ ui2 <- tabsetPanel(id = "menu",
                             mainPanel(uiOutput("sqp_table_output")),
                             ess_button("calc_model", "Create model")
                    ),
-                   tabPanel("Create the model", value = "cre_model",
-                            uiOutput("cre_model")
-                   )
+                   tabPanel("Create the model", value = "cre_model", uiOutput("cre_model"))
 )
 #####
 
@@ -290,8 +287,12 @@ server <- function(input, output, session) {
   
   non_na_columns <- function(x) select_if(x, ~ !all(is.na(.x)))
   
+  observe({
+    print(input$slid_rounds)
+  })
+  
   tmp_ess <-
-    eventReactive(input$slid_cnt, {
+    eventReactive(input$slid_rounds, {
       # Choose country when user calculates model
       downloaded_rnd <- map(input$slid_cnt, ~ non_na_columns(import_country(.x, as.numeric(req(input$slid_rounds)))))
       downloaded_rnd
@@ -306,17 +307,22 @@ server <- function(input, output, session) {
         'vars_ch',
         'Choose variables to use in the modeling',
         choices = setdiff(keep_common_columns(tmp_ess()), c("essround", "idno")),
-        selected = c("rlgdgr", "pplfair", "uempli"),
         multiple = TRUE,
         width = '500px'
         )
     })
   
   output$chosen_rounds <-
-    renderUI({
-      selectInput("slid_rounds",
-                  "Pick a round",
-                  choices = reduce(map(input$slid_cnt, show_country_rounds), intersect))
+      renderUI({
+        
+        selectizeInput(
+          'slid_rounds', 'Pick a round',
+          choices = reduce(map(req(input$slid_cnt), show_country_rounds), intersect),
+          options = list(
+            placeholder = 'Please select an option below',
+            onInitialize = I('function() { this.setValue(""); }')
+          )
+        )
     })
   #####
   
@@ -339,7 +345,7 @@ server <- function(input, output, session) {
       output$length_vars <- renderUI(p(""))
       updateTabsetPanel(session,
                         inputId = "menu",
-                        selected = "def_sscore")
+                        selected = "def_model")
     }
   })
   
@@ -439,14 +445,6 @@ server <- function(input, output, session) {
     # because it will change as soon as I add a new sscore. So I grab the name of the index
     index_names <- gsub("ssname", "", names(temp_input)[semi_index])
     
-    # explore_index <-
-    #       as.data.frame(
-    #         lapply(input$list_sscore, function(x) x == pick_list("list_sscore", reactiveValuesToList(input)))
-    #       ) %>% mutate(inside = substr(pick_list("list_sscore", reactiveValuesToList(input)), 1, 10),
-    #                    name = names(pick_list("list_sscore", reactiveValuesToList(input))))
-    # print(explore_index)
-    
-    # print(index_names)
     
     # To avoid deleting the sscore and ssname separately, I just delete the whole layout
     # that has both things together.
@@ -498,7 +496,8 @@ server <- function(input, output, session) {
   ##### Extract all scores manually after defined #####
   clean_ssnames <-
     eventReactive(input$def_model, {
-      if (input$ins_sscore == 0) return(character())
+      print((is.null(input$ins_sscore) || input$ins_sscore == 0))
+      if (is.null(input$ins_sscore) || input$ins_sscore == 0) return(character())
       
       # I want to grab the value in all ssname* in which
       # the value is neither "" nor NULL (because if it's NULL)
@@ -644,7 +643,7 @@ server <- function(input, output, session) {
     print("Updated ESS")
     print(upd_ess())
     # If no sscore was defined, return the same df the above
-    if (input$ins_sscore == 0) return(upd_ess())
+    if (is.null(input$ins_sscore) || input$ins_sscore == 0) return(upd_ess())
     
     # We need to add new sscores to the origin df.
     # Calculate them here
@@ -665,6 +664,10 @@ server <- function(input, output, session) {
     print(sscore_list())
     print("Value of input$hot is")
     print(req(input$hot))
+  })
+  
+  eventReactive(input$def_model, {
+    output$cre_model <- renderUI(HTML(""))
   })
   
   ##### Download SQP data #####
@@ -697,7 +700,6 @@ server <- function(input, output, session) {
   # If you still haven't added a independent variable, it doesn't
   # allow you to pass to the create model tab.
   observeEvent(input$calc_model, {
-    
     print(paste0("^", chosen_vars(), "$"))
     print(sqp_df())
     
@@ -767,18 +769,18 @@ server <- function(input, output, session) {
               tabPanel("Table of results",
                        # fluidRow(htmlOutput("tmod1")), # Header, I presume ?
                        fluidRow(
-                         column(width = 7, spinner_wrapper("original_cor")),
-                         column(width = 5, spinner_wrapper("corrected_cor"))
+                         column(width = 5, tableOutput("original_cor")),
+                         column(width = 5, tableOutput("corrected_cor"))
                        ),
                        # fluidRow(htmlOutput("tmod2")), # Header #2, I presume ?
                        fluidRow(
-                         column(width = 7, spinner_wrapper("original_cov")),
-                         column(width = 5, spinner_wrapper("corrected_cov"))
+                         column(width = 5, tableOutput("original_cov")),
+                         column(width = 5, tableOutput("corrected_cov"))
                        )
               )
             )
           )
-        
+
         updateTabsetPanel(session,
                           inputId = "menu",
                           selected = "cre_model")
@@ -846,14 +848,11 @@ server <- function(input, output, session) {
     print("original cov")
     print(original_cov)
     
-        
-    correct_wt <- function(x) if(all(x == 0) | any(x < 0)) rep(1, length(x)) else x
-    
     cor_cov <- map(var_df(), ~ {
       print("var_df data frames")
       print(.x)
       print(all(.x$pspwght == 0) | any(.x$pspwght < 0))
-      cov.wt(.x[ch_vars], wt = correct_wt(.x$pspwght), cor = TRUE)
+      cov.wt(.x[ch_vars], wt = .x$pspwght, cor = TRUE)
     })
     
     # Weighted correlation and covariance
@@ -937,7 +936,13 @@ server <- function(input, output, session) {
       corrected_cor <- reduce(corrected_cor, `+`) / denom_adj
       
       diag(corrected_cor) <- 1
+    } else {
+      corrected_cov = reduce(corrected_cov, `+`) / length(corrected_cov)
+      corrected_cor = reduce(corrected_cor, `+`) / length(corrected_cor)
     }
+    
+    rownames(corrected_cov) <- rownames(original_cov[[1]])
+    rownames(corrected_cor) <- rownames(original_cor[[1]])
     
     list(original_cov = reduce(original_cov, `+`) / length(original_cov),
          original_cor = reduce(original_cor, `+`) / length(original_cor),
@@ -992,6 +997,4 @@ server <- function(input, output, session) {
         knitr::kable(format = "html") %>% 
         kableExtra::kable_styling("striped", full_width = FALSE)
     })
-  
-  
 }
