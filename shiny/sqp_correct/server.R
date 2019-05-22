@@ -314,7 +314,6 @@ server <- function(input, output, session) {
   
   output$chosen_rounds <-
       renderUI({
-        
         selectizeInput(
           'slid_rounds', 'Pick a round',
           choices = reduce(map(req(input$slid_cnt), show_country_rounds), intersect),
@@ -767,12 +766,12 @@ server <- function(input, output, session) {
           renderUI(
             tabsetPanel(
               tabPanel("Table of results",
-                       # fluidRow(htmlOutput("tmod1")), # Header, I presume ?
+                       fluidRow(h5("Original and corrected correlation matrices")),
                        fluidRow(
                          column(width = 5, tableOutput("original_cor")),
                          column(width = 5, tableOutput("corrected_cor"))
                        ),
-                       # fluidRow(htmlOutput("tmod2")), # Header #2, I presume ?
+                       fluidRow(h5("Original and corrected covariance matrices")),
                        fluidRow(
                          column(width = 5, tableOutput("original_cov")),
                          column(width = 5, tableOutput("corrected_cov"))
