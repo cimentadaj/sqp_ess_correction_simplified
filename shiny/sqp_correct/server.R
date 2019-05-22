@@ -13,29 +13,6 @@ library(jtools)
 library(tidyr)
 library(dplyr)
 
-all_variables <-
-  c("polintr",
-    "ppltrst",
-    "stfeco",
-    "stfedu")
-# "stfhlth",
-# "stflife", 
-# "trstplt",
-# "trstprl")
-
-all_variables_label <- 
-  c("How interested in politics",
-    "Most people can be trusted or you can't be too careful",
-    "How satisfied with present state of economy in country",
-    "State of education in country nowadays")
-# "State of health services in country nowadays",
-# "How satisfied with life as a whole", 
-# "Trust in politicians",
-# "Trust in country's parliament")
-
-# Variables pasted together with labels
-var_n_labels <- paste0(all_variables, ": ", all_variables_label)
-
 ess_website <- "http://www.europeansocialsurvey.org"
 path_login <- "/user/login"
 
