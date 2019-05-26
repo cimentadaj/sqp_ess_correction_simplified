@@ -98,6 +98,12 @@ ess_button <- function(id, label, color = color_website) {
 ui2 <- tabsetPanel(id = "menu",
                    tabPanel("Select country and model", value = "country_n_vars",
                             br(),
+                            "When choosing a country and a round, this application needs to download
+                             data from the ESS and check for all available variables between countries.
+                             If you feel that the application is slow, be patient as it will respond when
+                             the data is downloaded successfully.",
+                            br(),
+                            br(),
                             fluidRow(
                               column(3, selectInput("slid_cnt", "Pick a country",
                                                     choices = all_countries,
@@ -150,10 +156,10 @@ ui2 <- tabsetPanel(id = "menu",
                    #            )
                    #          )
                    # ),
-                   tabPanel("Define the model", value = "def_model",
+                   tabPanel("Define quality of variables", value = "def_model",
                             br(),
-                            fluidRow(column(3, uiOutput("dv")),
-                                     column(3, uiOutput("iv")),
+                            fluidRow(## column(3, uiOutput("dv")),
+                                     ## column(3, uiOutput("iv")),
                                      column(5, uiOutput("cmv"))),
                             fluidRow(column(3, ""),
                                      column(3, uiOutput('length_vars3')), # three rows just to raise an error
@@ -162,7 +168,7 @@ ui2 <- tabsetPanel(id = "menu",
                             mainPanel(uiOutput("sqp_table_output")),
                             ess_button("calc_model", "Create model")
                    ),
-                   tabPanel("Create the model", value = "cre_model", uiOutput("cre_model"))
+                   tabPanel("Output", value = "cre_model", uiOutput("cre_model"))
 )
 #####
 
@@ -282,7 +288,7 @@ server <- function(input, output, session) {
     renderUI({
       selectInput(
         'vars_ch',
-        'Choose variables to use in the modeling',
+        'Choose variables for the correlation matrix',
         choices = setdiff(keep_common_columns(tmp_ess()), c("essround", "idno")),
         multiple = TRUE,
         width = '500px'
@@ -338,10 +344,10 @@ server <- function(input, output, session) {
     # is different from zero.
     if (length(input$vars_ch) < 2 && (length(input$def_sscore) != 0 && input$def_sscore != 0)) {
       output$length_vars <- renderUI(p(minimum_var_error))
-      output$length_vars2 <- renderUI(p(minimum_var_error))
+      ## output$length_vars2 <- renderUI(p(minimum_var_error))
     } else {
       output$length_vars <- renderUI(p(" "))
-      output$length_vars2 <- renderUI(p(" "))
+      ## output$length_vars2 <- renderUI(p(" "))
     }
   })
   
@@ -448,10 +454,10 @@ server <- function(input, output, session) {
   #####
   
   observeEvent(input$def_model, {
-    if (length(input$vars_ch) < 1) {
-      output$length_vars2 <- renderUI(p(minimum_var_error))
-    } else {
-      output$length_vars2 <- renderUI(p(""))
+    ## if (length(input$vars_ch) < 1) {
+    ##   output$length_vars2 <- renderUI(p(minimum_var_error))
+    ## } else {
+    ##   output$length_vars2 <- renderUI(p(""))
       
       # Because each user can go back to choose a new country/round
       # whenever the user clicks to define the model, the
@@ -466,7 +472,7 @@ server <- function(input, output, session) {
         updateTabsetPanel(session,
                           inputId = "menu",
                           selected = "def_model")
-    }
+    ## }
   })
 
   ##### Extract all scores manually after defined #####
@@ -592,7 +598,7 @@ server <- function(input, output, session) {
                          "Independent variables",
                          choices = setdiff(c(chosen_vars(), exists_cleanssnames()),
                                            c(input$dv_ch, exists_sscorelist())),
-                         selected = preserve_order("iv_ch")) # function to preserver order if some were chosen before
+                         selected = chosen_vars()) # to preserver order if some were chosen before
     )
   
   
@@ -601,8 +607,7 @@ server <- function(input, output, session) {
     renderUI(
       checkboxGroupInput("cmv_ch",
                          "Which variables are measured with the same method?",
-                         choices = c(input$dv_ch, input$iv_ch),
-                         selected = preserve_order("cmv_ch")) # function to preserver order if some were chosen before
+                         choices = chosen_vars())
     )
   
   #####
@@ -684,11 +689,11 @@ server <- function(input, output, session) {
     res <- bind_cols(cnt_df, tryCatch(get_estimates(sqp_id), error = function(e) empty_sqp))
     print(res)
     
-    if (length(input$iv_ch) < 1) {
+    ## if (length(input$iv_ch) < 1) {
       
-      output$length_vars3 <- renderUI(p(minimum_iv_error))
+    ##   output$length_vars3 <- renderUI(p(minimum_iv_error))
       
-    } else {
+    ## } else {
       
       output$length_vars3 <- renderUI(p(""))
       difference_in_vars <- length(sqp_id) != (length(chosen_vars()) * length(input$slid_cnt))
@@ -779,7 +784,6 @@ server <- function(input, output, session) {
         updateTabsetPanel(session,
                           inputId = "menu",
                           selected = "cre_model")
-      }
     }
   })
   
@@ -832,7 +836,7 @@ server <- function(input, output, session) {
   ##### Define cor and cov with weights/adjustments measurement erro #####
   models_coef <- eventReactive(input$calc_model, {
     
-    ch_vars <- c(input$dv_ch, input$iv_ch)
+    ch_vars <- chosen_vars()
     
     # Unweighted correlation and covariance
     original_cor <- map(var_df(), ~ cor(.x[ch_vars]))
@@ -916,8 +920,7 @@ server <- function(input, output, session) {
           ..1 %>% 
             sqp_cmv_cov_str(..2, cmv_vars = input$cmv_ch, original_data = ..3) %>% 
             .[-1] %>% 
-            as.matrix() %>% 
-            cov2cor()
+            as.matrix()
         })
     }
     
