@@ -114,13 +114,6 @@ ui2 <- tabsetPanel(
   tabPanel("Select country and model",
     value = "country_n_vars",
     br(),
-    "When choosing a country and a round, this application needs to download
-                             data from the ESS and check for all available variables between countries.
-                             This will then show a new box to pick which variables to use in the analysis.
-                             If you feel that the application is slow, be patient as it will respond when
-                             the data is downloaded successfully.",
-    br(),
-    br(),
     fluidRow(
       column(3, selectInput("slid_cnt", "Pick a country",
         choices = all_countries,
@@ -128,6 +121,13 @@ ui2 <- tabsetPanel(
       )),
       column(3, uiOutput("chosen_rounds"))
     ),
+    "When choosing a country and a round, this application needs to download
+                             data from the ESS and check for all available variables between countries.
+                             This will then show a new box to pick which variables to use in the analysis.
+                             If you feel that the application is slow, be patient as it will respond when
+                             the data is downloaded successfully.",
+    br(),
+    br(),
     uiOutput("chosen_vars"),
     uiOutput("length_vars"),
     ess_button("def_model", "Define quality of variables")
@@ -179,9 +179,6 @@ ui2 <- tabsetPanel(
     br(),
     p("This tab will download quality information from the Survey Quality Predictor API for all selected variables. When the download is ready, a table will pop out with all available quality information. If any of the quality information is filled out, you need to fill it out before adjusting the correlation/covariance matrices. These values have to be either between 0 and 1 or an NA, in case you don't have information. In order to correct for measurement error you need at least information about the quality and in order to account for the common method variance, you need information about the reliability and validity as defined by Saris and Andrews (1991)."),
     br(),
-    p("Reference:"),
-    p("Saris, W. E., and F. M. Andrews. 1991. “Evaluation of Measurement Instruments Using a Structural Modelin       g Approach.” In Measurement Errors in Surveys, eds. P. P. Biemer, R.M. Groves, N.A. Lyberg, L. E. Mathio       wetz, and S. Sudman. New York: JohnWiley & Sons, Inc., 575–97."),
-    br(),
     br(),
     fluidRow(
       ## column(3, uiOutput("dv")),
@@ -195,8 +192,17 @@ ui2 <- tabsetPanel(
       column(3, "")
     ),
     mainPanel(uiOutput("sqp_table_output")),
-    ess_button("download_sqp", "Download SQP data"),
-    ess_button("calc_model", "Output")
+    ess_button("calc_model", "Output"),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),
+    br(),    
+    p("Reference:"),
+    p("Saris, W. E., and F. M. Andrews. 1991. “Evaluation of Measurement Instruments Using a Structural Modelin       g Approach.” In Measurement Errors in Surveys, eds. P. P. Biemer, R.M. Groves, N.A. Lyberg, L. E. Mathio       wetz, and S. Sudman. New York: JohnWiley & Sons, Inc., 575–97.")    
   ),
   tabPanel("Output", value = "cre_model", uiOutput("cre_model"))
 )
@@ -504,7 +510,7 @@ server <- function(input, output, session) {
   #####
 
   observeEvent(input$def_model, {
-    if (length(input$vars_ch) < 1) {
+    if (length(input$vars_ch) < 2) {
       output$length_vars <- renderUI(p(minimum_iv_error))
     } else {
       output$length_vars <- renderUI(p(""))
@@ -730,7 +736,7 @@ server <- function(input, output, session) {
       paste0("ESS Round ", input$slid_rounds) %>%
       find_studies() %>%
       .[["id"]] %>%
-      find_questions(paste0("^", input$cmv_ch, "$")) %>%
+      find_questions(paste0("^", chosen_vars(), "$")) %>%
       mutate(
         country_q = countrycode(country_iso, origin = "iso2c", destination = "country.name"),
         country_q = paste0(country_q, "_", tolower(short_name))
@@ -747,28 +753,24 @@ server <- function(input, output, session) {
 
   # If you still haven't added a independent variable, it doesn't
   # allow you to pass to the create model tab.
-  observeEvent(input$download_sqp, {
+  observeEvent(input$def_model, {
     print(paste0("^", input$cmv_ch, "$"))
-    print(sqp_df())
 
-    cnt_df <<-
-      sqp_df()$res_sqp %>%
-      transmute(country = countrycode(country_iso, origin = "iso2c", destination = "country.name"))
-
-    sqp_id <<- sqp_df()$res_sqp %>% pull(id)
-    res <- bind_cols(cnt_df, sqp_df()$estimates_sqp)
-    print(res)
-
-    if (length(input$cmv_ch) < 1) {
-      output$length_vars3 <- renderUI(p(minimum_iv_error))
-    } else {
-      output$length_vars3 <- renderUI(p(""))
-      difference_in_vars <- length(sqp_id) != (length(chosen_vars()) * length(input$slid_cnt))
-
-      ## if (is.null(input$hot)) {
       output$hot <- renderRHandsontable({
+
+        cnt_df <-
+          sqp_df()$res_sqp %>%
+          transmute(country = countrycode(country_iso, origin = "iso2c", destination = "country.name"))
+
+        sqp_id <- sqp_df()$res_sqp %>% pull(id)
+        res <- bind_cols(cnt_df, sqp_df()$estimates_sqp)
+        print(res)
+
+        output$length_vars3 <- renderUI(p(""))
+        difference_in_vars <- length(sqp_id) != (length(chosen_vars()) * length(input$slid_cnt))
+
         sqp_cols <- c("reliability", "validity", "quality")
-        country_q <- unlist(map(input$slid_cnt, paste0, "_", input$cmv_ch))
+        country_q <- unlist(map(input$slid_cnt, paste0, "_", chosen_vars()))
         vars_missing <- setdiff(country_q, sqp_df()$res_sqp$country_q)
 
         df_to_complete <-
@@ -796,9 +798,7 @@ server <- function(input, output, session) {
             ),
             color = color_website
           )
-        )
-      ## }
-    }
+          )
   })
 
   observeEvent(input$calc_model, {
@@ -842,24 +842,26 @@ server <- function(input, output, session) {
       }
 
       output$cre_model <-
-        renderUI(
-          tabsetPanel(
-            tabPanel(
-              "Table of results",
-              fluidRow(h5("Original and corrected correlation matrices")),
-              fluidRow(
-                column(width = 5, tableOutput("original_cor")),
-                column(width = 5, tableOutput("corrected_cor"))
-              ),
-              fluidRow(h5("Original and corrected covariance matrices")),
-              fluidRow(
-                column(width = 5, tableOutput("original_cov")),
-                column(width = 5, tableOutput("corrected_cov"))
-              ),
-              downloadButton("downloadData", "Download as csv")
-            )
+          renderUI(
+              mainPanel(
+                  ## tabsetPanel(
+                  ##   tabPanel(
+                  ##     "Table of results",
+                  fluidRow(h5("Original and corrected correlation matrices")),
+                  fluidRow(
+                      column(width = 5, tableOutput("original_cor")),
+                      column(width = 5, tableOutput("corrected_cor"))
+                  ),
+                  fluidRow(h5("Original and corrected covariance matrices")),
+                  fluidRow(
+                      column(width = 5, tableOutput("original_cov")),
+                      column(width = 5, tableOutput("corrected_cov"))
+                  ),
+                  downloadButton("downloadData", "Download as csv")
+                  ##   )
+                  ## )
+              )
           )
-        )
 
       output$downloadData <-
         downloadHandler(
@@ -904,7 +906,6 @@ server <- function(input, output, session) {
     cor_cov <- map(var_df(), ~ {
       print("var_df data frames")
       print(.x)
-      print(all(.x$pspwght == 0) | any(.x$pspwght < 0))
       cov.wt(.x[ch_vars], wt = .x$pspwght, cor = TRUE)
     })
 
@@ -921,8 +922,7 @@ server <- function(input, output, session) {
     print(upd_sqpdf)
     # Subset chosen variables in sqp_df and
     # create quality estimate for the
-    filtered_sqp <- map(upd_sqpdf, ~ .x[.x[[1]] %in% ch_vars, ])
-
+    filtered_sqp <- map(upd_sqpdf, ~ filter(.x, question %in% ch_vars))
     print(filtered_sqp)
 
     # Replace all NA's so that there's no error.

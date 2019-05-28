@@ -5,8 +5,6 @@ account: cimentadaj
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 942681
-bundleId: 2101158
+bundleId: 2113250
 url: https://cimentadaj.shinyapps.io/sqp_correct/
-when: 1558521940.80106
-asMultiple: FALSE
-asStatic: FALSE
+when: 1559042510.7097
