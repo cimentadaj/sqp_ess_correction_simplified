@@ -177,12 +177,10 @@ ui2 <- tabsetPanel(
   tabPanel("Define quality of variables",
     value = "def_model",
     br(),
-    "This tab will download quality information from the Survey Quality Predictor API for all selected variables. If any of these variables do not have any information, a table will pop where you have to fill in with your own information. These values have to be either between 0 and 1 or an NA, in case you don't have information. 
-In order to correct for measurement error you need at least information about the quality and in order to account for the common method variance, you need information about the reliability and validity as defined by Saris and Andrews (1991)
-\n
-Reference: 
-\n
-Saris, W. E., and F. M. Andrews. 1991. “Evaluation of Measurement Instruments Using a Structural Modeling Approach.” In Measurement Errors in Surveys, eds. P. P. Biemer, R.M. Groves, N.A. Lyberg, L. E. Mathiowetz, and S. Sudman. New York: JohnWiley & Sons, Inc., 575–97.",
+    p("This tab will download quality information from the Survey Quality Predictor API for all selected variables. When the download is ready, a table will pop out with all available quality information. If any of the quality information is filled out, you need to fill it out before adjusting the correlation/covariance matrices. These values have to be either between 0 and 1 or an NA, in case you don't have information. In order to correct for measurement error you need at least information about the quality and in order to account for the common method variance, you need information about the reliability and validity as defined by Saris and Andrews (1991)."),
+    br(),
+    p("Reference:"),
+    p("Saris, W. E., and F. M. Andrews. 1991. “Evaluation of Measurement Instruments Using a Structural Modelin       g Approach.” In Measurement Errors in Surveys, eds. P. P. Biemer, R.M. Groves, N.A. Lyberg, L. E. Mathio       wetz, and S. Sudman. New York: JohnWiley & Sons, Inc., 575–97."),
     br(),
     br(),
     fluidRow(
@@ -507,17 +505,16 @@ server <- function(input, output, session) {
 
   observeEvent(input$def_model, {
     if (length(input$vars_ch) < 1) {
-      output$length_vars2 <- renderUI(p(minimum_var_error))
+      output$length_vars <- renderUI(p(minimum_iv_error))
     } else {
-      output$length_vars2 <- renderUI(p(""))
+      output$length_vars <- renderUI(p(""))
 
       # Because each user can go back to choose a new country/round
       # whenever the user clicks to define the model, the
       # hot table is thus resetted so that new values
       # can be added for these new country/rounds/variables
-      ## session$sendCustomMessage(type = "resetValue", message = "hot")
-
-
+      session$sendCustomMessage(type = "resetValue", message = "hot")
+      output$hot <- NULL
       # When the sumscores are ready, the user clicks
       # define model and we switch to the define model
       # tab to select dependent and independent variables
@@ -711,11 +708,11 @@ server <- function(input, output, session) {
     output$cre_model <- renderUI(HTML(""))
   })
 
-  ##### Download SQP data #####
-  ## input <- list(slid_cnt = c("Austria", "Belgium"),
-  ##               slid_rounds = 2,
-  ##               chosen_vars = c("tvtot", "tvpol", "rdtot"),
-  ##               cmv_ch = c("tvtot", "tvpol"))
+  ## Download SQP data #####
+  ## input <- list(slid_cnt = c("Austria", "Spain", "France"),
+  ##               slid_rounds = 1,
+  ##               chosen_vars = c("rlgdgr", "pplfair", "uempli"),
+  ##               cmv_ch = c("rlgdgr", "pplfair", "uempli"))
 
   # Download the question ids from the SQP API.
   sqp_df <- reactive({
@@ -725,9 +722,9 @@ server <- function(input, output, session) {
       return(character())
     }
 
-    main_cnt_lang <- filter(language_iso3, country %in% input$slid_cnt) %>% pull(iso3)
-    country_abbrv <- countrycode(input$slid_cnt, origin = "country.name", destination = "iso2c")
-    country_lang <- paste0(country_abbrv, "_", main_cnt_lang)
+    main_cnt_lang <- filter(language_iso3, country %in% input$slid_cnt)
+    country_abbrv <- countrycode(main_cnt_lang$country, origin = "country.name", destination = "iso2c")
+    country_lang <- paste0(country_abbrv, "_", main_cnt_lang %>% pull(iso3))
 
     intm <-
       paste0("ESS Round ", input$slid_rounds) %>%
@@ -769,37 +766,37 @@ server <- function(input, output, session) {
       difference_in_vars <- length(sqp_id) != (length(chosen_vars()) * length(input$slid_cnt))
 
       ## if (is.null(input$hot)) {
-        output$hot <- renderRHandsontable({
-          sqp_cols <- c("reliability", "validity", "quality")
-          country_q <- unlist(map(input$slid_cnt, paste0, "_", input$cmv_ch))
-          vars_missing <- setdiff(country_q, sqp_df()$res_sqp$country_q)
+      output$hot <- renderRHandsontable({
+        sqp_cols <- c("reliability", "validity", "quality")
+        country_q <- unlist(map(input$slid_cnt, paste0, "_", input$cmv_ch))
+        vars_missing <- setdiff(country_q, sqp_df()$res_sqp$country_q)
 
-          df_to_complete <-
-            NA_real_ %>%
-            matrix(length(vars_missing), ncol = length(sqp_cols)) %>%
-            as.data.frame() %>%
-            set_names(sqp_cols) %>%
-            mutate(question = vars_missing) %>%
-            separate(question, c("country", "question")) %>%
-            select(country, question, sqp_cols)
+        df_to_complete <-
+          NA_real_ %>%
+          matrix(length(vars_missing), ncol = length(sqp_cols)) %>%
+          as.data.frame() %>%
+          set_names(sqp_cols) %>%
+          mutate(question = vars_missing) %>%
+          separate(question, c("country", "question")) %>%
+          select(country, question, sqp_cols)
 
-          df_to_complete <- bind_rows(res, df_to_complete) %>% arrange(country, question)
+        df_to_complete <- bind_rows(res, df_to_complete) %>% arrange(country, question)
 
-          print(df_to_complete)
-          rhandsontable(df_to_complete, selectCallback = TRUE) %>%
-            hot_col("question", readOnly = TRUE) %>%
-            hot_col("country", readOnly = TRUE)
-        })
+        print(df_to_complete)
+        rhandsontable(df_to_complete, selectCallback = TRUE) %>%
+          hot_col("question", readOnly = TRUE) %>%
+          hot_col("country", readOnly = TRUE)
+      })
 
-        output$sqp_table_output <-
-          renderUI(
-            withSpinner(
-              tagList(
-                rHandsontableOutput("hot")
-              ),
-              color = color_website
-            )
+      output$sqp_table_output <-
+        renderUI(
+          withSpinner(
+            tagList(
+              rHandsontableOutput("hot")
+            ),
+            color = color_website
           )
+        )
       ## }
     }
   })
@@ -814,7 +811,6 @@ server <- function(input, output, session) {
       ## output$sqp_table_output <- NULL
 
       upd_sqpdf <<- {
-          
         sqp_df <-
           hot_to_r(input$hot) %>%
           split(.$country) %>%
@@ -840,7 +836,7 @@ server <- function(input, output, session) {
           bind_rows(filter(.y, !question %in% exists_sscorelist()), q_sscore)
         })
       }
-      
+
       spinner_wrapper <- function(plot_title) {
         withSpinner(tagList(tableOutput(plot_title)), color = color_website)
       }
