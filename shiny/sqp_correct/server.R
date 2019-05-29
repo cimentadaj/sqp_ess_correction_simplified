@@ -29,8 +29,10 @@ options(
 valid_email_error <- tags$span(style = "color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
 minimum_var_error <- tags$span(style = "color:red; font-size: 15px;", "Please select at least two variables for modeling.")
 minimum_iv_error <- tags$span(style = "color:red; font-size: 15px;", "Please select at least two variables.")
-missing_est_error <- tags$span(style = "color:red; font-size: 15px;", "Please fill all measurement cells")
-vals_probs_error <- tags$span(style = "color:red; font-size: 15px;", "All manually imputed cells should be between 0 and 1")
+missing_est_error <- tags$span(style = "color:red; font-size: 15px;", "Please fill all measurement cells with values between 0 and 1. If no information is available, fill it with a 99")
+minimum_cmv_vars <- tags$span(style = "color:red; font-size: 15px;", "You must choose no variables or either 2 or more variables that are measured with the same method")
+missing_quality <- tags$span(style = "color:red; font-size: 15px;", "The quality column must be non-missing and should not have 99 values. Otherwise, we cannot estimate any measurement error adjustments.")
+
 
 color_website <- "#AD1400"
 
@@ -110,101 +112,97 @@ ess_button <- function(id, label, color = color_website) {
 
 ##### UI for all tabs #####
 ui2 <- tabsetPanel(
-  id = "menu",
-  tabPanel("Select country and model",
-    value = "country_n_vars",
-    br(),
-    fluidRow(
-      column(3, selectInput("slid_cnt", "Pick a country",
-        choices = all_countries,
-        multiple = TRUE
-      )),
-      column(3, uiOutput("chosen_rounds"))
-    ),
-    "When choosing a country and a round, this application needs to download
+    id = "menu",
+    tabPanel("Select country and model",
+             value = "country_n_vars",
+             br(),
+             fluidRow(
+                 column(3, selectInput("slid_cnt", "Pick a country",
+                                       choices = all_countries,
+                                       multiple = TRUE
+                                       )),
+                 column(3, uiOutput("chosen_rounds"))
+             ),
+             "When choosing a country and a round, this application needs to download
                              data from the ESS and check for all available variables between countries.
                              This will then show a new box to pick which variables to use in the analysis.
                              If you feel that the application is slow, be patient as it will respond when
                              the data is downloaded successfully.",
-    br(),
-    br(),
-    uiOutput("chosen_vars"),
-    uiOutput("length_vars"),
-    ess_button("def_model", "Define quality of variables")
-  ),
-  # tabPanel("Create sum scores", value = "def_sscore",
-  #          br(),
-  #          p("Would you like to create additional sum score variables?
-  #            Sum scores are the addition of several variables into one single
-  #            variable. click on 'Create sum score' to create your sum score."),
-  #          br(),
-  #          br(),
-  #          fluidRow(
-  #            column(3,
-  #                   sidebarPanel(
-  #                     actionButton('ins_sscore', 'Create sum score'),
-  #                     h6("Create more than one sum score by clicking again."),
-  #                     br(),
-  #                     br(),
-  #                     width = 10
-  #                   )
-  #            ),
-  #            column(6,
-  #                   mainPanel(
-  #                     div(id = 'placeholder'),
-  #                     tags$script("
-  #                   Shiny.addCustomMessageHandler('resetValue', function(variableName) {
-  #                      Shiny.onInputChange(variableName, null);
-  #                   });"
-  #                     ),
-  #                     width = 12
-  #                   ),
-  #                   uiOutput('length_vars2')
-  #            ),
-  #            column(3,
-  #                   sidebarPanel(
-  #                     br(),
-  #                     uiOutput("new_sscore"),
-  #                     uiOutput("list_sscore", style = "margin-top: -25px;"),
-  #                     uiOutput("del_sscore"),
-  #                     br(),
-  #                     ess_button('def_model', "I'm done, I want to define my model"),
-  #                     width = 10
-  #                   )
-  #            )
-  #          )
-  # ),
-  tabPanel("Define quality of variables",
-    value = "def_model",
-    br(),
-    p("This tab will download quality information from the Survey Quality Predictor API for all selected variables. When the download is ready, a table will pop out with all available quality information. If any of the quality information is filled out, you need to fill it out before adjusting the correlation/covariance matrices. These values have to be either between 0 and 1 or an NA, in case you don't have information. In order to correct for measurement error you need at least information about the quality and in order to account for the common method variance, you need information about the reliability and validity as defined by Saris and Andrews (1991)."),
-    br(),
-    br(),
-    fluidRow(
-      ## column(3, uiOutput("dv")),
-      ## column(3, uiOutput("iv")),
-      column(5, uiOutput("cmv"))
-    ),
-    fluidRow(
-      column(3, ""),
-      column(3, uiOutput("length_vars3")), # three rows just to raise an error
-      column(3, uiOutput("missing_est_error")),
-      column(3, "")
-    ),
-    mainPanel(uiOutput("sqp_table_output")),
-    ess_button("calc_model", "Output"),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),
-    br(),    
-    p("Reference:"),
-    p("Saris, W. E., and F. M. Andrews. 1991. “Evaluation of Measurement Instruments Using a Structural Modelin       g Approach.” In Measurement Errors in Surveys, eds. P. P. Biemer, R.M. Groves, N.A. Lyberg, L. E. Mathio       wetz, and S. Sudman. New York: JohnWiley & Sons, Inc., 575–97.")    
-  ),
-  tabPanel("Output", value = "cre_model", uiOutput("cre_model"))
+             br(),
+             br(),
+             uiOutput("chosen_vars"),
+             uiOutput("length_vars"),
+             ess_button("def_model", "Define quality of variables")
+             ),
+                                        # tabPanel("Create sum scores", value = "def_sscore",
+                                        #          br(),
+                                        #          p("Would you like to create additional sum score variables?
+                                        #            Sum scores are the addition of several variables into one single
+                                        #            variable. click on 'Create sum score' to create your sum score."),
+                                        #          br(),
+                                        #          br(),
+                                        #          fluidRow(
+                                        #            column(3,
+                                        #                   sidebarPanel(
+                                        #                     actionButton('ins_sscore', 'Create sum score'),
+                                        #                     h6("Create more than one sum score by clicking again."),
+                                        #                     br(),
+                                        #                     br(),
+                                        #                     width = 10
+                                        #                   )
+                                        #            ),
+                                        #            column(6,
+                                        #                   mainPanel(
+                                        #                     div(id = 'placeholder'),
+                                        #                     tags$script("
+                                        #                   Shiny.addCustomMessageHandler('resetValue', function(variableName) {
+                                        #                      Shiny.onInputChange(variableName, null);
+                                        #                   });"
+                                        #                     ),
+                                        #                     width = 12
+                                        #                   ),
+                                        #                   uiOutput('length_vars2')
+                                        #            ),
+                                        #            column(3,
+                                        #                   sidebarPanel(
+                                        #                     br(),
+                                        #                     uiOutput("new_sscore"),
+                                        #                     uiOutput("list_sscore", style = "margin-top: -25px;"),
+                                        #                     uiOutput("del_sscore"),
+                                        #                     br(),
+                                        #                     ess_button('def_model', "I'm done, I want to define my model"),
+                                        #                     width = 10
+                                        #                   )
+                                        #            )
+                                        #          )
+                                        # ),
+    tabPanel("Define quality of variables",
+             value = "def_model",
+             br(),
+             p("This tab will download quality information from the Survey Quality Predictor API for all selected variables. When the download is ready, a table will pop out with all available quality information. If any of the quality information is filled out, you need to fill it out before adjusting the correlation/covariance matrices. These values have to be either between 0 and 1 or a 99, in case you don't have information. In order to correct for measurement error you need at least information about the quality and in order to account for the common method variance, you need information about the reliability and validity as defined by Saris and Andrews (1991)."),
+             br(),
+             br(),
+             fluidRow(
+                 column(2, uiOutput("cmv")),
+                 column(1, ""),
+                 br(),
+                 br(),
+                 column(4, uiOutput("sqp_table_output")),
+                 ess_button("calc_model", "Output")
+             ),
+             fluidRow(
+                 column(3, ""),
+                 column(3, uiOutput("length_vars3")), # three rows just to raise an error
+                 column(3, uiOutput("missing_est_error")),
+                 column(3, "")
+             ),
+             mainPanel(br(),
+                       br(),
+                       br(),
+                       p("Reference:"),
+                       p("Saris, W. E., and F. M. Andrews. 1991. “Evaluation of Measurement Instruments Using a Structural Modeling Approach.” In Measurement Errors in Surveys, eds. P. P. Biemer, R.M. Groves, N.A. Lyberg, L. E. Mathiowetz, and S. Sudman. New York: JohnWiley & Sons, Inc., 575–97."))
+             ),
+    tabPanel("Output", value = "cre_model", uiOutput("cre_model"))
 )
 #####
 
@@ -219,7 +217,9 @@ is_error <- function(x) {
 
 between_0_1 <- function(df) {
   res <- keep(df, is.numeric) %>% reduce(`c`)
-  all(between(res, 0, 1) & !is.na(res))
+  valid_numbers <- (between(res, 0, 1) | res == 99) & !is.na(res)
+
+  all(valid_numbers)
 }
 
 # For calculating sscore of quality scores and only returnig the row of
@@ -241,7 +241,6 @@ pick_list <- function(exclude, the_list) {
 
 #####
 
-
 server <- function(input, output, session) {
 
   ##### Helper functions in Shiny #####
@@ -254,9 +253,6 @@ server <- function(input, output, session) {
     is_specific_tab()
   }
 
-  is_error <- function(x) {
-    class(x) == "try-error"
-  }
   #####
 
   ##### Logging in #####
@@ -286,16 +282,14 @@ server <- function(input, output, session) {
       }
     }
   })
-  authenticate_ess("cimentadaj@gmail.com", ess_website, path_login)
-  USER$Logged <- TRUE
 
   # # Change UI based on whether the user is logged in or not.
   observe({
-    # if (USER$Logged == FALSE) {
-    #   output$page <- renderUI({
-    #     main_page(ui1)
-    #   })
-    # }
+    if (USER$Logged == FALSE) {
+      output$page <- renderUI({
+        main_page(ui1)
+      })
+    }
 
     if (USER$Logged == TRUE) {
       output$page <- renderUI({
@@ -800,16 +794,121 @@ server <- function(input, output, session) {
           )
           )
   })
-
+    
   observeEvent(input$calc_model, {
-    if (!is.null(input$hot) && anyNA(hot_to_r(input$hot))) {
-      output$missing_est_error <- renderUI(p(missing_est_error))
-    } else if (!is.null(input$hot) && !between_0_1(hot_to_r(input$hot))) {
-      output$missing_est_error <- renderUI(p(vals_probs_error))
-    } else {
-      output$missing_est_error <- renderUI(p(""))
-      ## output$sqp_table_output <- NULL
+    print(hot_to_r(input$hot))
+    print(class(hot_to_r(input$hot)))
+    hot_available <- !is.null(input$hot)
+    hot_any_missing <- anyNA(hot_to_r(input$hot))
+    length_cmv <- length(input$cmv_ch)
+    valid_numbers <- between_0_1(hot_to_r(input$hot))
+    quality_input <- hot_to_r(input$hot)$quality
+    any_99_quality <- any(quality_input == 99)
+    cmv_hot_df <- hot_to_r(input$hot) %>% filter(question %in% input$cmv_ch)
+    missing_info_cmv <- any(unlist(map(cmv_hot_df, ~ .x == 99)))
 
+    
+    if (length_cmv == 1) {
+
+        output$missing_est_error <- renderUI(p(minimum_cmv_vars))
+
+    } else if (hot_any_missing || !valid_numbers) {
+        
+      output$missing_est_error <- renderUI(p(missing_est_error))
+
+    } else if (anyNA(quality_input) || any_99_quality) {
+
+      output$missing_est_error <- renderUI(p(missing_quality))
+      
+    } else if (length_cmv == 0 || (length_cmv > 1 && missing_info_cmv)) {
+
+      print("Passed through replace quality only")
+      output$missing_est_error <- NULL
+      apply_cmv <<- FALSE
+        
+      
+      upd_sqpdf <<- {
+        sqp_df <-
+          hot_to_r(input$hot) %>%
+          split(.$country) %>%
+          map(~ .[, -1])
+
+        map2(var_df(), sqp_df, ~ {
+
+          # Calculate the quality of sumscore of each name-variables pairs
+          # and then bind them together with the sqp_df. The final output
+          # is the sqp_df with the quality of the N sum scores created.
+          q_sscore <- lapply(seq_along(exists_cleanssnames()), function(index) {
+            iterative_sscore(
+              unname(exists_cleanssnames()[index]),
+              sscore_list()[[index]],
+              .y,
+              .x
+            )
+          })
+
+          # Because q_sscore only returns the new quality of each sum score,
+          # we need to remove the variables that compose the sumscore manually
+          # from the sqp data.
+          bind_rows(filter(.y, !question %in% exists_sscorelist()), q_sscore)
+        })
+      }
+
+      spinner_wrapper <- function(plot_title) {
+        withSpinner(tagList(tableOutput(plot_title)), color = color_website)
+      }
+
+      output$cre_model <-
+          renderUI(
+              mainPanel(
+                  ## tabsetPanel(
+                  ##   tabPanel(
+                  ##     "Table of results",
+                  fluidRow(h5("Original and corrected correlation matrices")),
+                  fluidRow(
+                      column(width = 5, tableOutput("original_cor")),
+                      column(width = 5, tableOutput("corrected_cor"))
+                  ),
+                  fluidRow(h5("Original and corrected covariance matrices")),
+                  fluidRow(
+                      column(width = 5, tableOutput("original_cov")),
+                      column(width = 5, tableOutput("corrected_cov"))
+                  ),
+                  downloadButton("downloadData", "Download as csv")
+                  ##   )
+                  ## )
+              )
+          )
+
+      output$downloadData <-
+        downloadHandler(
+          filename = function() "corrected_matrices.zip",
+          content = function(file) {
+            write_csv_zip <- function(.x, .y) {
+              .x <- as_tibble(.x, rownames = "rowname")
+              path <- file.path(tempdir(), paste0(.y, ".csv"))
+              write_csv(.x, path)
+              path
+            }
+
+            where <- imap_chr(models_coef(), write_csv_zip)
+            utils::zip(file, where, flags = "-j")
+          },
+          contentType = "application/zip"
+        )
+
+
+      updateTabsetPanel(session,
+        inputId = "menu",
+        selected = "cre_model"
+      )
+
+    } else if (length_cmv > 1 && !missing_info_cmv) {
+
+      print("Passed through replace quality and apply CMV")      
+      apply_cmv <<- TRUE
+      output$missing_est_error <- NULL
+      
       upd_sqpdf <<- {
         sqp_df <-
           hot_to_r(input$hot) %>%
@@ -886,13 +985,16 @@ server <- function(input, output, session) {
         selected = "cre_model"
       )
     }
+
   })
 
   #####
 
+
   ##### Define cor and cov with weights/adjustments measurement erro #####
-  models_coef <- eventReactive(input$calc_model, {
-    ch_vars <- chosen_vars()
+  models_coef <- reactive({
+    input$cmv_ch
+    ch_vars <- chosen_vars() %>% sort()
 
     # Unweighted correlation and covariance
     original_cor <- map(var_df(), ~ cor(.x[ch_vars]))
@@ -922,7 +1024,7 @@ server <- function(input, output, session) {
     print(upd_sqpdf)
     # Subset chosen variables in sqp_df and
     # create quality estimate for the
-    filtered_sqp <- map(upd_sqpdf, ~ filter(.x, question %in% ch_vars))
+    filtered_sqp <- map(upd_sqpdf, ~ filter(.x, question %in% ch_vars) %>% arrange(question))
     print(filtered_sqp)
 
     # Replace all NA's so that there's no error.
@@ -961,14 +1063,13 @@ server <- function(input, output, session) {
     print(corrected_cor)
     print(filtered_sqp)
 
-    if (length(input$cmv_ch) > 1) {
+    if (apply_cmv) {
       corrected_cor <-
         map2(corrected_cor, filtered_sqp, ~ {
           .x %>%
             sqp_cmv_cor_str(.y, cmv_vars = input$cmv_ch) %>%
             .[-1] %>%
-            as.matrix() %>%
-            cov2cor()
+            as.matrix()
         })
 
       corrected_cov <-
@@ -979,6 +1080,8 @@ server <- function(input, output, session) {
             as.matrix()
         })
     }
+
+    corrected_cor <- map(corrected_cor, cov2cor)
 
     denom_adj <- length(original_cov)
     if (denom_adj > 1) {
@@ -1008,6 +1111,7 @@ server <- function(input, output, session) {
   })
   #####
 
+    
   ##### Prepare final table/plots #####
   # Final table
   output$original_cor <-
