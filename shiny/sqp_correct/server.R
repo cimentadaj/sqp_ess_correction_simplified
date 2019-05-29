@@ -29,9 +29,9 @@ options(
 valid_email_error <- tags$span(style = "color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
 minimum_var_error <- tags$span(style = "color:red; font-size: 15px;", "Please select at least two variables for modeling.")
 minimum_iv_error <- tags$span(style = "color:red; font-size: 15px;", "Please select at least two variables.")
-missing_est_error <- tags$span(style = "color:red; font-size: 15px;", "Please fill all measurement cells with values between 0 and 1. If no information is available, fill it with a 99")
+missing_est_error <- tags$span(style = "color:red; font-size: 15px;", "Please fill all cells with values between 0 and 1. If no information is available, fill it with a 99")
 minimum_cmv_vars <- tags$span(style = "color:red; font-size: 15px;", "You must choose no variables or either 2 or more variables that are measured with the same method")
-missing_quality <- tags$span(style = "color:red; font-size: 15px;", "The quality column must be non-missing and should not have 99 values. Otherwise, we cannot estimate any measurement error adjustments.")
+missing_quality <- tags$span(style = "color:red; font-size: 15px;", "The quality column must be non-missing and should have a value between 0 and 1. Otherwise, correction for measurement error is not possible. ")
 
 
 color_website <- "#AD1400"
@@ -53,6 +53,13 @@ main_page <- function(...) {
         id = "ess_logo",
         src = "http://www.europeansocialsurvey.org/common/ess_eric/img/ess-logo-top.png"
       ),
+      img(
+        id = "sqp_logo",
+        src = "SQP_logo_big_white.png",
+        width = "4.7%",
+        height = "4.7%"
+      ),
+      h3(id = "header_title", "Correction for measurement and sampling error app"),
       br(),
       br(),
       ...
@@ -66,6 +73,17 @@ main_page <- function(...) {
                  }
                  #ess_logo {
                  margin-top: 15px;
+                 position: relative
+                 }
+                 #sqp_logo {
+                 margin-top: 8px;
+                 float: right;
+                 position: relative
+                 }
+                 #header_title {
+                 margin-top: -35px;
+                 color: white;
+                 text-align: center;
                  position: relative
                  }"
       )
@@ -182,25 +200,18 @@ ui2 <- tabsetPanel(
              p("This tab will download quality information from the Survey Quality Predictor API for all selected variables. When the download is ready, a table will pop out with all available quality information. If any of the quality information is filled out, you need to fill it out before adjusting the correlation/covariance matrices. These values have to be either between 0 and 1 or a 99, in case you don't have information. In order to correct for measurement error you need at least information about the quality and in order to account for the common method variance, you need information about the reliability and validity as defined by Saris and Andrews (1991)."),
              br(),
              br(),
-             fluidRow(
-                 column(2, uiOutput("cmv")),
-                 column(1, ""),
-                 br(),
-                 br(),
-                 column(4, uiOutput("sqp_table_output")),
-                 ess_button("calc_model", "Output")
-             ),
-             fluidRow(
-                 column(3, ""),
-                 column(3, uiOutput("length_vars3")), # three rows just to raise an error
-                 column(3, uiOutput("missing_est_error")),
-                 column(3, "")
-             ),
-             mainPanel(br(),
-                       br(),
-                       br(),
-                       p("Reference:"),
-                       p("Saris, W. E., and F. M. Andrews. 1991. “Evaluation of Measurement Instruments Using a Structural Modeling Approach.” In Measurement Errors in Surveys, eds. P. P. Biemer, R.M. Groves, N.A. Lyberg, L. E. Mathiowetz, and S. Sudman. New York: JohnWiley & Sons, Inc., 575–97."))
+             uiOutput("sqp_table_output"),
+             br(),
+             br(),
+             uiOutput("cmv"),
+             br(),
+             ess_button("calc_model", "Output"),
+             uiOutput("length_vars3"), # three rows just to raise an error
+             uiOutput("missing_est_error"),
+             br(),
+             br(),
+             p("Reference:"),
+             p("Saris, W. E., and F. M. Andrews. 1991. “Evaluation of Measurement Instruments Using a Structural Modeling Approach.” In Measurement Errors in Surveys, eds. P. P. Biemer, R.M. Groves, N.A. Lyberg, L. E. Mathiowetz, and S. Sudman. New York: JohnWiley & Sons, Inc., 575–97.")
              ),
     tabPanel("Output", value = "cre_model", uiOutput("cre_model"))
 )
@@ -721,7 +732,7 @@ server <- function(input, output, session) {
     if (is.null(input$slid_cnt)) {
       return(character())
     }
-
+    
     main_cnt_lang <- filter(language_iso3, country %in% input$slid_cnt)
     country_abbrv <- countrycode(main_cnt_lang$country, origin = "country.name", destination = "iso2c")
     country_lang <- paste0(country_abbrv, "_", main_cnt_lang %>% pull(iso3))
@@ -741,7 +752,7 @@ server <- function(input, output, session) {
       filter(paste0(country_iso, "_", language_iso) %in% country_lang)
 
     estimates_sqp <- tryCatch(get_estimates(res_sqp$id), error = function(e) empty_sqp)
-    print(res_sqp)
+
     list(res_sqp = res_sqp, estimates_sqp = estimates_sqp)
   })
 
@@ -765,6 +776,7 @@ server <- function(input, output, session) {
 
         sqp_cols <- c("reliability", "validity", "quality")
         country_q <- unlist(map(input$slid_cnt, paste0, "_", chosen_vars()))
+        
         vars_missing <- setdiff(country_q, sqp_df()$res_sqp$country_q)
 
         df_to_complete <-
@@ -773,7 +785,7 @@ server <- function(input, output, session) {
           as.data.frame() %>%
           set_names(sqp_cols) %>%
           mutate(question = vars_missing) %>%
-          separate(question, c("country", "question")) %>%
+          separate(question, c("country", "question"), sep = "_") %>%
           select(country, question, sqp_cols)
 
         df_to_complete <- bind_rows(res, df_to_complete) %>% arrange(country, question)
