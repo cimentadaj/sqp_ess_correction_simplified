@@ -12,6 +12,7 @@ library(rhandsontable)
 library(jtools)
 library(tidyr)
 library(dplyr)
+library(glue)
 
 ess_website <- "http://www.europeansocialsurvey.org"
 path_login <- "/user/login"
@@ -25,14 +26,35 @@ options(
   survey.lonely.psu = "adjust"
 )
 
+
+# Because countrycode has different long names for different iso2c UK names
+custom_match <- c(`GB` = "United Kingdom", `UK` = "United Kingdom")
+
 # Text for errors when email is wrong or when 1 variable is selected as model
 valid_email_error <- tags$span(style = "color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
 minimum_var_error <- tags$span(style = "color:red; font-size: 15px;", "Please select at least two variables for modeling.")
 minimum_iv_error <- tags$span(style = "color:red; font-size: 15px;", "Please select at least two variables.")
-missing_est_error <- tags$span(style = "color:red; font-size: 15px;", "Please fill all cells with values between 0 and 1. If no information is available, fill it with a 99")
-minimum_cmv_vars <- tags$span(style = "color:red; font-size: 15px;", "You must choose no variables or either 2 or more variables that are measured with the same method")
-missing_quality <- tags$span(style = "color:red; font-size: 15px;", "The quality column must be non-missing and should have a value between 0 and 1. Otherwise, correction for measurement error is not possible. ")
 
+missing_est_error <- tags$span(style = "color:red; font-size: 15px;", "Please complete all cells with values between 0 and 1. If no information is available, add a 99 and note that if no reliability and/or validity are provided, the common method variance cannot be taken into account. If you set quality to 99, then correction for measurement error is not possible.")
+
+minimum_cmv_vars <- tags$span(style = "color:red; font-size: 15px;", "You must choose no variables or either 2 or more variables that are measured with the same method")
+
+missing_quality <- tags$span(style = "color:red; font-size: 15px;", "The quality column must be non-missing and should have a value between 0 and 1. Otherwise, correction for measurement error is not possible.")
+
+ess_signup_url <- a("https://www.europeansocialsurvey.org/user/new",
+  href = "https://www.europeansocialsurvey.org/user/new",
+  target = "_blank"
+)
+
+ess_weight_url <- a("European Social Survey Round 8 Weighting Strategy",
+  href = "https://www.europeansocialsurvey.org/docs/round8/methods/ESS8_weighting_strategy.pdf",
+  target = "_blank"
+)
+
+sqp_url <- a("sqp.upf.edu",
+  href = "http://sqp.upf.edu/",
+  target = "_blank"
+)
 
 color_website <- "#AD1400"
 
@@ -95,25 +117,39 @@ main_page <- function(...) {
 ##### UI TAB TO LOG IN #####
 ui1 <- tagList(
   div(
+    id = "welcome_msg",
+    h3("Welcome to the correction for measurement and sampling app of the European Social Survey!", align = "center")
+  ),
+  div(
     id = "login",
-    textInput("essemail", "Registered ESS email"),
+    textInput("essemail", "Sign in with your registered ESS email address:"),
     # passwordInput("passwd", "Password"),
-    br(),
     uiOutput("emailValid"),
-    actionButton("Login", "Log in")
+    actionButton("Login", "Log in"),
+    br(),
+    br(),
+    "If you haven’t registered yet with the ESS, please do that first: ",
+    ess_signup_url
   ),
   tags$style(
     type = "text/css",
-    "#login {
-               font-size: 14px;
-               text-align: left;
-               position: absolute;
-               top: 50%;
-               left: 50%;
-               margin-top: -100px;
-               margin-left: -150px;
-               width: 25%;
-               }"
+    "
+     #welcome_msg {
+        position: absolute;
+        top: 40%;
+        margin-top: -120px;
+        margin-left: 450px;
+     }
+     #login {
+        font-size: 14px;
+        text-align: left;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-top: -100px;
+        margin-left: -170px;
+        width: 25%;
+     }"
   )
 )
 
@@ -130,90 +166,102 @@ ess_button <- function(id, label, color = color_website) {
 
 ##### UI for all tabs #####
 ui2 <- tabsetPanel(
-    id = "menu",
-    tabPanel("Select country and model",
-             value = "country_n_vars",
-             br(),
-             fluidRow(
-                 column(3, selectInput("slid_cnt", "Pick a country",
-                                       choices = all_countries,
-                                       multiple = TRUE
-                                       )),
-                 column(3, uiOutput("chosen_rounds"))
-             ),
-             "When choosing a country and a round, this application needs to download
-                             data from the ESS and check for all available variables between countries.
-                             This will then show a new box to pick which variables to use in the analysis.
-                             If you feel that the application is slow, be patient as it will respond when
-                             the data is downloaded successfully.",
-             br(),
-             br(),
-             uiOutput("chosen_vars"),
-             uiOutput("length_vars"),
-             ess_button("def_model", "Define quality of variables")
-             ),
-                                        # tabPanel("Create sum scores", value = "def_sscore",
-                                        #          br(),
-                                        #          p("Would you like to create additional sum score variables?
-                                        #            Sum scores are the addition of several variables into one single
-                                        #            variable. click on 'Create sum score' to create your sum score."),
-                                        #          br(),
-                                        #          br(),
-                                        #          fluidRow(
-                                        #            column(3,
-                                        #                   sidebarPanel(
-                                        #                     actionButton('ins_sscore', 'Create sum score'),
-                                        #                     h6("Create more than one sum score by clicking again."),
-                                        #                     br(),
-                                        #                     br(),
-                                        #                     width = 10
-                                        #                   )
-                                        #            ),
-                                        #            column(6,
-                                        #                   mainPanel(
-                                        #                     div(id = 'placeholder'),
-                                        #                     tags$script("
-                                        #                   Shiny.addCustomMessageHandler('resetValue', function(variableName) {
-                                        #                      Shiny.onInputChange(variableName, null);
-                                        #                   });"
-                                        #                     ),
-                                        #                     width = 12
-                                        #                   ),
-                                        #                   uiOutput('length_vars2')
-                                        #            ),
-                                        #            column(3,
-                                        #                   sidebarPanel(
-                                        #                     br(),
-                                        #                     uiOutput("new_sscore"),
-                                        #                     uiOutput("list_sscore", style = "margin-top: -25px;"),
-                                        #                     uiOutput("del_sscore"),
-                                        #                     br(),
-                                        #                     ess_button('def_model', "I'm done, I want to define my model"),
-                                        #                     width = 10
-                                        #                   )
-                                        #            )
-                                        #          )
-                                        # ),
-    tabPanel("Define quality of variables",
-             value = "def_model",
-             br(),
-             p("This tab will download quality information from the Survey Quality Predictor API for all selected variables. When the download is ready, a table will pop out with all available quality information. If any of the quality information is filled out, you need to fill it out before adjusting the correlation/covariance matrices. These values have to be either between 0 and 1 or a 99, in case you don't have information. In order to correct for measurement error you need at least information about the quality and in order to account for the common method variance, you need information about the reliability and validity as defined by Saris and Andrews (1991)."),
-             br(),
-             br(),
-             uiOutput("sqp_table_output"),
-             br(),
-             br(),
-             uiOutput("cmv"),
-             br(),
-             ess_button("calc_model", "Output"),
-             uiOutput("length_vars3"), # three rows just to raise an error
-             uiOutput("missing_est_error"),
-             br(),
-             br(),
-             p("Reference:"),
-             p("Saris, W. E., and F. M. Andrews. 1991. “Evaluation of Measurement Instruments Using a Structural Modeling Approach.” In Measurement Errors in Surveys, eds. P. P. Biemer, R.M. Groves, N.A. Lyberg, L. E. Mathiowetz, and S. Sudman. New York: JohnWiley & Sons, Inc., 575–97.")
-             ),
-    tabPanel("Output", value = "cre_model", uiOutput("cre_model"))
+  id = "menu",
+  tabPanel("Select country and model",
+    value = "country_n_vars",
+    br(),
+    fluidRow(
+      column(3, selectInput("slid_cnt", "Pick a country or several",
+        choices = all_countries,
+        multiple = TRUE
+      )),
+      column(3, uiOutput("chosen_rounds"))
+    ),
+    "After having chosen a country and round, this application downloads the data from the ESS. If
+several countries are chosen, the application will only provide those variables
+that are available across countries for that specific round. The available variables can then be chosen
+from a box that will appear next:",
+    br(),
+    br(),
+    uiOutput("chosen_vars"),
+    uiOutput("length_vars"),
+    ess_button("def_model", "Define quality of variables"),
+    br(),
+    br(),
+    "Note that your data is already corrected for sampling error at this point. The application
+follows the", ess_weight_url, "(page 2):
+“The use of pspwght is recommended in any analyses that aim to draw inferences related to
+the general population of a country or when comparisons between countries are performed.
+Instead, (pspwght*pweight) should be used for analyses in which countries are combined to
+represent a larger geographical region (e.g. comparing “Nordic countries” with “Mediterranean
+countries”, or producing estimates for “all ESS countries”)."
+  ),
+  # tabPanel("Create sum scores", value = "def_sscore",
+  #          br(),
+  #          p("Would you like to create additional sum score variables?
+  #            Sum scores are the addition of several variables into one single
+  #            variable. click on 'Create sum score' to create your sum score."),
+  #          br(),
+  #          br(),
+  #          fluidRow(
+  #            column(3,
+  #                   sidebarPanel(
+  #                     actionButton('ins_sscore', 'Create sum score'),
+  #                     h6("Create more than one sum score by clicking again."),
+  #                     br(),
+  #                     br(),
+  #                     width = 10
+  #                   )
+  #            ),
+  #            column(6,
+  #                   mainPanel(
+  #                     div(id = 'placeholder'),
+  #                     tags$script("
+  #                   Shiny.addCustomMessageHandler('resetValue', function(variableName) {
+  #                      Shiny.onInputChange(variableName, null);
+  #                   });"
+  #                     ),
+  #                     width = 12
+  #                   ),
+  #                   uiOutput('length_vars2')
+  #            ),
+  #            column(3,
+  #                   sidebarPanel(
+  #                     br(),
+  #                     uiOutput("new_sscore"),
+  #                     uiOutput("list_sscore", style = "margin-top: -25px;"),
+  #                     uiOutput("del_sscore"),
+  #                     br(),
+  #                     ess_button('def_model', "I'm done, I want to define my model"),
+  #                     width = 10
+  #                   )
+  #            )
+  #          )
+  # ),
+  tabPanel("Define quality of variables",
+    value = "def_model",
+    br(),
+    p("This tab downloads quality information from the Survey Quality Predictor (SQP2.1,", sqp_url, ", Saris 2015) for all selected variables. When the download is ready, a table will pop up with all available SQP authorized quality predictions. If any of the quality information is missing, you need to add it before the correlation/covariance matrices can be corrected for measurement error. You can go to SQP2.1:", sqp_url, "and create or use a user quality prediction, or alternatively, you can introduce measurement quality from any other source manually in the input table. These values have to be between 0 and 1 or 99, in case you don't have any information. In order to correct for any measurement error you need at least information on the quality of the question. In order to account for the common method variance for those variables which are measured with the same method, you need information about the reliability and validity, as defined by Saris and Andrews (1991)."),
+    br(),
+    br(),
+    uiOutput("sqp_table_output"),
+    br(),
+    br(),
+    uiOutput("cmv"),
+    br(),
+    ess_button("calc_model", "Output"),
+    uiOutput("length_vars3"), # three rows just to raise an error
+    uiOutput("missing_est_error"),
+    br(),
+    p("Reference:"),
+    p("Saris, W. E., and F. M. Andrews. 1991. “Evaluation of Measurement Instruments Using a
+Structural Modeling Approach.” In Measurement Errors in Surveys, eds. P. P. Biemer, R.M.
+Groves, N.A. Lyberg, L. E. Mathiowetz, and S. Sudman. New York: JohnWiley &amp; Sons, Inc.,
+575–97."),
+    p("Saris, W.E. 2015. “Survey Quality Predictor 2 [Online Software]. Version 2.1.” Retrieved from
+sqp.upf.edu")
+  ),
+  tabPanel("Output", value = "cre_model", uiOutput("cre_model"))
 )
 #####
 
@@ -331,7 +379,7 @@ server <- function(input, output, session) {
     renderUI({
       selectInput(
         "vars_ch",
-        "Choose variables for the correlation matrix",
+        "Choose variables",
         choices = setdiff(keep_common_columns(tmp_ess()), c("essround", "idno")),
         multiple = TRUE,
         width = "500px"
@@ -732,7 +780,7 @@ server <- function(input, output, session) {
     if (is.null(input$slid_cnt)) {
       return(character())
     }
-    
+
     main_cnt_lang <- filter(language_iso3, country %in% input$slid_cnt)
     country_abbrv <- countrycode(main_cnt_lang$country, origin = "country.name", destination = "iso2c")
     country_lang <- paste0(country_abbrv, "_", main_cnt_lang %>% pull(iso3))
@@ -743,7 +791,7 @@ server <- function(input, output, session) {
       .[["id"]] %>%
       find_questions(paste0("^", chosen_vars(), "$")) %>%
       mutate(
-        country_q = countrycode(country_iso, origin = "iso2c", destination = "country.name"),
+        country_q = countrycode(country_iso, origin = "iso2c", destination = "country.name", custom_match = custom_match),
         country_q = paste0(country_q, "_", tolower(short_name))
       )
 
@@ -761,52 +809,50 @@ server <- function(input, output, session) {
   observeEvent(input$def_model, {
     print(paste0("^", input$cmv_ch, "$"))
 
-      output$hot <- renderRHandsontable({
+    output$hot <- renderRHandsontable({
+      cnt_df <-
+        sqp_df()$res_sqp %>%
+        transmute(country = countrycode(country_iso, origin = "iso2c", destination = "country.name", custom_match = custom_match))
 
-        cnt_df <-
-          sqp_df()$res_sqp %>%
-          transmute(country = countrycode(country_iso, origin = "iso2c", destination = "country.name"))
+      sqp_id <- sqp_df()$res_sqp %>% pull(id)
+      res <- bind_cols(cnt_df, sqp_df()$estimates_sqp)
+      print(res)
 
-        sqp_id <- sqp_df()$res_sqp %>% pull(id)
-        res <- bind_cols(cnt_df, sqp_df()$estimates_sqp)
-        print(res)
+      output$length_vars3 <- renderUI(p(""))
+      difference_in_vars <- length(sqp_id) != (length(chosen_vars()) * length(input$slid_cnt))
 
-        output$length_vars3 <- renderUI(p(""))
-        difference_in_vars <- length(sqp_id) != (length(chosen_vars()) * length(input$slid_cnt))
+      sqp_cols <- c("reliability", "validity", "quality")
+      country_q <- unlist(map(input$slid_cnt, paste0, "_", chosen_vars()))
 
-        sqp_cols <- c("reliability", "validity", "quality")
-        country_q <- unlist(map(input$slid_cnt, paste0, "_", chosen_vars()))
-        
-        vars_missing <- setdiff(country_q, sqp_df()$res_sqp$country_q)
+      vars_missing <- setdiff(country_q, sqp_df()$res_sqp$country_q)
 
-        df_to_complete <-
-          NA_real_ %>%
-          matrix(length(vars_missing), ncol = length(sqp_cols)) %>%
-          as.data.frame() %>%
-          set_names(sqp_cols) %>%
-          mutate(question = vars_missing) %>%
-          separate(question, c("country", "question"), sep = "_") %>%
-          select(country, question, sqp_cols)
+      df_to_complete <-
+        NA_real_ %>%
+        matrix(length(vars_missing), ncol = length(sqp_cols)) %>%
+        as.data.frame() %>%
+        set_names(sqp_cols) %>%
+        mutate(question = vars_missing) %>%
+        separate(question, c("country", "question"), sep = "_") %>%
+        select(country, question, sqp_cols)
 
-        df_to_complete <- bind_rows(res, df_to_complete) %>% arrange(country, question)
+      df_to_complete <- bind_rows(res, df_to_complete) %>% arrange(country, question)
 
-        print(df_to_complete)
-        rhandsontable(df_to_complete, selectCallback = TRUE) %>%
-          hot_col("question", readOnly = TRUE) %>%
-          hot_col("country", readOnly = TRUE)
-      })
+      rhandsontable(df_to_complete, selectCallback = TRUE) %>%
+        hot_col("question", readOnly = TRUE) %>%
+        hot_col("country", readOnly = TRUE)
+    })
 
-      output$sqp_table_output <-
-        renderUI(
-          withSpinner(
-            tagList(
-              rHandsontableOutput("hot")
-            ),
-            color = color_website
-          )
-          )
+    output$sqp_table_output <-
+      renderUI(
+        withSpinner(
+          tagList(
+            rHandsontableOutput("hot")
+          ),
+          color = color_website
+        )
+      )
   })
-    
+
   observeEvent(input$calc_model, {
     print(hot_to_r(input$hot))
     print(class(hot_to_r(input$hot)))
@@ -819,26 +865,19 @@ server <- function(input, output, session) {
     cmv_hot_df <- hot_to_r(input$hot) %>% filter(question %in% input$cmv_ch)
     missing_info_cmv <- any(unlist(map(cmv_hot_df, ~ .x == 99)))
 
-    
+
     if (length_cmv == 1) {
-
-        output$missing_est_error <- renderUI(p(minimum_cmv_vars))
-
+      output$missing_est_error <- renderUI(p(minimum_cmv_vars))
     } else if (hot_any_missing || !valid_numbers) {
-        
       output$missing_est_error <- renderUI(p(missing_est_error))
-
     } else if (anyNA(quality_input) || any_99_quality) {
-
       output$missing_est_error <- renderUI(p(missing_quality))
-      
     } else if (length_cmv == 0 || (length_cmv > 1 && missing_info_cmv)) {
-
       print("Passed through replace quality only")
       output$missing_est_error <- NULL
       apply_cmv <<- FALSE
-        
-      
+
+
       upd_sqpdf <<- {
         sqp_df <-
           hot_to_r(input$hot) %>%
@@ -871,26 +910,20 @@ server <- function(input, output, session) {
       }
 
       output$cre_model <-
-          renderUI(
-              mainPanel(
-                  ## tabsetPanel(
-                  ##   tabPanel(
-                  ##     "Table of results",
-                  fluidRow(h5("Original and corrected correlation matrices")),
-                  fluidRow(
-                      column(width = 5, tableOutput("original_cor")),
-                      column(width = 5, tableOutput("corrected_cor"))
-                  ),
-                  fluidRow(h5("Original and corrected covariance matrices")),
-                  fluidRow(
-                      column(width = 5, tableOutput("original_cov")),
-                      column(width = 5, tableOutput("corrected_cov"))
-                  ),
-                  downloadButton("downloadData", "Download as csv")
-                  ##   )
-                  ## )
-              )
+        renderUI(
+          mainPanel(
+            br(),
+            fluidRow(
+              column(width = 5, tableOutput("original_cor")),
+              column(width = 5, tableOutput("corrected_cor"))
+            ),
+            fluidRow(
+              column(width = 5, tableOutput("original_cov")),
+              column(width = 5, tableOutput("corrected_cov"))
+            ),
+            downloadButton("downloadData", "Download as csv")
           )
+        )
 
       output$downloadData <-
         downloadHandler(
@@ -914,13 +947,11 @@ server <- function(input, output, session) {
         inputId = "menu",
         selected = "cre_model"
       )
-
     } else if (length_cmv > 1 && !missing_info_cmv) {
-
-      print("Passed through replace quality and apply CMV")      
+      print("Passed through replace quality and apply CMV")
       apply_cmv <<- TRUE
       output$missing_est_error <- NULL
-      
+
       upd_sqpdf <<- {
         sqp_df <-
           hot_to_r(input$hot) %>%
@@ -953,26 +984,24 @@ server <- function(input, output, session) {
       }
 
       output$cre_model <-
-          renderUI(
-              mainPanel(
-                  ## tabsetPanel(
-                  ##   tabPanel(
-                  ##     "Table of results",
-                  fluidRow(h5("Original and corrected correlation matrices")),
-                  fluidRow(
-                      column(width = 5, tableOutput("original_cor")),
-                      column(width = 5, tableOutput("corrected_cor"))
-                  ),
-                  fluidRow(h5("Original and corrected covariance matrices")),
-                  fluidRow(
-                      column(width = 5, tableOutput("original_cov")),
-                      column(width = 5, tableOutput("corrected_cov"))
-                  ),
-                  downloadButton("downloadData", "Download as csv")
-                  ##   )
-                  ## )
-              )
+        renderUI(
+          mainPanel(
+            ## tabsetPanel(
+            ##   tabPanel(
+            ##     "Table of results",
+            fluidRow(
+              column(width = 5, tableOutput("original_cor")),
+              column(width = 5, tableOutput("corrected_cor"))
+            ),
+            fluidRow(
+              column(width = 5, tableOutput("original_cov")),
+              column(width = 5, tableOutput("corrected_cov"))
+            ),
+            downloadButton("downloadData", "Download as csv")
+            ##   )
+            ## )
           )
+        )
 
       output$downloadData <-
         downloadHandler(
@@ -997,7 +1026,6 @@ server <- function(input, output, session) {
         selected = "cre_model"
       )
     }
-
   })
 
   #####
@@ -1123,7 +1151,37 @@ server <- function(input, output, session) {
   })
   #####
 
-    
+
+  # Titles
+
+  correction_text <-
+    reactive({
+      length_cmv <- length(input$cmv_ch)
+      cmv_hot_df <- hot_to_r(input$hot) %>% filter(question %in% input$cmv_ch)
+      missing_info_cmv <- any(unlist(map(cmv_hot_df, ~ .x == 99)))
+
+      only_quality <- length_cmv == 0 || (length_cmv > 1 && missing_info_cmv)
+      both_quality_cmv <- length_cmv > 1 && !missing_info_cmv
+
+      if (only_quality) {
+        res <- "quality"
+      } else if (both_quality_cmv) {
+        res <- "quality and CMV"
+      }
+
+      res
+    })
+
+  all_titles <- reactive({
+    list(
+      cap_original_cor = glue("Original correlation matrix unweighted and without correction for measurement error for selected countr{if (length(input$slid_cnt) > 1) 'ies' else 'y'}"),
+      cap_original_cov = glue("Original covariance matrix unweighted and without correction for measurement error for selected countr{if (length(input$slid_cnt) > 1) 'ies' else 'y'}"),
+      cap_corrected_cor = glue("Adjusted correlation matrix weighted and corrected for {correction_text()} for selected countr{if (length(input$slid_cnt) > 1) 'ies' else 'y'}"),
+      cap_corrected_cov = glue("Adjusted covariance matrix weighted and corrected for {correction_text()} for selected countr{if (length(input$slid_cnt) > 1) 'ies' else 'y'}")
+    )
+  })
+
+
   ##### Prepare final table/plots #####
   # Final table
   output$original_cor <-
@@ -1133,8 +1191,11 @@ server <- function(input, output, session) {
         tibble::rownames_to_column() %>%
         as_tibble() %>%
         mutate_if(is.numeric, function(x) as.character(round(x, 3))) %>%
-        knitr::kable(format = "html") %>%
-        kableExtra::kable_styling("striped", full_width = FALSE)
+        knitr::kable(
+          format = "html",
+          caption = all_titles()$cap_original_cor
+        ) %>%
+        kableExtra::kable_styling("striped", full_width = TRUE)
     })
 
   output$corrected_cor <-
@@ -1144,8 +1205,11 @@ server <- function(input, output, session) {
         tibble::rownames_to_column() %>%
         as_tibble() %>%
         mutate_if(is.numeric, function(x) as.character(round(x, 3))) %>%
-        knitr::kable(format = "html") %>%
-        kableExtra::kable_styling("striped", full_width = FALSE)
+        knitr::kable(
+          format = "html",
+          caption = all_titles()$cap_corrected_cor
+        ) %>%
+        kableExtra::kable_styling("striped", full_width = TRUE)
     })
 
   output$original_cov <-
@@ -1155,8 +1219,11 @@ server <- function(input, output, session) {
         tibble::rownames_to_column() %>%
         as_tibble() %>%
         mutate_if(is.numeric, function(x) as.character(round(x, 3))) %>%
-        knitr::kable(format = "html") %>%
-        kableExtra::kable_styling("striped", full_width = FALSE)
+        knitr::kable(
+          format = "html",
+          caption = all_titles()$cap_original_cov
+        ) %>%
+        kableExtra::kable_styling("striped", full_width = TRUE)
     })
 
   output$corrected_cov <-
@@ -1166,7 +1233,10 @@ server <- function(input, output, session) {
         tibble::rownames_to_column() %>%
         as_tibble() %>%
         mutate_if(is.numeric, function(x) as.character(round(x, 3))) %>%
-        knitr::kable(format = "html") %>%
-        kableExtra::kable_styling("striped", full_width = FALSE)
+        knitr::kable(
+          format = "html",
+          caption = all_titles()$cap_corrected_cov
+        ) %>%
+        kableExtra::kable_styling("striped", full_width = TRUE)
     })
 }
