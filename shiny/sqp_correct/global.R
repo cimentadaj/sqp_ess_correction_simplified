@@ -60,12 +60,12 @@ sqp_cmv_cor_str <- function (x, sqp_data, cmv_vars, cmv = NULL) {
     stop("You need to supply at least two variables to calculate the Common Method Variance", 
          call. = FALSE)
   }
-  sqp_data <- sqpr:::sqp_reconstruct(sqp_data, c("reliability", "validity"))
+
+  sqp_data <- sqpr:::sqp_reconstruct(sqp_data[sqp_data[[1]] %in% cmv_vars, ], c("reliability", "validity"))
   x <- sqpr:::matrix2tibble(x)
   sqpr:::columns_present(x, sqp_data, cmv_vars)
   selected_rows <- sqp_data[[1]] %in% cmv_vars
-  if (is.null(cmv)) 
-    cmv <- sqpr:::estimate_cmv(sqp_data[selected_rows, ])
+  if (is.null(cmv)) cmv <- sqpr:::estimate_cmv(sqp_data[selected_rows, ])
   cmv <- prod(cmv)
   corrected_corr <- tibble::as_tibble(sqpr:::replace_matrix_cmv(x, cmv, cmv_vars))
   corrected_corr
@@ -104,8 +104,8 @@ sqp_cmv_cov_str <- function (x, sqp_data, cmv_vars, original_data, cmv = NULL) {
     stop("You need to supply at least two variables to calculate the Common Method Variance", 
          call. = FALSE)
   }
-  
-  sqp_data <- sqpr:::sqp_reconstruct(sqp_data, c("reliability", "validity"))
+
+  sqp_data <- sqpr:::sqp_reconstruct(sqp_data[sqp_data[[1]] %in% cmv_vars, ], c("reliability", "validity"))  
   x <- sqpr:::matrix2tibble(x)
   sqpr:::columns_present(x, sqp_data, cmv_vars)
   selected_rows <- sqp_data[[1]] %in% cmv_vars

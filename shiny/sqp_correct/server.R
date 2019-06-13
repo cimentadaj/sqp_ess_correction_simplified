@@ -865,7 +865,6 @@ server <- function(input, output, session) {
     cmv_hot_df <- hot_to_r(input$hot) %>% filter(question %in% input$cmv_ch)
     missing_info_cmv <- any(unlist(map(cmv_hot_df, ~ .x == 99)))
 
-
     if (length_cmv == 1) {
       output$missing_est_error <- renderUI(p(minimum_cmv_vars))
     } else if (hot_any_missing || !valid_numbers) {
@@ -912,6 +911,8 @@ server <- function(input, output, session) {
       output$cre_model <-
         renderUI(
           mainPanel(
+            br(),
+            uiOutput('top_title'),
             br(),
             fluidRow(
               column(width = 5, tableOutput("original_cor")),
@@ -986,9 +987,9 @@ server <- function(input, output, session) {
       output$cre_model <-
         renderUI(
           mainPanel(
-            ## tabsetPanel(
-            ##   tabPanel(
-            ##     "Table of results",
+            br(),
+            uiOutput('top_title'),
+            br(),
             fluidRow(
               column(width = 5, tableOutput("original_cor")),
               column(width = 5, tableOutput("corrected_cor"))
@@ -998,8 +999,6 @@ server <- function(input, output, session) {
               column(width = 5, tableOutput("corrected_cov"))
             ),
             downloadButton("downloadData", "Download as csv")
-            ##   )
-            ## )
           )
         )
 
@@ -1019,7 +1018,6 @@ server <- function(input, output, session) {
           },
           contentType = "application/zip"
         )
-
 
       updateTabsetPanel(session,
         inputId = "menu",
@@ -1165,21 +1163,29 @@ server <- function(input, output, session) {
 
       if (only_quality) {
         res <- "quality"
+        res_two <- "only for quality. This is due to the missing values in the reliability and validity columns or because you specified no shared common method among the variables."
       } else if (both_quality_cmv) {
         res <- "quality and CMV"
+        res_two <- "for quality and CMV successfully"
       }
 
-      res
+      list(res = res, res_two = res_two)
     })
 
-  all_titles <- reactive({
-    list(
-      cap_original_cor = glue("Original correlation matrix unweighted and without correction for measurement error for selected countr{if (length(input$slid_cnt) > 1) 'ies' else 'y'}"),
-      cap_original_cov = glue("Original covariance matrix unweighted and without correction for measurement error for selected countr{if (length(input$slid_cnt) > 1) 'ies' else 'y'}"),
-      cap_corrected_cor = glue("Adjusted correlation matrix weighted and corrected for {correction_text()} for selected countr{if (length(input$slid_cnt) > 1) 'ies' else 'y'}"),
-      cap_corrected_cov = glue("Adjusted covariance matrix weighted and corrected for {correction_text()} for selected countr{if (length(input$slid_cnt) > 1) 'ies' else 'y'}")
-    )
-  })
+  output$top_title <-
+    renderUI({
+        h4(glue("Your adjusted correlation and covariance matrices have been weighted and adjusted {correction_text()$res_two}"))
+    })
+
+  all_titles <-
+    reactive({
+      list(
+        cap_original_cor = glue("Original correlation matrix unweighted and without correction for measurement error for selected countr{if (length(input$slid_cnt) > 1) 'ies' else 'y'}"),
+        cap_original_cov = glue("Original covariance matrix unweighted and without correction for measurement error for selected countr{if (length(input$slid_cnt) > 1) 'ies' else 'y'}"),
+        cap_corrected_cor = glue("Adjusted correlation matrix weighted and corrected for {correction_text()$res} for selected countr{if (length(input$slid_cnt) > 1) 'ies' else 'y'}"),
+        cap_corrected_cov = glue("Adjusted covariance matrix weighted and corrected for {correction_text()$res} for selected countr{if (length(input$slid_cnt) > 1) 'ies' else 'y'}")
+      )
+    })
 
 
   ##### Prepare final table/plots #####
