@@ -835,8 +835,14 @@ server <- function(input, output, session) {
         separate(question, c("country", "question"), sep = "_") %>%
         select(country, question, sqp_cols)
 
-      df_to_complete <- bind_rows(res, df_to_complete) %>% arrange(country, question)
+      df_to_complete <-
+        bind_rows(res, df_to_complete)
 
+      df_to_complete <-
+        df_to_complete %>%
+        group_split(country) %>%
+        map_dfr(~ slice(., na.omit(match(chosen_vars(), .$question))))
+      
       rhandsontable(df_to_complete, selectCallback = TRUE) %>%
         hot_col("question", readOnly = TRUE) %>%
         hot_col("country", readOnly = TRUE)
@@ -1032,7 +1038,7 @@ server <- function(input, output, session) {
   ##### Define cor and cov with weights/adjustments measurement erro #####
   models_coef <- reactive({
     input$cmv_ch
-    ch_vars <- chosen_vars() %>% sort()
+    ch_vars <- chosen_vars()
 
     # Unweighted correlation and covariance
     original_cor <- map(var_df(), ~ cor(.x[ch_vars]))
@@ -1060,9 +1066,14 @@ server <- function(input, output, session) {
 
     print("filtered sqp")
     print(upd_sqpdf)
+
     # Subset chosen variables in sqp_df and
     # create quality estimate for the
-    filtered_sqp <- map(upd_sqpdf, ~ filter(.x, question %in% ch_vars) %>% arrange(question))
+    filtered_sqp <- map(upd_sqpdf, ~ {
+      filter(.x, question %in% ch_vars) %>%
+        slice(match(question, ch_vars))
+    })
+
     print(filtered_sqp)
 
     # Replace all NA's so that there's no error.
@@ -1098,9 +1109,14 @@ server <- function(input, output, session) {
     # but it accepts a string in cmv_vars instead of `...`
     # in sqpr::sqp_cmv
 
-    print(corrected_cor)
+    print("This is the filtered sqp with all values")
     print(filtered_sqp)
+    print("This is the weighted correlation")
+    print(corrected_cor)
+    print("This is the head of the original data")
+    print(var_df())
 
+    
     if (apply_cmv) {
       corrected_cor <-
         map2(corrected_cor, filtered_sqp, ~ {
@@ -1119,7 +1135,12 @@ server <- function(input, output, session) {
         })
     }
 
+    print("This is the corrected cor previous to cov2cor")
+    print(corrected_cor)
+    
     corrected_cor <- map(corrected_cor, cov2cor)
+    print("This is the corrected cor post cov2cor")
+    print(corrected_cor)
 
     denom_adj <- length(original_cov)
     if (denom_adj > 1) {
