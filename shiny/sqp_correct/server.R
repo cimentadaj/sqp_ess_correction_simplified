@@ -31,7 +31,9 @@ options(
 custom_match <- c(`GB` = "United Kingdom", `UK` = "United Kingdom")
 
 # Text for errors when email is wrong or when 1 variable is selected as model
-valid_email_error <- tags$span(style = "color:red; font-size: 15px;", "Invalid email, please register at http://www.europeansocialsurvey.org/user/new")
+valid_email_error_generic <- tags$span(style = "color:red; font-size: 15px;", "Please provide your ESS email and SQP account")
+valid_email_error <- tags$span(style = "color:red; font-size: 15px;", "Invalid European Social Survey email, please register at http://www.europeansocialsurvey.org/user/new")
+valid_email_error_sqp <- tags$span(style = "color:red; font-size: 15px;", "Invalid SQP account, please register at http://sqp.upf.edu/accounts/register/")
 minimum_var_error <- tags$span(style = "color:red; font-size: 15px;", "Please select at least two variables for modeling.")
 minimum_iv_error <- tags$span(style = "color:red; font-size: 15px;", "Please select at least two variables.")
 
@@ -43,6 +45,11 @@ missing_quality <- tags$span(style = "color:red; font-size: 15px;", "The quality
 
 ess_signup_url <- a("https://www.europeansocialsurvey.org/user/new",
   href = "https://www.europeansocialsurvey.org/user/new",
+  target = "_blank"
+)
+
+sqp_signup_url <- a("http://sqp.upf.edu/accounts/register/",
+  href = "http://sqp.upf.edu/accounts/register/",
   target = "_blank"
 )
 
@@ -123,13 +130,19 @@ ui1 <- tagList(
   div(
     id = "login",
     textInput("essemail", "Sign in with your registered ESS email address:"),
-    # passwordInput("passwd", "Password"),
+    textInput("sqpemail",
+              "Sign in with your registered SQP account:",
+              placeholder = "Username"),
+    passwordInput("pw", "", placeholder = "Password"),
     uiOutput("emailValid"),
     actionButton("Login", "Log in"),
     br(),
     br(),
-    "If you haven’t registered yet with the ESS, please do that first: ",
-    ess_signup_url
+    "If you haven’t registered yet with the ESS or SQP, please do that first: ",
+    ess_signup_url,
+    "and",
+    sqp_signup_url
+    
   ),
   tags$style(
     type = "text/css",
@@ -324,6 +337,8 @@ server <- function(input, output, session) {
       if (!is.null(input$Login)) {
         if (input$Login > 0) {
           email <- isolate(input$essemail)
+          email_sqp <- isolate(input$sqpemail)
+          pw_sqp <- isolate(input$pw)          
           # Password <- isolate(input$passwd)
           # Id.username <- which(my_username == Username)
           # Id.password <- which(my_password == Password)
@@ -332,8 +347,17 @@ server <- function(input, output, session) {
           # are not in the .Globalenv, the handle of the website was not shared
           # across requests. I have input the website variables manually
           auth <- is_error(authenticate_ess(email, ess_website, path_login))
-          if (auth || email == "") {
+          auth_sqp <- is_error(sqp_login(email_sqp, pw_sqp))
+
+          # Check for ess and SQP login and provide custom errors depending
+          # on whether they worked
+
+          if (auth) {
             output$emailValid <- renderUI(p(valid_email_error))
+          } else if (auth_sqp) {
+            output$emailValid <- renderUI(p(valid_email_error_sqp))
+          } else if (email == "") {
+            output$emailValid <- renderUI(p(valid_email_error_generic))
           } else {
             USER$Logged <- TRUE
           }
