@@ -85,10 +85,11 @@ main_page <- function(...) {
       img(
         id = "sqp_logo",
         src = "SQP_logo_big_white.png",
-        width = "4.7%",
-        height = "4.7%"
+        width = "5.7%",
+        height = "5.7%"
       ),
-      h3(id = "header_title", "Correction for measurement and sampling error app"),
+      h3(id = "header_title", attribute = "center",
+         "Correction for measurement and sampling error app"),
       br(),
       br(),
       ...
@@ -96,26 +97,32 @@ main_page <- function(...) {
     tags$style(
       type = "text/css",
       paste0(
-        "#fluidp {
+        "
+            #header_title {
+                margin-left: auto;
+                margin-right: auto;
+                width: 50em
+                }
+            #fluidp {
                  background-color: ", color_website, ";
                  height: 70px;
                  }
-                 #ess_logo {
+            #ess_logo {
                  margin-top: 15px;
                  position: relative
                  }
-                 #sqp_logo {
+            #sqp_logo {
                  margin-top: 8px;
                  float: right;
                  position: relative
                  }
-                 #header_title {
+            #header_title {
                  margin-top: -35px;
                  color: white;
                  text-align: center;
                  position: relative
                  }"
-      )
+     )
     )
   )
 }
@@ -125,7 +132,7 @@ main_page <- function(...) {
 ui1 <- tagList(
   div(
     id = "welcome_msg",
-    h3("Welcome to the correction for measurement and sampling app of the European Social Survey!", align = "center")
+    h3(align = "center", "Welcome to the correction for measurement and sampling app of the European Social Survey!")
   ),
   div(
     id = "login",
@@ -142,26 +149,23 @@ ui1 <- tagList(
     ess_signup_url,
     "and",
     sqp_signup_url
-    
   ),
   tags$style(
     type = "text/css",
     "
      #welcome_msg {
-        position: absolute;
-        top: 40%;
-        margin-top: -120px;
-        margin-left: 450px;
+        margin-left: auto;
+        margin-right: auto;
+        width: 50em
      }
      #login {
-        font-size: 14px;
-        text-align: left;
         position: absolute;
+        width: 300px;
+        height: 200px;
+        z-index: 15;
         top: 50%;
         left: 50%;
-        margin-top: -100px;
-        margin-left: -170px;
-        width: 25%;
+        margin: -50px 0 0 -150px;
      }"
   )
 )
