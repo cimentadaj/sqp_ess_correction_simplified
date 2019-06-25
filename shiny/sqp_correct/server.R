@@ -196,10 +196,12 @@ ui2 <- tabsetPanel(
     value = "country_n_vars",
     br(),
     fluidRow(
-      column(3, selectInput("slid_cnt", "Pick a country or several",
-        choices = all_countries,
-        multiple = TRUE
-      )),
+      column(3,
+             selectInput("slid_cnt", "Pick a country or several",
+                         choices = all_countries,
+                         multiple = TRUE
+                         )
+             ),
       column(3, uiOutput("chosen_rounds"))
     ),
     "After having chosen a country and round, this application downloads the data from the ESS. If
@@ -409,6 +411,7 @@ server <- function(input, output, session) {
     })
 
   keep_common_columns <- function(x) map(x, ~ select_if(.x, is.numeric) %>% names()) %>% reduce(intersect)
+  if_error_empty <- function(expr, type) tryCatch(expr, error = function(e) type)
 
   ##### First tab - choosing vars, rounds, cnts #####
   output$chosen_vars <-
@@ -416,7 +419,11 @@ server <- function(input, output, session) {
       selectInput(
         "vars_ch",
         "Choose variables",
-        choices = setdiff(keep_common_columns(tmp_ess()), c("essround", "idno")),
+        choices = if_error_empty(
+          setdiff(keep_common_columns(tmp_ess()), c("essround", "idno")),
+          character()
+        ),
+        selected = "",
         multiple = TRUE,
         width = "500px"
       )
@@ -426,7 +433,11 @@ server <- function(input, output, session) {
     renderUI({
       selectizeInput(
         "slid_rounds", "Pick a round",
-        choices = reduce(map(req(input$slid_cnt), show_country_rounds), intersect),
+        choices = if_error_empty(
+          reduce(map(input$slid_cnt, show_country_rounds), intersect),
+          numeric()
+        ),
+        selected = numeric(),
         options = list(
           placeholder = "Please select an option below",
           onInitialize = I('function() { this.setValue(""); }')
