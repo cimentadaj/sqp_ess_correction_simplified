@@ -78,16 +78,24 @@ main_page <- function(...) {
   div(
     id = "fluidp",
     fluidPage(
-      img(
+      a(
+        img(
         id = "ess_logo",
         src = "http://www.europeansocialsurvey.org/common/ess_eric/img/ess-logo-top.png"
-      ),
-      img(
+        ),
+        href = "http://www.europeansocialsurvey.org/",
+        target = "_blank"
+       ),
+      a(
+        img(
         id = "sqp_logo",
         src = "SQP_logo_big_white.png",
-        width = "5.7%",
-        height = "5.7%"
-      ),
+        width = "5.0%",
+        height = "5.0%"
+        ),
+        href = "http://sqp.upf.edu/",
+        target = "_blank"
+       ),
       h3(id = "header_title", attribute = "center",
          "Correction for measurement and sampling error app"),
       br(),
