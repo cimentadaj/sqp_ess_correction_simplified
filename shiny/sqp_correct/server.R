@@ -1230,11 +1230,11 @@ server <- function(input, output, session) {
       both_quality_cmv <- length_cmv > 1 && !missing_info_cmv
 
       if (only_quality) {
-        res <- "quality"
-        res_two <- "only for quality. This is due to the missing values in the reliability and validity columns or because you specified no shared common method among the variables."
+        res <- "measurement error"
+        res_two <- "only for measurement error. This is due to the missing values in the reliability and validity columns or because you specified no shared common method among the variables."
       } else if (both_quality_cmv) {
-        res <- "quality and CMV"
-        res_two <- "for quality and CMV successfully"
+        res <- "measurement error and CMV"
+        res_two <- "for measurement error and CMV successfully"
       }
 
       list(res = res, res_two = res_two)
