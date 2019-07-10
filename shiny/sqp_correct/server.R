@@ -86,8 +86,8 @@ main_page <- function(...) {
         img(
         id = "sqp_ess_logo",
         src = "sqp_ess_logo.png",
-        width = "25.0%",
-        height = "15.0%"
+        width = "22.0%",
+        height = "13.0%"
         ),
         href = "http://sqp.upf.edu/",
         target = "_blank"
@@ -104,9 +104,9 @@ main_page <- function(...) {
         "
             #header_title {
                  margin-top: 15px;
-                 margin-left: 40px;
+                 margin-left: 35px;
                  position: relative;
-                 font-size: 40px;
+                 font-size: 35px;
                  color: white;
                 }
             #fluidp {
@@ -1219,10 +1219,10 @@ server <- function(input, output, session) {
 
       if (only_quality) {
         res <- "measurement error"
-        res_two <- "only for measurement error. This is due to the missing values in the reliability and validity columns or because you specified no shared common method among the variables."
+        res_two <- "measurement error but common method variance was not taken into account. This is either due to missing values for reliablity and validity or because you have not specified that variables share the same method."
       } else if (both_quality_cmv) {
-        res <- "measurement error and CMV"
-        res_two <- "for measurement error and CMV successfully"
+        res <- "measurement error and common method variance"
+        res_two <- "for measurement error and common method variance successfully"
       }
 
       list(res = res, res_two = res_two)
@@ -1230,7 +1230,7 @@ server <- function(input, output, session) {
 
   output$top_title <-
     renderUI({
-        h4(glue("Your adjusted correlation and covariance matrices have been weighted and adjusted {correction_text()$res_two}"))
+        h4(glue("Your adjusted correlation and covariance matrices have been weighted and corrected {correction_text()$res_two}"))
     })
 
   all_titles <-
@@ -1242,7 +1242,6 @@ server <- function(input, output, session) {
         cap_corrected_cov = glue("Adjusted covariance matrix weighted and corrected for {correction_text()$res} for selected countr{if (length(input$slid_cnt) > 1) 'ies' else 'y'}")
       )
     })
-
 
   ##### Prepare final table/plots #####
   # Final table
