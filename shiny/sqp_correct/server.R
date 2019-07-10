@@ -17,15 +17,11 @@ library(glue)
 ess_website <- "http://www.europeansocialsurvey.org"
 path_login <- "/user/login"
 
-# SQP credentials
-sqp_login("asqme", "asqme")
-
 # option to deal with lonegly PSUs
 options(
   shiny.sanitize.errors = TRUE,
   survey.lonely.psu = "adjust"
 )
-
 
 # Because countrycode has different long names for different iso2c UK names
 custom_match <- c(`GB` = "United Kingdom", `UK` = "United Kingdom")
@@ -78,25 +74,25 @@ main_page <- function(...) {
   div(
     id = "fluidp",
     fluidPage(
+      ## a(
+      ##   img(
+      ##   id = "ess_logo",
+      ##   src = "http://www.europeansocialsurvey.org/common/ess_eric/img/ess-logo-top.png"
+      ##   ),
+      ##   href = "http://www.europeansocialsurvey.org/",
+      ##   target = "_blank"
+      ##  ),
       a(
         img(
-        id = "ess_logo",
-        src = "http://www.europeansocialsurvey.org/common/ess_eric/img/ess-logo-top.png"
-        ),
-        href = "http://www.europeansocialsurvey.org/",
-        target = "_blank"
-       ),
-      a(
-        img(
-        id = "sqp_logo",
-        src = "SQP_logo_big_white.png",
-        width = "5.0%",
-        height = "5.0%"
+        id = "sqp_ess_logo",
+        src = "sqp_ess_logo.png",
+        width = "25.0%",
+        height = "15.0%"
         ),
         href = "http://sqp.upf.edu/",
         target = "_blank"
        ),
-      h3(id = "header_title", attribute = "center",
+      h3(id = "header_title",
          "Correction for measurement and sampling error app"),
       br(),
       br(),
@@ -107,27 +103,19 @@ main_page <- function(...) {
       paste0(
         "
             #header_title {
-                margin-left: auto;
-                margin-right: auto;
-                width: 50em
+                 margin-top: 15px;
+                 margin-left: 40px;
+                 position: relative;
+                 font-size: 40px;
+                 color: white;
                 }
             #fluidp {
                  background-color: ", color_website, ";
                  height: 70px;
                  }
-            #ess_logo {
-                 margin-top: 15px;
-                 position: relative
-                 }
-            #sqp_logo {
+            #sqp_ess_logo {
                  margin-top: 8px;
                  float: right;
-                 position: relative
-                 }
-            #header_title {
-                 margin-top: -35px;
-                 color: white;
-                 text-align: center;
                  position: relative
                  }"
      )
