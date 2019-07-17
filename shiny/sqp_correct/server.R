@@ -93,7 +93,7 @@ main_page <- function(...) {
         target = "_blank"
        ),
       h3(id = "header_title",
-         "Correction for measurement and sampling error app"),
+         "Correction for measurement and sampling errors app"),
       br(),
       br(),
       ...
